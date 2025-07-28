@@ -24,7 +24,7 @@ const ThemeToggle = () => {
     <select
       value={theme}
       onChange={(e) => setTheme(e.target.value)}
-      className="px-4 py-2 rounded bg-white text-black dark:bg-gray-800 dark:text-foreground border border-gray-300 dark:border-gray-600"
+      className="pr-4 py-2 rounded bg-background text-foreground border border-gray-300 border-gray-600"
     >
       {themes.map((t) => (
         <option key={t} value={t}>

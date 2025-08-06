@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
@@ -57,40 +63,12 @@ code {
   h6,
   span {
     font-family: Azonix Regular;
-    letter-spacing: 3px;
   }
 
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 5% 10%;
-    --card: 0 0% 98%;
-    --card-foreground: 240 4% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 4% 10%;
-    --primary: 220 90% 56%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 12% 92%;
-    --secondary-foreground: 240 5% 20%;
-    --muted: 240 10% 95%;
-    --muted-foreground: 240 4% 40%;
-    --accent: 180 70% 40%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 85% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 90%;
-    --input: 240 6% 95%;
-    --ring: 220 90% 56%;
-    --chart-1: 220 80% 60%;
-    --chart-2: 180 70% 50%;
-    --chart-3: 340 70% 60%;
-    --chart-4: 45 95% 60%;
-    --chart-5: 120 55% 50%;
   }
 
   :root {
@@ -247,51 +225,6 @@ code {
   z-index: 3;
 }
 
-.scroll-stack-scroller {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: visible;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  will-change: scroll-position;
-}
-
-.scroll-stack-inner {
-  min-height: 100vh;
-}
-
-.scroll-stack-card-wrapper {
-  position: relative;
-}
-
-.scroll-stack-card {
-  transform-origin: top center;
-  will-change: transform, filter;
-  backface-visibility: hidden;
-  transform-style: preserve-3d;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
-  height: 20rem;
-  width: 100%;
-  margin: 30px 0;
-  padding: 2rem;
-  border-radius: 40px;
-  box-sizing: border-box;
-  /* Improve mobile performance */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  position: relative;
-}
-
-.scroll-stack-end {
-  width: 100%;
-  height: 1px;
-}
-
 @layer base {
   * {
     @apply border-border;
@@ -317,7 +250,7 @@ code {
   color: var(--chart-1);
   border-style: solid;
   border-width: 2px 2px 2px 2px;
-  border-color:  var(--chart-1);
+  border-color: var(--chart-1);
   border-radius: 40px 40px 40px 40px;
   transform: translate(0px, 0px) rotate(0deg);
   transition: 0.2s;
@@ -364,46 +297,4 @@ code {
 .btn-secondary:active {
   background: #f0f0f0;
   transform: scale(0.98);
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #121212;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #00ffd1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #6fd2c0;
-}
-
-/* Dark theme by default */
-body {
-  background-color: #000000;
 }

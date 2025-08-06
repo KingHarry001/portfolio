@@ -19,6 +19,7 @@ import Uidesign from "./pages/Uidesign";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfServices from "./pages/TermsOfServices";
 import TestimonialsSection from "./components/TestimonialsSection";
+import { useEffect } from "react";
 
 const scrollToSection = (id) => {
   const section = document.getElementById(id);
@@ -55,7 +56,57 @@ const items = [
   },
 ];
 
+const customStyles = `
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #121212;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #00FFD1;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6FD2C0;
+  }
+
+  /* Dark theme by default */
+  body {
+    background-color: #000000;
+    color: #FFFFFF;
+  }
+`;
+
 const Portfolio = () => {
+  useEffect(() => {
+    // Add dark theme by default
+    document.documentElement.classList.add("dark");
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -81,6 +132,7 @@ const Portfolio = () => {
 function App() {
   return (
     <div className="App">
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Portfolio />} />

@@ -93,12 +93,6 @@ const Footer = () => {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^\w\-]+/g, "");
-
-  const handleServiceInquiry = (serviceTitle) => {
-    const slug = slugify(serviceTitle);
-    navigate(`/${slug}`);
-  };
-
   return (
     <footer className="bg-muted border-t border-white/10">
       {/* Main Footer Content */}

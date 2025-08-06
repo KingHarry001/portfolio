@@ -97,7 +97,6 @@ const customStyles = `
   /* Dark theme by default */
   body {
     background-color: #000000;
-    color: #FFFFFF;
   }
 `;
 

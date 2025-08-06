@@ -1,6 +1,7 @@
 import React from "react";
 import { Code, Palette, Shield, Zap } from "lucide-react";
 import { personalInfo, skills, certifications } from "../data/mock";
+// import { Skeleton } from "./ui/skeleton";
 
 const AboutSection = () => {
   const skillCategories = [
@@ -8,19 +9,16 @@ const AboutSection = () => {
       title: "Design Excellence",
       icon: <Palette className="w-6 h-6" />,
       skills: skills.design,
-      // color: "",
     },
     {
       title: "Development Power",
       icon: <Code className="w-6 h-6" />,
       skills: skills.development,
-      // color: "#6FD2C0",
     },
     {
       title: "Emerging Technologies",
       icon: <Shield className="w-6 h-6" />,
       skills: skills.emerging,
-      // color: "#40E0D0",
     },
   ];
 
@@ -53,11 +51,11 @@ const AboutSection = () => {
             {/* Profile Image with Decorative Elements */}
             <div className="relative">
               <div className="w-64 h-64 mx-auto lg:mx-0">
-                <div className="relative overflow-hidden">
+                <div className="relative overflow-hidden cursor-target">
                   <img
-                    src={personalInfo.profileImage}
+                    src='../King.jpg'
                     alt={personalInfo.name}
-                    className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-500"
+                    className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-500 "
                   />
                   <div className="absolute inset-0 bg-gradient-to-tr from-chart-1/20 to-transparent"></div>
                 </div>
@@ -68,14 +66,14 @@ const AboutSection = () => {
 
             {/* Certifications */}
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-foreground">
+              <h3 className="text-xl font-semibold text-foreground mt-[10vh]">
                 Recent Certifications
               </h3>
               <div className="space-y-3">
                 {certifications.map((cert) => (
                   <div
                     key={cert.id}
-                    className="flex items-center justify-between p-4 hover:border-[#00FFD1]/30 transition-all duration-300 bg-card text-card-foreground border border-border shadow-lg"
+                    className="flex items-center justify-between p-4 hover:border-[#00FFD1]/30 transition-all duration-300 bg-card text-card-foreground border border-border shadow-lg cursor-target"
                   >
                     <div>
                       <div className="font-medium text-foreground ">
@@ -132,27 +130,27 @@ const AboutSection = () => {
             ))}
 
             {/* Experience Highlights */}
-            <div className="mt-12 p-6 bg-gradient-to-br from-white/5 to-[#00FFD1]/5 bg-card text-card-foreground border border-border shadow-lg">
+            <div className="mt-12 p-6 bg-gradient-to-br from-white/5 to-[#00FFD1]/5 bg-card text-card-foreground border border-border shadow-lg cursor-target">
               <h3 className="text-xl font-semibold text-foreground mb-4">
                 Journey Highlights
               </h3>
               <div className="space-y-3 text-muted-foreground">
                 <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 chart-1 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 chart-1 rounded-full">✔ </div>
                   <p>
                     Started as a graphic designer, evolved into full-stack
                     development
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 chart-1 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 chart-1 rounded-full">✔ </div>
                   <p>
                     Currently pursuing cybersecurity certifications to expand
                     expertise
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 chart-1 rounded-full mt-2"></div>
+                  <div className="w-2 h-2 chart-1 rounded-full">✔ </div>
                   <p>Passionate about crypto and emerging web technologies</p>
                 </div>
               </div>

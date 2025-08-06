@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Mail,
   Phone,
@@ -6,8 +6,14 @@ import {
   Send,
   Calendar,
   ExternalLink,
+  X,
+  Github,
+  Twitter,
+  Instagram,
+  Linkedin,
 } from "lucide-react";
 import { personalInfo, socialLinks } from "../data/mock";
+import BookingModal from "./BookingModal";
 
 const ContactSection = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +24,7 @@ const ContactSection = () => {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -26,39 +33,23 @@ const ContactSection = () => {
     });
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setIsSubmitting(true);
-
-  //   // Mock form submission
-  //   setTimeout(() => {
-  //     console.log("Form submitted:", formData);
-  //     alert(
-  //       "Thank you for your message! I'll get back to you within 24 hours."
-  //     );
-  //     setFormData({
-  //       name: "",
-  //       email: "",
-  //       company: "",
-  //       service: "",
-  //       message: "",
-  //     });
-  //     setIsSubmitting(false);
-  //   }, 1000);
-  // };
-
   const handleCalendarBooking = () => {
-    // Mock calendar booking
-    alert(
-      "Calendar booking would open here - integration with Calendly or similar service"
-    );
+    setIsBookingOpen(true);
   };
 
   const socialPlatforms = [
-    { name: "GitHub", url: socialLinks.github, icon: "📧" },
-    { name: "LinkedIn", url: socialLinks.linkedin, icon: "💼" },
-    { name: "Dribbble", url: socialLinks.dribbble, icon: "🎨" },
-    { name: "Twitter", url: socialLinks.twitter, icon: "🐦" },
+    { name: "GitHub", url: socialLinks.github, icon: <Github size={30} /> },
+    {
+      name: "LinkedIn",
+      url: socialLinks.linkedin,
+      icon: <Linkedin size={30} />,
+    },
+    {
+      name: "Instagram",
+      url: socialLinks.instagram,
+      icon: <Instagram size={30} />,
+    },
+    { name: "Twitter", url: socialLinks.twitter, icon: <Twitter size={30} /> },
   ];
 
   const handleSubmit = (e) => {
@@ -75,8 +66,10 @@ Service: ${service}
 Message: ${message}
   `;
 
+    alert("Thank you for your message! I'll get back to you within 24 hours.");
+
     const encodedMessage = encodeURIComponent(formattedMessage);
-    const phoneNumber = "2349038163213"; // Replace with your real number
+    const phoneNumber = "2349038163213";
 
     const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     window.open(whatsappURL, "_blank");
@@ -123,7 +116,7 @@ Message: ${message}
 
             {/* Contact Methods */}
             <div className="space-y-6">
-              <div className="flex items-start gap-4 p-4 bg-muted border border-white/10 hover:border-[#00FFD1]/30 transition-all duration-300">
+              <div className="flex items-start gap-4 p-4 bg-muted border border-white/10 hover:border-[#00FFD1]/30 transition-all duration-300 cursor-target">
                 <div className="p-3 chart-1/10 border border-[#00FFD1]/30 text-chart-1">
                   <Mail size={24} />
                 </div>
@@ -136,7 +129,7 @@ Message: ${message}
                 </div>
               </div>
 
-              <div className="flex items-start gap-4 p-4 bg-muted border border-white/10 hover:border-[#00FFD1]/30 transition-all duration-300">
+              <div className="flex items-start gap-4 p-4 bg-muted border border-white/10 hover:border-[#00FFD1]/30 transition-all duration-300 cursor-target">
                 <div className="p-3 chart-1/10 border border-[#00FFD1]/30 text-chart-1">
                   <Phone size={24} />
                 </div>
@@ -149,7 +142,7 @@ Message: ${message}
                 </div>
               </div>
 
-              <div className="flex items-start gap-4 p-4 bg-muted border border-white/10 hover:border-[#00FFD1]/30 transition-all duration-300">
+              <div className="flex items-start gap-4 p-4 bg-muted border border-white/10 hover:border-[#00FFD1]/30 transition-all duration-300 cursor-target">
                 <div className="p-3 chart-1/10 border border-[#00FFD1]/30 text-chart-1">
                   <MapPin size={24} />
                 </div>
@@ -181,7 +174,7 @@ Message: ${message}
               </p>
               <button
                 onClick={handleCalendarBooking}
-                className="btn-secondary ring-2 ring-ring group flex items-center gap-2"
+                className="btn-secondary ring-2 ring-ring group flex items-center gap-2 cursor-target"
               >
                 <Calendar size={18} />
                 Book Free Consultation
@@ -191,23 +184,27 @@ Message: ${message}
                 />
               </button>
             </div>
+            <BookingModal
+              isOpen={isBookingOpen}
+              onClose={() => setIsBookingOpen(false)}
+            />
 
             {/* Social Links */}
             <div>
               <h4 className="text-foreground font-semibold mb-4">
                 Follow My Work
               </h4>
-              <div className="flex gap-4">
+              <div className="flex gap-4 ">
                 {socialPlatforms.map((platform) => (
                   <a
                     key={platform.name}
                     href={platform.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 bg-white/10 border border-white/20 hover:border-[#00FFD1]/50 hover:chart-1/10 transition-all duration-300 group"
+                    className="p-2 bg-white/10 border border-white/20 hover:chart-1/10 transition-all duration-300 group cursor-target hover:-translate-y-3"
                     title={platform.name}
                   >
-                    <span className="text-lg group-hover:scale-110 transition-transform duration-300 inline-block">
+                    <span className="text-lg group-hover:scale-110 transition-transform duration-300 inline-block hover:text-chart-1">
                       {platform.icon}
                     </span>
                   </a>
@@ -238,7 +235,7 @@ Message: ${message}
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300"
+                    className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300 cursor-target"
                     placeholder="John Doe"
                   />
                 </div>
@@ -257,7 +254,7 @@ Message: ${message}
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300"
+                    className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300 cursor-target"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -277,7 +274,7 @@ Message: ${message}
                     name="company"
                     value={formData.company}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300"
+                    className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300 cursor-target"
                     placeholder="Your Company"
                   />
                 </div>
@@ -294,7 +291,7 @@ Message: ${message}
                     name="service"
                     value={formData.service}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300"
+                    className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300 cursor-target"
                   >
                     <option value="">Select a service</option>
                     <option value="graphic-design">Graphic Design</option>
@@ -322,7 +319,7 @@ Message: ${message}
                   onChange={handleInputChange}
                   required
                   rows={6}
-                  className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300 resize-vertical"
+                  className="w-full p-3 bg-background border border-white/20 text-foreground focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] outline-none transition-colors duration-300 resize-vertical cursor-target"
                   placeholder="Tell me about your project, goals, timeline, and any specific requirements..."
                 />
               </div>
@@ -330,7 +327,7 @@ Message: ${message}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full btn-primary bg-chart-1 group flex items-center justify-center gap-3 ${
+                className={`w-full btn-primary bg-chart-1 group flex items-center justify-center gap-3 cursor-target ${
                   isSubmitting ? "opacity-70 cursor-not-allowed" : ""
                 }`}
               >
@@ -339,7 +336,9 @@ Message: ${message}
                 ) : (
                   <Send size={18} />
                 )}
-                {isSubmitting ? "Sending Message..." : "Send a Message Via WhatsApp"}
+                {isSubmitting
+                  ? "Sending Message..."
+                  : "Send a Message Via WhatsApp"}
               </button>
 
               <p className="text-sm text-muted-foreground text-left mt-4">

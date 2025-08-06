@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
@@ -10,123 +9,68 @@ import ContactSection from "./components/ContactSection";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
 import "./index.css";
+import { VscHome, VscAccount, VscSettingsGear, VscSend } from "react-icons/vsc";
+import Dock from "./components/react-ui/Dock";
+import TargetCursor from "./components/react-ui/TargetCursor";
+import GraphicsPage from "./pages/GraphicsPage";
+import WebDev from "./pages/WebDev";
+import CyberSec from "./pages/CyberSec";
+import Uidesign from "./pages/Uidesign";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfServices from "./pages/TermsOfServices";
+import TestimonialsSection from "./components/TestimonialsSection";
 
-// Custom CSS for dark theme buttons and styling
-const customStyles = `
-  .btn-primary {
-    border-radius: 0px;
-    padding: 14px 24px;
-    font-size: 18px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.4s ease-in-out;
-    min-height: 56px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    line-height: 1.2;
-    letter-spacing: 0;
+const scrollToSection = (id) => {
+  const section = document.getElementById(id);
+  if (section) {
+    section.scrollIntoView({ behavior: "smooth" });
   }
+};
 
-  .btn-primary:hover {
-    background: transparent;
-    color: var(--text-foreground);
-  }
-
-  .btn-primary:active {
-    background: #6FD2C0;
-    transform: scale(0.98);
-  }
-
-  .btn-secondary {
-    border-radius: 10px;
-    padding: 14px 24px;
-    font-size: 18px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.4s ease-in-out;
-    min-height: 56px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    line-height: 1.2;
-    letter-spacing: 0;
-  }
-
-  .btn-secondary:hover {
-    background: #FFFFFF;
-    color: #000000;
-  }
-
-  .btn-secondary:active {
-    background: #F0F0F0;
-    transform: scale(0.98);
-  }
-
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Smooth scrolling */
-  html {
-    scroll-behavior: smooth;
-  }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #121212;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #00FFD1;
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #6FD2C0;
-  }
-
-  /* Dark theme by default */
-  body {
-    background-color: #000000;
-    color: #FFFFFF;
-  }
-`;
+const items = [
+  {
+    icon: <VscHome size={23} />,
+    label: "Home",
+    onClick: () => scrollToSection("home"),
+  },
+  {
+    icon: <VscAccount size={23} />,
+    label: "About",
+    onClick: () => scrollToSection("about"),
+  },
+  {
+    icon: <VscSettingsGear size={23} />,
+    label: "Services",
+    onClick: () => scrollToSection("services"),
+  },
+  {
+    icon: <span className="material-symbols-outlined">work_history</span>,
+    label: "Gallery",
+    onClick: () => scrollToSection("projects"),
+  },
+  {
+    icon: <VscSend size={23} />,
+    label: "Contact",
+    onClick: () => scrollToSection("contact"),
+  },
+];
 
 const Portfolio = () => {
-  useEffect(() => {
-    // Add dark theme by default
-    document.documentElement.classList.add("dark");
-  }, []);
-
   return (
-    <div className="min-h-screen !bg-background !text-foreground">
+    <div className="min-h-screen">
       <Header />
+      <TargetCursor spinDuration={2} hideDefaultCursor={true} />
       <main>
-        <Hero />
+        <Dock items={items} magnification={50} className="border-chart-1" />
+        <div id="home">
+          <Hero />
+        </div>
         <HeroSection />
         <AboutSection />
         <ServicesSection />
         <ProjectsSection />
         <BlogSection />
+        <TestimonialsSection />
         <ContactSection />
       </main>
       <Footer />
@@ -137,10 +81,15 @@ const Portfolio = () => {
 function App() {
   return (
     <div className="App">
-      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Portfolio />} />
+          <Route path="/graphic-design" element={<GraphicsPage />} />
+          <Route path="/web-development" element={<WebDev />} />
+          <Route path="/uiux-design" element={<Uidesign />} />
+          <Route path="/security-consulting" element={<CyberSec />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfServices />} />
         </Routes>
       </BrowserRouter>
     </div>

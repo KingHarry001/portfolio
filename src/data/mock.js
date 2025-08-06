@@ -5,18 +5,17 @@ export const personalInfo = {
   title: "Creative Technologist & Digital Strategist",
   tagline: "Bridging creativity with cutting-edge technology",
   bio: "Multidisciplinary creative professional specializing in graphic design, web development, and digital experiences. Currently expanding into cybersecurity and AI-integrated applications, with a passion for crypto and future web technologies.",
-  location: "San Francisco, CA",
+  location: "Lagos, Nigeria",
   email: "kingharrisonariwodo@gmail.com",
   phone: "(+234) 903 816 3213",
-  profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"
+  // profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"
 };
 
 export const socialLinks = {
-  github: "https://github.com/johndoe",
-  linkedin: "https://linkedin.com/in/johndoe",
-  dribbble: "https://dribbble.com/johndoe",
-  twitter: "https://twitter.com/johndoe",
-  instagram: "https://instagram.com/johndoe"
+  github: "https://github.com/KingHarry001",
+  linkedin: "www.linkedin.com/in/harrison-k-a-a5b118278",
+  twitter: "https://x.com/NyxAsura",
+  instagram: "https://www.instagram.com/nexusdesignsorg/"
 };
 
 export const skills = {
@@ -30,6 +29,7 @@ export const skills = {
     { name: "HTML/CSS", level: 95, category: "Frontend" },
     { name: "JavaScript", level: 92, category: "Programming" },
     { name: "React.js", level: 90, category: "Frontend" },
+    { name: "Next.js", level: 90, category: "Backend" },
     { name: "Node.js", level: 85, category: "Backend" },
     { name: "Python", level: 75, category: "Programming" }
   ],
@@ -45,7 +45,7 @@ export const services = [
     id: 1,
     title: "Graphic Design",
     description: "Complete brand identity, logo design, and visual communication solutions",
-    features: ["Logo & Brand Identity", "Marketing Materials", "Social Media Graphics", "Print Design"],
+    features: ["✔ Logo & Brand Identity", "✔ Marketing Materials", "✔ Social Media Graphics", "✔ Print Design"],
     startingPrice: "$500",
     duration: "1-2 weeks",
     icon: "palette"
@@ -54,7 +54,7 @@ export const services = [
     id: 2,
     title: "Web Development",
     description: "Modern, responsive websites and web applications built with latest technologies",
-    features: ["Custom Web Development", "React Applications", "E-commerce Sites", "API Integration"],
+    features: ["✔ Custom Web Development", "✔ React Applications", "✔ E-commerce Sites", "✔ API Integration"],
     startingPrice: "$1,500",
     duration: "2-4 weeks",
     icon: "code"
@@ -63,7 +63,7 @@ export const services = [
     id: 3,
     title: "UI/UX Design",
     description: "User-centered design solutions that combine aesthetics with functionality",
-    features: ["User Research", "Wireframing & Prototyping", "Design Systems", "Usability Testing"],
+    features: ["✔ User Research", "✔ Wireframing & Prototyping", "✔ Design Systems", "✔ Usability Testing"],
     startingPrice: "$800",
     duration: "1-3 weeks",
     icon: "smartphone"
@@ -72,7 +72,7 @@ export const services = [
     id: 4,
     title: "Security Consulting",
     description: "Basic cybersecurity setup and consultation for small businesses and startups",
-    features: ["Security Audits", "Best Practices Setup", "Consultation", "Training"],
+    features: ["✔ Security Audits", "✔ Best Practices Setup", "✔ Consultation", "✔ Training"],
     startingPrice: "$300",
     duration: "1 week",
     icon: "shield"
@@ -222,13 +222,13 @@ export const certifications = [
     id: 1,
     name: "CompTIA Security+ (In Progress)",
     issuer: "CompTIA",
-    year: "2024",
+    year: "2025",
     credentialUrl: "#"
   },
   {
     id: 2,
-    name: "React Developer Certification",
-    issuer: "Meta",
+    name: "Graphics Design Certificate",
+    issuer: "Canva",
     year: "2023",
     credentialUrl: "#"
   },
@@ -236,7 +236,21 @@ export const certifications = [
     id: 3,
     name: "Google UX Design Certificate",
     issuer: "Google",
-    year: "2023",
+    year: "2022",
     credentialUrl: "#"
-  }
+  },
+  {
+    id: 4,
+    name: "UI/UX Design Certificate",
+    issuer: "Figma",
+    year: "2021",
+    credentialUrl: "#"
+  },
+  {
+    id: 5,
+    name: "React Developer Certification",
+    issuer: "Meta",
+    year: "2021",
+    credentialUrl: "#"
+  },
 ];

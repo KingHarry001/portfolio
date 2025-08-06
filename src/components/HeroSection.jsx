@@ -1,13 +1,52 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, Download, ExternalLink } from "lucide-react";
 import { personalInfo } from "../data/mock";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/all";
 
+gsap.registerPlugin(ScrollTrigger);
 
 const HeroSection = () => {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const fullText = personalInfo.tagline;
 
+  const statsRef = useRef();
+  const sectionRef = useRef();
+  
+  useEffect(() => {
+    if (!statsRef.current) return;
+
+    const statEls = gsap.utils.selector(statsRef)(".stats-value");
+
+    statEls.forEach((el) => {
+      const finalValue = parseInt(el.textContent.replace(/[^0-9]/g, ""));
+      const suffix = el.textContent.replace(/[0-9]/g, "");
+      const obj = { value: 0 };
+
+      ScrollTrigger.create({
+        trigger: el,
+        start: "top 80%",
+        toggleActions: "play none none reset",
+        onEnter: () => {
+          gsap.to(obj, {
+            value: finalValue,
+            duration: 4,
+            ease: "power2.out",
+            onUpdate: () => {
+              el.innerText =
+                new Intl.NumberFormat().format(Math.floor(obj.value)) + suffix;
+            },
+          });
+        },
+      });
+    });
+
+    // Cleanup triggers on unmount
+    return () => {
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
+  }, []);
   useEffect(() => {
     if (currentIndex < fullText.length) {
       const timer = setTimeout(() => {
@@ -25,12 +64,12 @@ const HeroSection = () => {
     }
   };
 
-const fileDownloadURL = "https://drive.google.com/uc?export=download&id=1Gi4LJY5ZaEzsHm1O_FPusCb7mb-TSyLN";
+  const fileDownloadURL =
+    "https://drive.google.com/uc?export=download&id=1Gi4LJY5ZaEzsHm1O_FPusCb7mb-TSyLN";
 
-const handleResumeDownload = () => {
-  window.open(fileDownloadURL, "_blank");
-};
-
+  const handleResumeDownload = () => {
+    window.open(fileDownloadURL, "_blank");
+  };
 
   const roles = [
     "Web Developer",
@@ -74,12 +113,13 @@ const handleResumeDownload = () => {
   return (
     <section
       id="hero"
-      className="relative min-h-screen bg-background text-foreground overflow-hidden text-left"
+      ref={sectionRef}
+      className="relative min-h-screen bg-background text-foreground overflow-hidden"
     >
       {/* Grid Pattern Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100px_100px] opacity-20"></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pt-20">
+      <div className="relative z-10 max-w-7xl px-4 lg:px-8 pt-20">
         <div className="grid lg:grid-cols-2 gap-12 min-h-screen items-center">
           {/* Left Content */}
           <div className="space-y-8">
@@ -99,13 +139,13 @@ const handleResumeDownload = () => {
               </h1>
 
               <div className="my-8">
-                <h1 className="relative text-left text-xl lg:text-2xl text-muted-foreground font-medium">
+                <h2 className="relative text-left text-xl lg:text-2xl text-muted-foreground font-medium">
                   I'm a <span className="cursor-target"> </span>
                   <span className="font-bold animate-pulse bg-gradient-to-r from-[#9c43fe] via-[#4cc2e9] to-[#1014cc] bg-clip-text text-transparent">
                     {text}
                   </span>
                   <span className="text-foreground animate-blink">|</span>
-                </h1>
+                </h2>
                 <p className="text-xl lg:text-2xl text-muted-foreground font-medium">
                   {displayText}
                   <span className="animate-pulse">|</span>
@@ -121,7 +161,7 @@ const handleResumeDownload = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => scrollToAbout()}
-                className="btn-primary bg-chart-1 group flex items-center justify-center gap-3"
+                className="btn-primary group flex items-center justify-center gap-3 bg-chart-1"
               >
                 <span>View My Work</span>
                 <ExternalLink
@@ -143,21 +183,30 @@ const handleResumeDownload = () => {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
+            <div
+              ref={statsRef}
+              className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10"
+            >
               <div>
-                <div className="text-2xl font-bold text-foreground">50+</div>
+                <div className="text-2xl font-bold text-foreground stats-value">
+                  50+
+                </div>
                 <div className="text-sm text-muted-foreground">
                   Projects Completed
                 </div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-foreground">3+</div>
+                <div className="text-2xl font-bold text-foreground stats-value">
+                  3+
+                </div>
                 <div className="text-sm text-muted-foreground">
                   Years Experience
                 </div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-foreground">25+</div>
+                <div className="text-2xl font-bold text-foreground stats-value">
+                  25+
+                </div>
                 <div className="text-sm text-muted-foreground">
                   Happy Clients
                 </div>

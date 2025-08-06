@@ -4,6 +4,11 @@ export default {
   content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
   theme: {
     extend: {
+      fontFamily: {
+        bitcount: ['"Bitcount"', "system-ui"],
+        azonix: ["Azonix Regular", "sans-serif"],
+        prata: ["Prata", "sans-serif"]
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

@@ -1,9 +1,48 @@
-import React from "react";
-import { Heart, Github, Linkedin, Mail, Phone } from "lucide-react";
-import { personalInfo, socialLinks } from "../data/mock";
+import React, { useEffect, useState } from "react";
+import { Heart, Github, Linkedin, Mail, Phone, Instagram } from "lucide-react";
+import { personalInfo, services, socialLinks } from "../data/mock";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+
+  const roles = [
+    "Web Developer",
+    "Web Designer",
+    "Cybersecurity Expert",
+    "Founder",
+    "Creator",
+  ];
+
+    const [text, setText] = useState("");
+    const [index, setIndex] = useState(0);
+    const [char, setChar] = useState(0);
+    const [deleting, setDeleting] = useState(false);
+  
+    useEffect(() => {
+      const current = roles[index];
+      const isEnd = char === current.length;
+      const isStart = char === 0;
+  
+      const timeout = setTimeout(
+        () => {
+          if (!deleting) {
+            setText(current.substring(0, char + 1));
+            setChar((c) => c + 1);
+            if (isEnd) setDeleting(true);
+          } else {
+            setText(current.substring(0, char - 1));
+            setChar((c) => c - 1);
+            if (isStart) {
+              setDeleting(false);
+              setIndex((prev) => (prev + 1) % roles.length);
+            }
+          }
+        },
+        isEnd ? 1000 : deleting ? 50 : 100
+      );
+  
+      return () => clearTimeout(timeout);
+    }, [char, deleting, index]);
 
   const footerSections = [
     {
@@ -49,6 +88,17 @@ const Footer = () => {
     }
   };
 
+  const slugify = (text) =>
+    text
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w\-]+/g, "");
+
+  const handleServiceInquiry = (serviceTitle) => {
+    const slug = slugify(serviceTitle);
+    navigate(`/${slug}`);
+  };
+
   return (
     <footer className="bg-muted border-t border-white/10">
       {/* Main Footer Content */}
@@ -60,9 +110,13 @@ const Footer = () => {
               <h3 className="text-2xl font-bold text-foreground mb-2">
                 {personalInfo.name}
               </h3>
-              <p className="text-chart-1 font-medium mb-4">
-                Creative Technologist
-              </p>
+              <h2 className="relative text-left text-xl lg:text-2xl text-muted-foreground font-medium">
+                I'm a <span className="cursor-target"> </span>
+                <span className="font-bold animate-pulse bg-gradient-to-r from-[#9c43fe] via-[#4cc2e9] to-[#1014cc] bg-clip-text text-transparent">
+                  {text}
+                </span>
+                <span className="text-foreground animate-blink">|</span>
+              </h2>
               <p className="text-muted-foreground leading-relaxed">
                 Bridging creativity with cutting-edge technology to deliver
                 exceptional digital experiences.
@@ -87,7 +141,7 @@ const Footer = () => {
                 href={socialLinks.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-white/10 hover:chart-1/20 border border-white/20 hover:border-[#00FFD1]/30 transition-all duration-300"
+                className="p-2 bg-white/10 hover:chart-1/20 border cursor-target border-white/20 hover:border-[#00FFD1]/30 transition-all duration-300 hover:-translate-y-2"
                 title="GitHub"
               >
                 <Github
@@ -99,10 +153,22 @@ const Footer = () => {
                 href={socialLinks.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-white/10 hover:chart-1/20 border border-white/20 hover:border-[#00FFD1]/30 transition-all duration-300"
+                className="p-2 bg-white/10 hover:chart-1/20 border cursor-target border-white/20 hover:border-[#00FFD1]/30 transition-all duration-300 hover:-translate-y-2"
                 title="LinkedIn"
               >
                 <Linkedin
+                  size={20}
+                  className="text-muted-foreground hover:text-chart-1 transition-colors duration-300"
+                />
+              </a>
+              <a
+                href={socialLinks.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-white/10 hover:chart-1/20 border cursor-target border-white/20 hover:border-[#00FFD1]/30 transition-all duration-300 hover:-translate-y-2"
+                title="instagram"
+              >
+                <Instagram
                   size={20}
                   className="text-muted-foreground hover:text-chart-1 transition-colors duration-300"
                 />
@@ -120,7 +186,7 @@ const Footer = () => {
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
                     <button
-                      onClick={() => scrollToSection(link.href)}
+                      onClick={() => handleServiceInquiry(services.title)}
                       className="text-muted-foreground hover:text-chart-1 transition-colors duration-300"
                     >
                       {link.name}
@@ -156,7 +222,7 @@ const Footer = () => {
       {/* Bottom Footer */}
       <div className="border-t border-white/10 bg-background">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-[10vh] sm:pb-0">
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <span>
                 © {currentYear} {personalInfo.name}. All rights reserved.
@@ -171,9 +237,7 @@ const Footer = () => {
                 Privacy Policy
               </button>
               <button
-                onClick={() =>
-                  alert("Terms of Service would be displayed here")
-                }
+                href="terms-of-service"
                 className="hover:text-chart-1 transition-colors duration-300"
               >
                 Terms of Service
@@ -183,7 +247,7 @@ const Footer = () => {
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <span>Made with</span>
               <Heart size={16} className="text-chart-1 animate-pulse" />
-              <span>and cutting-edge tech</span>
+              <span>Nexus dynasty studio</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Calendar, Clock, ArrowRight, BookOpen } from "lucide-react";
 import { blogPosts } from "../data/mock";
+import { ScrollTrigger } from "gsap/all";
+import gsap from "gsap";
 
 const BlogSection = () => {
   const handlePostClick = (post) => {
@@ -32,6 +34,43 @@ const BlogSection = () => {
     });
   };
 
+  const statsRef = useRef();
+  const sectionRef = useRef();
+
+  useEffect(() => {
+    if (!statsRef.current) return;
+
+    const statEls = gsap.utils.selector(statsRef)(".stats-value");
+
+    statEls.forEach((el) => {
+      const finalValue = parseInt(el.textContent.replace(/[^0-9]/g, ""));
+      const suffix = el.textContent.replace(/[0-9]/g, "");
+      const obj = { value: 0 };
+
+      ScrollTrigger.create({
+        trigger: el,
+        start: "top 80%",
+        toggleActions: "play none none reset",
+        onEnter: () => {
+          gsap.to(obj, {
+            value: finalValue,
+            duration: 4,
+            ease: "power2.out",
+            onUpdate: () => {
+              el.innerText =
+                new Intl.NumberFormat().format(Math.floor(obj.value)) + suffix;
+            },
+          });
+        },
+      });
+    });
+
+    // Cleanup triggers on unmount
+    return () => {
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
+  }, []);
+
   return (
     <section id="blog" className="py-20 bg-muted">
       <div className="max-w-7xl mx-auto lg:px-8">
@@ -42,7 +81,7 @@ const BlogSection = () => {
               Journal
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto p-3">
             Sharing my journey through cybersecurity, development insights, and
             explorations into emerging technologies like Web3 and AI.
           </p>
@@ -51,24 +90,24 @@ const BlogSection = () => {
         {/* Featured Post */}
         <div className="mb-16 px-6 lg:px-0">
           <div className="bg-gradient-to-r from-chart-1/10 to-transparent border-l-4 border-[#00FFD1] p-1 mb-8">
-            <div className="flex items-center gap-2 text-chart-1 font-medium">
+            <div className="flex items-center gap-2 text-foreground font-medium">
               <BookOpen size={20} />
               <span>Featured Article</span>
             </div>
           </div>
 
-          <div className="bg-background border border-white/10 overflow-hidden hover:border-[#00FFD1]/30 transition-all duration-500">
-            <div className="p-8">
+          <div ref={statsRef}  className="bg-background border border-white/10 overflow-hidden hover:border-[#00FFD1]/30 transition-all duration-500">
+            <div className="p-8 cursor-target">
               <div className="flex items-center gap-4 mb-4">
                 <span
-                  className={`inline-block px-3 py-1 text-sm font-medium border ${getCategoryColor(
+                  className={`inline-block px-3 py-1 text-sm font-medium border stats-value ${getCategoryColor(
                     blogPosts[0].category
                   )}`}
                 >
                   {blogPosts[0].category}
                 </span>
                 <div className="flex items-center gap-4 text-muted-foreground text-sm">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 stats-value">
                     <Calendar size={16} />
                     {formatDate(blogPosts[0].publishDate)}
                   </div>
@@ -106,7 +145,7 @@ const BlogSection = () => {
           {blogPosts.slice(1).map((post) => (
             <article
               key={post.id}
-              className="group bg-background border border-white/10 overflow-hidden hover:border-[#00FFD1]/30 transition-all duration-500 hover:-translate-y-2"
+              className="group bg-background border border-white/10 overflow-hidden hover:border-[#00FFD1]/30 transition-all duration-500 hover:-translate-y-2 cursor-target"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -167,7 +206,7 @@ const BlogSection = () => {
 
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-chart-1 mb-2">
+              <div ref={statsRef} className="text-2xl font-bold text-chart-1 mb-2 stats-value">
                 {blogPosts.length}+
               </div>
               <div className="text-muted-foreground">Articles Published</div>

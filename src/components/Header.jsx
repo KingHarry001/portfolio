@@ -21,6 +21,7 @@ const Header = () => {
     { name: "Services", href: "#services" },
     { name: "Projects", href: "#projects" },
     { name: "Blog", href: "#blog" },
+    { name: "Testimonials", href: "#testimonial" },
     { name: "Contact", href: "#contact" },
   ];
 
@@ -72,7 +73,7 @@ const Header = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300"
+              className="md:hidden p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300 cursor-target"
             >
               {isMobileMenuOpen ? (
                 <X size={20} className="text-foreground" />

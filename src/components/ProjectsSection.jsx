@@ -1,10 +1,50 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ExternalLink, Github, Filter } from "lucide-react";
 import { projects } from "../data/mock";
+import { ScrollTrigger } from "gsap/all";
+import gsap from "gsap";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const ProjectsSection = () => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [filteredProjects, setFilteredProjects] = useState(projects);
+
+  const statsRef = useRef();
+
+  useEffect(() => {
+    if (!statsRef.current) return;
+
+    const statEls = gsap.utils.selector(statsRef)(".stats-value");
+
+    statEls.forEach((el) => {
+      const finalValue = parseInt(el.textContent.replace(/[^0-9]/g, ""));
+      const suffix = el.textContent.replace(/[0-9]/g, "");
+      const obj = { value: 0 };
+
+      ScrollTrigger.create({
+        trigger: el,
+        start: "top 80%",
+        toggleActions: "play none none reset",
+        onEnter: () => {
+          gsap.to(obj, {
+            value: finalValue,
+            duration: 3,
+            ease: "power2.out",
+            onUpdate: () => {
+              el.innerText =
+                new Intl.NumberFormat().format(Math.floor(obj.value)) + suffix;
+            },
+          });
+        },
+      });
+    });
+
+    // Cleanup triggers on unmount
+    return () => {
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
+  }, []);
 
   const categories = ["All", "Design", "Dev", "Security", "Experimental"];
 
@@ -51,7 +91,7 @@ const ProjectsSection = () => {
             <button
               key={category}
               onClick={() => handleFilterChange(category)}
-              className={`px-6 py-2 border transition-all duration-300 ${
+              className={`px-6 py-2 border transition-all duration-300 cursor-target ${
                 activeFilter === category
                   ? "text-chart-1 border-[#00FFD1]"
                   : "bg-muted text-muted-foreground shadow-lg border-white/20 hover:border-[#00FFD1]/50 hover:text-foreground"
@@ -67,7 +107,7 @@ const ProjectsSection = () => {
           {filteredProjects.map((project) => (
             <div
               key={project.id}
-              className="group bg-muted border border-white/10 overflow-hidden hover:border-[#00FFD1]/30 transition-all duration-500 hover:-translate-y-2"
+              className="group bg-muted border border-white/10 overflow-hidden hover:border-[#00FFD1]/30 transition-all duration-500 hover:-translate-y-2 cursor-target"
             >
               {/* Project Image */}
               <div className="relative overflow-hidden">
@@ -104,7 +144,7 @@ const ProjectsSection = () => {
               <div className="p-6">
                 <div className="mb-3">
                   <span
-                    className={`inline-block px-3 py-1 text-sm font-medium border ${
+                    className={`inline-block px-3 py-1 text-sm font-medium border cursor-target ${
                       project.category === "Design"
                         ? "border-purple-500 text-purple-400"
                         : project.category === "Dev"
@@ -131,7 +171,7 @@ const ProjectsSection = () => {
                   {project.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="px-2 py-1 bg-white/10 text-muted-foreground text-xs border border-white/20"
+                      className="px-2 py-1 bg-white/10 text-muted-foreground text-xs border border-chart-1"
                     >
                       {tag}
                     </span>
@@ -141,7 +181,7 @@ const ProjectsSection = () => {
                 {/* View Project Button */}
                 <button
                   onClick={() => handleProjectClick(project)}
-                  className="w-full btn-secondary ring-2 ring-ring text-center justify-center"
+                  className="w-full btn-secondary text-foreground ring-2 ring-ring text-center justify-center"
                 >
                   View Project Details
                 </button>
@@ -158,34 +198,37 @@ const ProjectsSection = () => {
                 "Loading more projects... This would load additional projects"
               )
             }
-            className="btn-primary bg-chart-1"
+            className="btn-primary bg-chart-1 text-foreground"
           >
             Load More Projects
           </button>
         </div>
 
         {/* Project Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 pt-16 border-t border-white/10">
+        <div
+           ref={statsRef} 
+          className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 pt-16 border-t border-white/10"
+        >
           <div className="text-center">
-            <div className="text-3xl font-bold text-chart-1 mb-2">
+            <div className="text-3xl font-bold text-chart-1 mb-2 stats-value">
               {projects.length}
             </div>
             <div className="text-muted-foreground">Total Projects</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-chart-1 mb-2">
+            <div className="text-3xl font-bold text-chart-1 mb-2 stats-value">
               {projects.filter((p) => p.featured).length}
             </div>
             <div className="text-muted-foreground">Featured Works</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-chart-1 mb-2">
+            <div className="text-3xl font-bold text-chart-1 mb-2  stats-value">
               {categories.length - 1}
             </div>
             <div className="text-muted-foreground">Categories</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-chart-1 mb-2">100%</div>
+            <div className="text-3xl font-bold text-chart-1 mb-2  stats-value">100%</div>
             <div className="text-muted-foreground">Client Satisfaction</div>
           </div>
         </div>

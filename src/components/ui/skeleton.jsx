@@ -1,5 +1,7 @@
 import { cn } from "../../lib/utils"
 
+// FIXME find out how to use skeleton
+
 function Skeleton({
   className,
   ...props

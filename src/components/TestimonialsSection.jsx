@@ -3,102 +3,98 @@ import ChromaGrid from "./react-ui/ChromaGrid";
 const items = [
   {
     image: "https://i.pravatar.cc/300?img=1",
-    title: "Sarah Johnson",
+    title: "Ava Martinez",
     subtitle:
-      "Working with Javi Jason was an absolute pleasure! They captured every special moment with such creativity and attention to detail. The photos turned out stunning—natural, vibrant, and full of emotion. I couldn’t be happier with the results. Highly recommended!",
-    handle: "@sarahjohnson",
+      "Harrison took our brand from 'meh' to magnetic. The new website not only looks amazing — it converts better, loads faster, and actually reflects who we are. People keep asking who built it. Total game-changer.",
+    handle: "@avamartinez",
     borderColor: "#3B82F6",
     gradient: "linear-gradient(145deg, #3B82F6, #000)",
-    url: "https://github.com/sarahjohnson",
+    url: "https://github.com/avamartinez",
   },
   {
     image: "https://i.pravatar.cc/300?img=2",
-    title: "Mike Chen",
+    title: "Derek Lin",
     subtitle:
-      "5 stars. Javi made magic with the lens. Clean edits, fast delivery, and top-tier quality.",
-    handle: "@mikechen",
+      "We hired Harrison to redesign our SaaS dashboard UI. Not only did he deliver pixel-perfect Figma files ahead of schedule, but he also helped us rethink flows and UX bottlenecks. Usage went up by 23% in the first month post-launch.",
+    handle: "@derekux",
     borderColor: "#10B981",
     gradient: "linear-gradient(180deg, #10B981, #000)",
-    url: "https://linkedin.com/in/mikechen",
+    url: "https://linkedin.com/in/derekux",
   },
   {
-    image: "https://i.pravatar.cc/300?img=1",
-    title: "Sarah Johnson",
+    image: "https://i.pravatar.cc/300?img=3",
+    title: "Jasmine Patel",
     subtitle:
-      "Javi Jason didn’t just take photos—he captured emotions. Every picture from our wedding tells a beautiful story. His calm presence and eye for candid moments made all the difference. We’ll treasure these memories forever",
-    handle: "@sarahjohnson",
-    borderColor: "#3B82F6",
-    gradient: "linear-gradient(145deg, #3B82F6, #000)",
-    url: "https://github.com/sarahjohnson",
+      "What I love about working with Harrison is that he listens. He didn’t just build a site — he built *our* site. The vibe, layout, messaging — all of it was tailored. It feels personal, polished, and pro.",
+    handle: "@jasminemadeit",
+    borderColor: "#8B5CF6",
+    gradient: "linear-gradient(145deg, #8B5CF6, #000)",
+    url: "https://github.com/jasminemadeit",
   },
   {
-    image: "https://i.pravatar.cc/300?img=2",
-    title: "Mike Chen",
+    image: "https://i.pravatar.cc/300?img=4",
+    title: "Leo Turner",
     subtitle:
-      "Working with Javi Jason was seamless from start to finish. He understood our brand vibe instantly and delivered high-quality images that elevated our entire campaign. Professional, punctual, and incredibly talented",
-    handle: "@mikechen",
-    borderColor: "#10B981",
-    gradient: "linear-gradient(180deg, #10B981, #000)",
-    url: "https://linkedin.com/in/mikechen",
+      "We’ve worked with agencies that overpromise and underdeliver. Harrison is the opposite. He’s fast, sharp, and totally dialed into the latest design and dev trends. Our landing page build was smooth and stress-free.",
+    handle: "@leoturner",
+    borderColor: "#EC4899",
+    gradient: "linear-gradient(180deg, #EC4899, #000)",
+    url: "https://linkedin.com/in/leoturner",
   },
   {
-    image: "https://i.pravatar.cc/300?img=1",
-    title: "Sarah Johnson",
+    image: "https://i.pravatar.cc/300?img=5",
+    title: "Nina K.",
     subtitle:
-      "I’ve never felt comfortable in front of a camera until I met Javi. He knows exactly how to bring out your natural vibe. The shots came out 🔥 and I’m still obsessed with the edits",
-    handle: "@sarahjohnson",
-    borderColor: "#3B82F6",
-    gradient: "linear-gradient(145deg, #3B82F6, #000)",
-    url: "https://github.com/sarahjohnson",
+      "Our Webflow site kept breaking. Harrison came in, cleaned up the mess, and gave us a scalable setup with clean CMS collections and zero jank. Wish we found him sooner.",
+    handle: "@ninakdesign",
+    borderColor: "#F59E0B",
+    gradient: "linear-gradient(145deg, #F59E0B, #000)",
+    url: "https://github.com/ninakdesign",
   },
   {
-    image: "https://i.pravatar.cc/300?img=2",
-    title: "Mike Chen",
+    image: "https://i.pravatar.cc/300?img=6",
+    title: "Samuel Osei",
     subtitle:
-      "Javi Jason is a visual storyteller. His attention to lighting, mood, and composition is next level. Every photo feels like a piece of art. Can’t wait to shoot again!",
-    handle: "@mikechen",
-    borderColor: "#10B981",
-    gradient: "linear-gradient(180deg, #10B981, #000)",
-    url: "https://linkedin.com/in/mikechen",
-  },
-  ,
-  {
-    image: "https://i.pravatar.cc/300?img=1",
-    title: "Sarah Johnson",
-    subtitle:
-      "I’ve never felt comfortable in front of a camera until I met Javi. He knows exactly how to bring out your natural vibe. The shots came out 🔥 and I’m still obsessed with the edits",
-    handle: "@sarahjohnson",
-    borderColor: "#3B82F6",
-    gradient: "linear-gradient(145deg, #3B82F6, #000)",
-    url: "https://github.com/sarahjohnson",
+      "Harrison’s brand and logo design helped us finally look like the business we *actually* are. Everything just clicks now — social, web, pitch decks — it’s all cohesive. He’s got an eye, for real.",
+    handle: "@samosei",
+    borderColor: "#EF4444",
+    gradient: "linear-gradient(180deg, #EF4444, #000)",
+    url: "https://linkedin.com/in/samosei",
   },
   {
-    image: "https://i.pravatar.cc/300?img=2",
-    title: "Mike Chen",
+    image: "https://i.pravatar.cc/300?img=7",
+    title: "Emily Zhao",
     subtitle:
-      "Javi Jason is a visual storyteller. His attention to lighting, mood, and composition is next level. Every photo feels like a piece of art. Can’t wait to shoot again!",
-    handle: "@mikechen",
-    borderColor: "#10B981",
-    gradient: "linear-gradient(180deg, #10B981, #000)",
-    url: "https://linkedin.com/in/mikechen",
+      "I run a personal brand and needed a site that felt authentic — not corporate. Harrison nailed it. Mobile-first, super clean, and totally on-brand. The whole process was smooth from kickoff to launch.",
+    handle: "@emzhao",
+    borderColor: "#06B6D4",
+    gradient: "linear-gradient(145deg, #06B6D4, #000)",
+    url: "https://github.com/emzhao",
+  },
+  {
+    image: "https://i.pravatar.cc/300?img=8",
+    title: "Carlos Mendes",
+    subtitle:
+      "Working with Harrison was one of the best calls we made. Our product now looks as good as it works. He’s part dev, part designer, part creative strategist — all in one.",
+    handle: "@carloshq",
+    borderColor: "#A855F7",
+    gradient: "linear-gradient(180deg, #A855F7, #000)",
+    url: "https://linkedin.com/in/carloshq",
   },
 ];
+
 
 const TestimonialsSection = () => {
   return (
     <section id="testimonial" className="py-10">
       <div className="max-w-7xl mx-auto px-6 pt-10 lg:px-8">
         <div className="text-center">
-          <h2 className="text-5xl font-bold text-foreground mb-6">
+          <h2 className="text-5xl font-bold text-white mb-6">
             Testi
             <span className="bg-gradient-to-r from-chart-1 to-foreground bg-clip-text text-transparent inline-block">
               Monials
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            A showcase of my latest work spanning design, development, security,
-            and experimental technologies.
-          </p>
         </div>
       </div>
       <div style={{ position: "relative" }}>

@@ -1,23 +1,30 @@
-import Header from "../components/Header";
-import ContactSection from "../components/ContactSection";
-import Footer from "../components/Footer";
-import Dock from "../components/react-ui/Dock";
 import { VscAccount, VscHome, VscSend, VscSettingsGear } from "react-icons/vsc";
 import { ChevronDown } from "lucide-react";
-import TargetCursor from "../components/react-ui/TargetCursor";
+import Beams from "../components/react-ui/Beams";
+import FeaturesGrid from "../components/react-ui/SortableCard";
 
 const features = [
   {
     title: "Logo & Brand Identity",
-    desc: "✔ Custom logos, ✔ color palette, ✔ typography, and brand guidelines.",
+    desc: [
+      "✔ Custom logos",
+      "✔ Color palette",
+      "✔ Typography",
+      "and brand guidelines.",
+    ],
   },
   {
     title: "Marketing Materials",
-    desc: ["✔ Flyers", "✔ brochures", "✔ presentations", "and more for your campaigns."],
+    desc: [
+      "✔ Flyers",
+      "✔ Brochures",
+      "✔ Presentations",
+      "and more for your campaigns.",
+    ],
   },
   {
     title: "Social Media Graphics",
-    desc: ["✔ Branded post templates","✔ story covers", "and ad creatives."],
+    desc: ["✔ Branded post templates", "✔ Story covers", "and ad creatives."],
   },
   {
     title: "Print Design",
@@ -70,43 +77,67 @@ const GraphicsPage = () => {
 
   return (
     <div className="bg-background font-sans">
-      <Header />
-      <Dock items={items} magnification={50} className="border-chart-1" />
-      <TargetCursor spinDuration={2} hideDefaultCursor={true} />
-
       {/* Hero Section */}
       <section
-        className="text-white relative bg-gradient-to-br from-purple-700 via-indigo-900 to-gray-900 py-24 px-6 text-center overflow-hidden min-h-screen flex flex-col justify-center items-center"
+        className="text-white py-24 px-6 text-center overflow-hidden min-h-screen flex flex-col justify-center items-center"
         aria-label="Hero Section"
       >
-        <h2 className="text-5xl lg:text-7xl font-bold lg:leading-[15vh] mb-4">
-          Graphic Design that <br /> Elevates Brands
-        </h2>
-        <p className="text-xl max-w-2xl mx-auto text-gray-300 mb-8">
-          Complete brand identity, logo design, and striking visual solutions
-          tailored for your business.
-        </p>
-        <a
-          href="#contact"
-          className="btn-primary rounded-full text-lg font-semibold transition"
-        >
-          Get Started
-        </a>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <button
-            onClick={scrollToNext}
-            className="text-foreground hover:text-foreground transition-colors duration-300"
-          >
-            <ChevronDown size={32} />
-          </button>
-        </div>
-
         <div
-          className="absolute inset-0 bg-noise opacity-5 pointer-events-none"
-          aria-hidden="true"
-        />
+          className="min-h-screen"
+          style={{
+            width: "100%",
+            height: "600px",
+            position: "absolute",
+            zIndex: 0,
+          }}
+        >
+          <Beams
+            beamWidth={2}
+            beamHeight={15}
+            beamNumber={12}
+            lightColor="#ffffff"
+            speed={2}
+            noiseIntensity={1.75}
+            scale={0.2}
+            rotation={0}
+          />
+        </div>
+        <div className="z-20">
+          <div className="inline-flex items-center px-4 py-2 chart-1/10 border border-[#00FFD1]/20 rounded-full mb-5"> 
+            <div className="w-2 h-2 chart-1 rounded-full animate-pulse mr-3"></div>
+            <span className="text-chart-1 text-sm font-medium">
+              Available for new projects
+            </span>
+          </div>
+          <h2 className="text-5xl lg:text-7xl font-bold lg:leading-[15vh] mb-4">
+            Graphic Design that <br /> Elevates Brands
+          </h2>
+          <p className="text-xl max-w-2xl mx-auto text-gray-300 mb-8">
+            Complete brand identity, logo design, and striking visual solutions
+            tailored for your business.
+          </p>
+          <a
+            href="#contact"
+            className="btn-primary rounded-full text-lg font-semibold transition"
+          >
+            Get Started
+          </a>
+
+          {/* Scroll Indicator */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <button
+              onClick={scrollToNext}
+              className="text-foreground hover:text-foreground transition-colors duration-300"
+            >
+              <ChevronDown size={32} />
+            </button>
+          </div>
+
+          <div
+            className="absolute inset-0 bg-noise opacity-5 pointer-events-none"
+            aria-hidden="true"
+          />
+        </div>
       </section>
 
       {/* What's Included */}
@@ -118,17 +149,7 @@ const GraphicsPage = () => {
         <h2 className="text-4xl font-bold mb-12 text-center">
           What’s Included
         </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-          {features.map((feature) => (
-            <div
-              key={feature.id}
-              className="bg-gray-900 rounded-xl p-6 shadow-lg hover:scale-105 transform transition duration-300"
-            >
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-400">{feature.desc}</p>
-            </div>
-          ))}
-        </div>
+        <FeaturesGrid features={features} />
       </section>
 
       {/* Portfolio */}
@@ -150,7 +171,6 @@ const GraphicsPage = () => {
           ))}
         </div>
       </section>
-
 
       {/* Pricing Section */}
       <section
@@ -177,9 +197,6 @@ const GraphicsPage = () => {
           </a>
         </div>
       </section>
-
-      <ContactSection />
-      <Footer />
     </div>
   );
 };

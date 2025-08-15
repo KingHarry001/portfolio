@@ -1,5 +1,4 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom"; // <-- import
+import { useNavigate } from "react-router-dom"; // <-- import
 import { Palette, Code, Smartphone, Shield, ArrowRight } from "lucide-react";
 import { services } from "../data/mock";
 
@@ -28,7 +27,7 @@ const ServicesSection = () => {
     <section id="services" className="py-20 bg-">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold text-foreground mb-6">
+          <h2 className="text-5xl font-bold text-white mb-6">
             My{" "}
             <span className="bg-gradient-to-r from-chart-1 to-foreground bg-clip-text text-transparent">
               Services

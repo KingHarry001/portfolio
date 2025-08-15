@@ -20,6 +20,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfServices from "./pages/TermsOfServices";
 import TestimonialsSection from "./components/TestimonialsSection";
 import { useEffect } from "react";
+import ScrollToTop from "./components/react-ui/ScrollToTop";
 
 const scrollToSection = (id) => {
   const section = document.getElementById(id);
@@ -86,7 +87,8 @@ const customStyles = `
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #00FFD1;
+    // background: #00FFD1;
+    border: 1px solid #00FFD1;
     border-radius: 4px;
   }
 
@@ -108,10 +110,9 @@ const Portfolio = () => {
 
   return (
     <div className="min-h-screen">
-      <Header />
-      <TargetCursor spinDuration={2} hideDefaultCursor={true} />
+      {/* <Header />
+      <TargetCursor spinDuration={2} hideDefaultCursor={true} /> */}
       <main>
-        <Dock items={items} magnification={50} className="border-chart-1" />
         <div id="home">
           <Hero />
         </div>
@@ -121,9 +122,7 @@ const Portfolio = () => {
         <ProjectsSection />
         <BlogSection />
         <TestimonialsSection />
-        <ContactSection />
       </main>
-      <Footer />
     </div>
   );
 };
@@ -133,6 +132,10 @@ function App() {
     <div className="App">
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       <BrowserRouter>
+        <ScrollToTop />
+        <Header />
+        <TargetCursor spinDuration={2} hideDefaultCursor={true} />
+        <Dock items={items} magnification={50} className="border-chart-1" />
         <Routes>
           <Route path="/" element={<Portfolio />} />
           <Route path="/graphic-design" element={<GraphicsPage />} />
@@ -142,6 +145,8 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfServices />} />
         </Routes>
+        <ContactSection />
+        <Footer />
       </BrowserRouter>
     </div>
   );

@@ -298,3 +298,15 @@ code {
   background: #f0f0f0;
   transform: scale(0.98);
 }
+
+.card-shape {
+  transition: border-radius 0.4s ease, transform 0.3s ease;
+}
+.card-shape:hover {
+  border-radius: 3rem 1rem 3rem 1rem;
+  transform: scale(1.03);
+}
+
+.card-shape:hover {
+  box-shadow: 0 0 15px rgba(0, 255, 209, 0.4), inset 0 0 10px rgba(0, 255, 209, 0.1);
+}

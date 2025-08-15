@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart, Github, Linkedin, Mail, Phone, Instagram } from "lucide-react";
-import { personalInfo, services, socialLinks } from "../data/mock";
+import { personalInfo, socialLinks } from "../data/mock";
+import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
 
   const roles = [
@@ -13,36 +15,36 @@ const Footer = () => {
     "Creator",
   ];
 
-    const [text, setText] = useState("");
-    const [index, setIndex] = useState(0);
-    const [char, setChar] = useState(0);
-    const [deleting, setDeleting] = useState(false);
-  
-    useEffect(() => {
-      const current = roles[index];
-      const isEnd = char === current.length;
-      const isStart = char === 0;
-  
-      const timeout = setTimeout(
-        () => {
-          if (!deleting) {
-            setText(current.substring(0, char + 1));
-            setChar((c) => c + 1);
-            if (isEnd) setDeleting(true);
-          } else {
-            setText(current.substring(0, char - 1));
-            setChar((c) => c - 1);
-            if (isStart) {
-              setDeleting(false);
-              setIndex((prev) => (prev + 1) % roles.length);
-            }
+  const [text, setText] = useState("");
+  const [index, setIndex] = useState(0);
+  const [char, setChar] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = roles[index];
+    const isEnd = char === current.length;
+    const isStart = char === 0;
+
+    const timeout = setTimeout(
+      () => {
+        if (!deleting) {
+          setText(current.substring(0, char + 1));
+          setChar((c) => c + 1);
+          if (isEnd) setDeleting(true);
+        } else {
+          setText(current.substring(0, char - 1));
+          setChar((c) => c - 1);
+          if (isStart) {
+            setDeleting(false);
+            setIndex((prev) => (prev + 1) % roles.length);
           }
-        },
-        isEnd ? 1000 : deleting ? 50 : 100
-      );
-  
-      return () => clearTimeout(timeout);
-    }, [char, deleting, index]);
+        }
+      },
+      isEnd ? 1000 : deleting ? 50 : 100
+    );
+
+    return () => clearTimeout(timeout);
+  }, [char, deleting, index]);
 
   const footerSections = [
     {
@@ -74,12 +76,11 @@ const Footer = () => {
     },
   ];
 
-  const scrollToSection = (href) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const slugify = (text) =>
+    text
+      .toLowerCase()
+      .replace(/[^\w ]+/g, "")
+      .replace(/ +/g, "-");
 
   const handleQuickHire = () => {
     const element = document.querySelector("#contact");
@@ -87,12 +88,6 @@ const Footer = () => {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
-
-  const slugify = (text) =>
-    text
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w\-]+/g, "");
   return (
     <footer className="bg-muted border-t border-white/10">
       {/* Main Footer Content */}
@@ -180,7 +175,7 @@ const Footer = () => {
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
                     <button
-                      onClick={() => handleServiceInquiry(services.title)}
+                      onClick={() => navigate(`/${slugify(link.name)}`)}
                       className="text-muted-foreground hover:text-chart-1 transition-colors duration-300"
                     >
                       {link.name}
@@ -238,10 +233,15 @@ const Footer = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <span>Made with</span>
-              <Heart size={16} className="text-chart-1 animate-pulse" />
-              <span>Nexus dynasty studio</span>
+            <div className="flex items-center gap-2 text-muted-foreground text-sm max-[456px]:text-center">
+              <span>
+                Made with
+                <Heart
+                  size={16}
+                  className="text-chart-1 animate-pulse inline mx-2"
+                />
+                Nexus dynasty studio
+              </span>
             </div>
           </div>
         </div>

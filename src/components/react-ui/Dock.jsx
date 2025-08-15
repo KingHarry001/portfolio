@@ -160,7 +160,7 @@ export default function Dock({
     animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 100 }}
     transition={{ duration: 0.3 }}
     onMouseMove={({ pageX }) => {
-      isHovered.set(1);
+      isHovered.set(0.1);
       mouseX.set(pageX);
     }}
     onMouseLeave={() => {

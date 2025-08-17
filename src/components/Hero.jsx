@@ -4,7 +4,7 @@ import Orb from "./react-ui/Orb";
 const Hero = () => {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const fullText ="Hello World";
+  const fullText = "Hello World";
 
   useEffect(() => {
     if (currentIndex < fullText.length) {
@@ -17,7 +17,7 @@ const Hero = () => {
   }, [currentIndex, fullText]);
 
   return (
-    <div className="h-screen w-full relative">
+    <div id="hero" className="h-screen w-full relative">
       <Orb
         hoverIntensity={0.5}
         rotateOnHover={true}

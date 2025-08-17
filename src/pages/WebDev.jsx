@@ -84,7 +84,7 @@ const WebDev = () => {
         {/* CardSwap Section */}
         <div className="min-h-screen w-full relative">
           <div className="text-left">
-            <h2 className="text-5xl lg:text-[20vh] font-bold max-[460px]:leading-[8vh]">
+            <h2 className="text-5xl lg:text-[20vh] font-bold max-[460px]:leading-[8vh] text-chart-1">
               <span className="block my-2">Our</span>
               <span className="block my-2">Winning</span>
               <span className="block my-2">Edge</span>
@@ -119,12 +119,12 @@ const WebDev = () => {
                 }}
               >
                 <div className="text-left p-4 border-solid border-stone-100">
-                  <h3>Seo Optimized</h3>
+                  <h3 className="text-chart-1 font-bold">Seo Optimized</h3>
                 </div>
                 <div className="w-full h-0.5 bg-white" />
                 <div className="w-full h-full px-10 flex flex-col items-center justify-center">
                   <img src={myIcon1} alt="icon" />
-                  <p>
+                  <p className="text-center">
                     Our SEO-centric design approach enhances your online
                     visibility, driving organic traffic by securing prime ranks
                     on Google search.
@@ -146,12 +146,12 @@ const WebDev = () => {
                 }}
               >
                 <div className="text-left p-4 border-solid border-stone-100">
-                  <h3>High-Converting Design</h3>
+                  <h3 className="text-chart-1 font-bold">High-Converting Design</h3>
                 </div>
                 <div className="w-full h-0.5 bg-white" />
                 <div className="w-full h-full px-10 flex flex-col items-center justify-center">
                   <img src={myIcon2} alt="icon" />
-                  <p>
+                  <p className="text-center">
                     Our engaging design techniques drive remarkable increases in
                     conversion rates by compelling visitors to take decisive,
                     intentional action.
@@ -173,12 +173,12 @@ const WebDev = () => {
                 }}
               >
                 <div className="text-left p-4 border-solid border-stone-100">
-                  <h3>Peak Performance on Any Screen</h3>
+                  <h3 className="text-chart-1 font-bold">Peak Performance on Any Screen</h3>
                 </div>
                 <div className="w-full h-0.5 bg-white" />
                 <div className="w-full h-full px-10 flex flex-col items-center justify-center">
                   <img src={myIcon3} alt="icon" />
-                  <p>
+                  <p className="text-center">
                     Our fluid website experience guarantees flawless performance
                     across all screens, from desktops and laptops to tablets and
                     mobile devices.
@@ -200,12 +200,12 @@ const WebDev = () => {
                 }}
               >
                 <div className="text-left p-4 border-solid border-stone-100">
-                  <h3>Fast Turnaround Time</h3>
+                  <h3 className="text-chart-1 font-bold">Fast Turnaround Time</h3>
                 </div>
                 <div className="w-full h-0.5 bg-white" />
                 <div className="w-full h-full px-10 flex flex-col items-center justify-center ">
                   <img src={myIcon4} alt="icon" />
-                  <p>
+                  <p className="text-center">
                     Launch your landing pages swiftly within 7 to 14 days,
                     ensuring fast access to online opportunities without
                     sacrificing quality.
@@ -218,7 +218,7 @@ const WebDev = () => {
 
         {/* Scroller Section */}
         <div className="min-h-screen pt-[5rem]">
-          <h2 className="text-3xl lg:text-6xl font-bold lg:leading-[15vh]">
+          <h2 className="text-3xl lg:text-6xl font-bold lg:leading-[15vh] text-center">
             Specialized in Crafting Brand Defining Hero Sections
           </h2>
           {[
@@ -228,14 +228,15 @@ const WebDev = () => {
           ].map((text, idx) => (
             <div
               key={idx}
-              className="inline-flex items-center px-4 py-2 chart-1/10"
+              className="inline-flex justify-center items-center px-4 py-2"
             >
-              <div className="chart-1 rounded-full animate-pulse mr-3">
+              <div className="rounded-full animate-pulse mr-3">
                 <img src={check} alt="icon" className="w-[30px] h-[30px]" />
               </div>
-              <span className="text-chart-1 text-sm font-medium">{text}</span>
+              <span className="text-sm font-medium">{text}</span>
             </div>
           ))}
+
           <VerticalScroller />
         </div>
 

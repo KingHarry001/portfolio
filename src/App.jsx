@@ -58,6 +58,10 @@ const items = [
 ];
 
 const customStyles = `
+  body {
+    overflow-x: hidden;
+  }
+
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -110,12 +114,10 @@ const Portfolio = () => {
 
   return (
     <div className="min-h-screen">
-      {/* <Header />
-      <TargetCursor spinDuration={2} hideDefaultCursor={true} /> */}
+      <Dock items={items} magnification={50} className="border-chart-1" />
+      <TargetCursor spinDuration={2} hideDefaultCursor={true} />
       <main>
-        <div id="home">
-          <Hero />
-        </div>
+        <Hero />
         <HeroSection />
         <AboutSection />
         <ServicesSection />
@@ -134,8 +136,6 @@ function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Header />
-        <TargetCursor spinDuration={2} hideDefaultCursor={true} />
-        <Dock items={items} magnification={50} className="border-chart-1" />
         <Routes>
           <Route path="/" element={<Portfolio />} />
           <Route path="/graphic-design" element={<GraphicsPage />} />

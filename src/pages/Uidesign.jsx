@@ -1,16 +1,9 @@
-import React from 'react'
-import Header from '../components/Header'
-import Dock from '../components/react-ui/Dock'
-import ContactSection from '../components/ContactSection'
-import Footer from '../components/Footer'
+import SplashCursor from "../components/react-ui/SlashCursor"
 
 const Uidesign = () => {
   return (
     <div>
-      <Header />
-      <Dock />
-      <ContactSection />
-      <Footer />
+      <SplashCursor />
     </div>
   )
 }

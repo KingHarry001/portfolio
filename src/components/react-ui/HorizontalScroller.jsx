@@ -7,7 +7,7 @@ const images = [check, svg1, svg2, check, svg1, svg2]; // repeat for seamless lo
 
 export default function HorizontalScroller() {
   return (
-    <div className="w-full overflow-hidden relative border border-gray-300">
+    <div className="w-full overflow-hidden relative my-10">
       <div className="flex animate-scroll whitespace-nowrap">
         {images.map((img, i) => (
           <img

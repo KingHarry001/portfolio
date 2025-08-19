@@ -7,7 +7,7 @@ export default {
       fontFamily: {
         bitcount: ['"Bitcount"', "system-ui"],
         azonix: ["Azonix Regular", "sans-serif"],
-        prata: ["Prata", "sans-serif"]
+        prata: ["Prata", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -77,6 +77,9 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      screens: {
+        mobile: { max: "460px" }, // creates `mobile:` prefix
       },
     },
   },

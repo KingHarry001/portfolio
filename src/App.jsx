@@ -88,10 +88,11 @@ const customStyles = `
 
   ::-webkit-scrollbar-track {
     background: #121212;
+    display:none;
   }
 
   ::-webkit-scrollbar-thumb {
-    // background: #00FFD1;
+    background: #00FFD1;
     border: 1px solid #00FFD1;
     border-radius: 4px;
   }
@@ -107,11 +108,6 @@ const customStyles = `
 `;
 
 const Portfolio = () => {
-  useEffect(() => {
-    // Add dark theme by default
-    document.documentElement.classList.add("dark");
-  }, []);
-
   return (
     <div className="min-h-screen">
       <Dock items={items} magnification={50} className="border-chart-1" />
@@ -122,7 +118,7 @@ const Portfolio = () => {
         <AboutSection />
         <ServicesSection />
         <ProjectsSection />
-        <BlogSection />
+        {/* <BlogSection /> */}
         <TestimonialsSection />
       </main>
     </div>

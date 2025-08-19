@@ -244,7 +244,7 @@ const Footer = () => {
             {/* Brand & Description */}
             <div ref={heroRef} className="lg:col-span-1 space-y-6 opacity-0">
               <div>
-                <h3 className="text-2xl font-bold text-foreground mb-2 bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text">
+                <h3 className="text-2xl font-bold  mb-2 bg-gradient-to-r from-chart-1 to-gray-300 bg-clip-text text-transparent">
                   {personalInfo.name}
                 </h3>
                 <h2 className="relative text-left text-xl text-muted-foreground font-medium mb-4">

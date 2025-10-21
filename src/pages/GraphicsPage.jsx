@@ -18,7 +18,7 @@ import Nexus4 from "../assets/nexus4.png";
 
 const features = [
   {
-    title: "Logo & Brand Identity",
+    title: "Logo & Brand Identity.",
     desc: [
       "✔ Custom logos",
       "✔ Color palette",

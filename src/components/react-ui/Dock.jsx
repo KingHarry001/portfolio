@@ -52,7 +52,7 @@ function DockItem({
       onHoverStart={() => isHovered.set(1)}
       onHoverEnd={() => isHovered.set(0)}
       onClick={onClick}
-      className={`relative inline-flex items-center justify-center rounded-full border-chart-1 border-2 shadow-md ${className}`}
+      className={`relative inline-flex items-center justify-center rounded-full border-chart-1 border-2 shadow-lg hover:shadow-chart-1/50 transition-shadow cursor-pointer ${className}`}
       tabIndex={0}
       role="button"
     >
@@ -76,15 +76,17 @@ function DockLabel({ children, className = "", isHovered }) {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: 0 }}
-          animate={{ opacity: 1, y: -10 }}
-          exit={{ opacity: 0, y: 0 }}
+          initial={{ opacity: 0, y: 0, scale: 0.8 }}
+          animate={{ opacity: 1, y: -10, scale: 1 }}
+          exit={{ opacity: 0, y: 0, scale: 0.8 }}
           transition={{ duration: 0.2 }}
-          className={`${className} absolute -top-6 left-1/2 w-fit whitespace-pre rounded-md border border-chart-1 bg-chart-1 px-2 py-0.5 text-xs text-white`}
+          className={`${className} absolute -top-8 left-1/2 w-fit whitespace-pre rounded-lg border border-chart-1/50 bg-gray-900/95 backdrop-blur-md px-3 py-1.5 text-xs font-medium text-white shadow-xl`}
           role="tooltip"
           style={{ x: "-50%" }}
         >
           {children}
+          {/* Tooltip arrow */}
+          <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 bg-gray-900/95 border-r border-b border-chart-1/50 rotate-45"></div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -94,7 +96,7 @@ function DockLabel({ children, className = "", isHovered }) {
 // Icon Container
 function DockIcon({ children, className = "" }) {
   return (
-    <div className={`flex items-center justify-center text-chart-1 ${className}`}>
+    <div className={`flex items-center justify-center text-chart-1 transition-transform hover:scale-110 ${className}`}>
       {children}
     </div>
   );
@@ -105,7 +107,7 @@ export default function Dock({
   items = [],
   className = "",
   spring = { mass: 0.1, stiffness: 150, damping: 12 },
-  magnification = 0,
+  magnification = 60,
   distance = 200,
   panelHeight = 64,
   dockHeight = 256,
@@ -147,48 +149,50 @@ export default function Dock({
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeoutRef.current);
+    };
   }, []);
 
   return (
- <motion.div
-  style={{ height, scrollbarWidth: "none" }}
-  className="w-full fixed bottom-4 flex justify-center items-center pointer-events-none z-50 sm:hidden"
->
-  <motion.div
-    initial={{ opacity: 1, y: 0 }}
-    animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 100 }}
-    transition={{ duration: 0.3 }}
-    onMouseMove={({ pageX }) => {
-      isHovered.set(0.1);
-      mouseX.set(pageX);
-    }}
-    onMouseLeave={() => {
-      isHovered.set(0);
-      mouseX.set(Infinity);
-    }}
-    className={`${className} pointer-events-auto transform flex items-center w-fit gap-4 rounded-2xl border-chart-1 bg-gray-400 bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 border-2 pb-2 px-4`}
-    style={{ height: panelHeight }}
-    role="toolbar"
-    aria-label="Application dock"
-  >
-    {items.map((item, index) => (
-      <DockItem
-        key={index}
-        onClick={item.onClick}
-        className={item.className}
-        mouseX={mouseX}
-        spring={spring}
-        distance={distance}
-        magnification={magnification}
-        baseItemSize={baseItemSize}
+    <motion.div
+      style={{ height, scrollbarWidth: "none" }}
+      className="w-full fixed bottom-4 flex justify-center items-center pointer-events-none z-50 hidden md:flex"
+    >
+      <motion.div
+        initial={{ opacity: 1, y: 0 }}
+        animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 100 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        onMouseMove={({ pageX }) => {
+          isHovered.set(0.1);
+          mouseX.set(pageX);
+        }}
+        onMouseLeave={() => {
+          isHovered.set(0);
+          mouseX.set(Infinity);
+        }}
+        className={`${className} pointer-events-auto transform flex items-center w-fit gap-4 rounded-2xl border-chart-1 bg-gray-900/40 bg-clip-padding backdrop-filter backdrop-blur-xl bg-opacity-10 border-2 pb-2 px-4 shadow-2xl hover:bg-gray-900/50 transition-colors`}
+        style={{ height: panelHeight }}
+        role="toolbar"
+        aria-label="Application dock"
       >
-        <DockIcon>{item.icon}</DockIcon>
-        <DockLabel isHovered={isHovered}>{item.label}</DockLabel>
-      </DockItem>
-    ))}
-  </motion.div>
-</motion.div>
-
+        {items.map((item, index) => (
+          <DockItem
+            key={index}
+            onClick={item.onClick}
+            className={item.className}
+            mouseX={mouseX}
+            spring={spring}
+            distance={distance}
+            magnification={magnification}
+            baseItemSize={baseItemSize}
+          >
+            <DockIcon>{item.icon}</DockIcon>
+            <DockLabel isHovered={isHovered}>{item.label}</DockLabel>
+          </DockItem>
+        ))}
+      </motion.div>
+    </motion.div>
   );
 }

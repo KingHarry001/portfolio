@@ -11,7 +11,7 @@ export const personalInfo = {
   location: "Lagos, Nigeria",
   email: "kingharrisonariwodo@gmail.com",
   phone: "(+234) 903 816 3213",
-  // profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"
+  profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"
 };
 
 export const socialLinks = {
@@ -91,18 +91,33 @@ export const services = [
   },
   {
     id: 4,
-    title: "Security Consulting",
+    title: "cybersecurity",
     description:
       "Basic cybersecurity setup and consultation for small businesses and startups",
     features: [
       "Security Audits",
       "Best Practices Setup",
-      "Consultation",
+      "Security Consultation",
       "Training",
     ],
     startingPrice: "$300",
     duration: "1 week",
     icon: "shield",
+  },
+  {
+    id: 5,
+    title: "App Development",
+    description:
+      "Custom mobile and web applications built to scale your business with modern, user-friendly design and robust functionality.",
+    features: [
+      "Cross-Platform Development",
+      "UI/UX Design",
+      "API Integration",
+      "Performance Optimization",
+    ],
+    startingPrice: "$300",
+    duration: "1 week",
+    icon: "smartphone",
   },
 ];
 
@@ -116,7 +131,7 @@ export const projects = [
       "This premium product showcase website demonstrates the capabilities of the Apple iPhone 15 Pro through immersive 3D visuals and smooth animations. Built with cutting-edge web technologies, it features interactive product demonstrations, detailed specifications, and cinematic presentations that mirror Apple's design philosophy. The site showcases advanced GSAP animations, 3D product renders, and responsive design patterns.",
     category: "Dev",
     tags: ["3D", "UI/UX", "Product Showcase", "Gsap"],
-    image: [apple],
+    image: apple,
     liveUrl: "https://apple-iphone-jet.vercel.app/",
     githubUrl: "https://github.com/KingHarry001/apple-iphone-15-pro",
     featured: true,
@@ -142,9 +157,10 @@ export const projects = [
       "1000+ GitHub stars",
     ],
     gallery: [
+      apple,
       "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&h=600&fit=crop", apple
+      "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&h=600&fit=crop",
     ],
   },
   {
@@ -156,10 +172,9 @@ export const projects = [
       "An elegant photography portfolio that showcases professional work through immersive galleries and smooth interactions. The site features advanced WebGL effects using OGL, sophisticated image lazy loading, and fluid animations that enhance the viewing experience. Built with performance in mind, it delivers stunning visuals while maintaining fast load times and smooth navigation.",
     category: "Dev",
     tags: ["React", "Gsap", "Ogl", "Tailwind CSS"],
-    image:
-      "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=600&h=400&fit=crop",
-    liveUrl: "https://jason-photography-portfoliocr.vercel.app/",
-    githubUrl: "https://github.com/yourusername/jason-photography-portfolio",
+    image: jasonportfolio,
+    liveUrl: "https://jason-photography-portfolio.vercel.app/",
+    githubUrl: "https://github.com/KingHarry001/jason_photography_portfolio",
     featured: true,
     completionDate: "2024-02-15",
     clientName: "Jason Miller Photography",
@@ -183,6 +198,7 @@ export const projects = [
       "Award-winning design recognition",
     ],
     gallery: [
+      jasonportfolio,
       "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&h=600&fit=crop",
@@ -197,10 +213,9 @@ export const projects = [
       "A futuristic gaming platform that bridges the gap between traditional gaming, AI, and blockchain technology. Zentry represents the next evolution of interactive entertainment, featuring a unified play layer that connects different gaming ecosystems. Built with modern web technologies and featuring cutting-edge animations and user interactions.",
     category: "Dev",
     tags: ["Gsap", "Sentry", "React", "Tailwind CSS", "React icons"],
-    image:
-      "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=400&fit=crop",
+    image: zentry,
     liveUrl: "https://zentry-psi.vercel.app/",
-    githubUrl: "https://github.com/yourusername/zentry",
+    githubUrl: "https://github.com/KingHarry001/zentry",
     featured: false,
     completionDate: "2024-01-10",
     clientName: "Zentry Gaming",
@@ -224,6 +239,7 @@ export const projects = [
       "Featured in gaming publications",
     ],
     gallery: [
+      zentry,
       "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1579952363873-27d3bfad9c0d?w=800&h=600&fit=crop",
@@ -238,8 +254,7 @@ export const projects = [
       "A comprehensive estate management platform designed for real estate professionals. Baithak streamlines property management workflows with intuitive listings management, client relationship tools, and detailed analytics. The platform features modern design patterns, smooth animations, and responsive layouts that work seamlessly across all devices.",
     category: "Dev",
     tags: ["Estate", "React", "Gsap", "Tailwind CSS"],
-    image:
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=400&fit=crop",
+    image: baithak,
     liveUrl: "https://baithak-rho.vercel.app/",
     githubUrl: "https://github.com/yourusername/baithak",
     featured: false,
@@ -265,6 +280,7 @@ export const projects = [
       "200+ real estate agents onboarded",
     ],
     gallery: [
+      baithak,
       "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop",
@@ -277,7 +293,7 @@ export const projects = [
       "Experimental AI-powered content generation tool with custom training models.",
     fullDescription:
       "An innovative AI-powered platform that generates high-quality content for various use cases. This experimental project explores the boundaries of artificial intelligence in content creation, featuring custom training models and advanced natural language processing capabilities. The tool demonstrates cutting-edge AI technology with an intuitive user interface.",
-    category: "Experimental",
+    category: "App",
     tags: ["AI", "Machine Learning", "Experimental"],
     image:
       "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop",
@@ -352,6 +368,24 @@ export const projects = [
       "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=600&fit=crop",
     ],
   },
+  {
+  id: 7,
+  title: "Your Mobile App Name",
+  description: "Your app description...",
+  category: "App",
+  tags: ["React Native", "Mobile", "Firebase"],
+  image: "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?w=800&h=600&fit=crop",
+  liveUrl: "https://youtu.be/YOUR_DEMO_VIDEO", // Video demo
+  githubUrl: "https://github.com/yourusername/your-app",
+  featured: true,
+  gallery: [
+      "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=600&fit=crop",
+    ],
+  // Add a note in fullDescription
+  fullDescription: "...Download APK: [link] or watch demo video...",
+},
 ];
 
 export const blogPosts = [

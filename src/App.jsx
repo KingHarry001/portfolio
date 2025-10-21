@@ -47,7 +47,7 @@ const items = [
   },
   {
     icon: <span className="material-symbols-outlined">work_history</span>,
-    label: "Gallery",
+    label: "Projects",
     onClick: () => scrollToSection("projects"),
   },
   {

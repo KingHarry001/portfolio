@@ -5,11 +5,16 @@ export default function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth", // can be 'smooth' if you want
-    });
+    // Check if screen width is greater than mobile breakpoint (768px)
+    const isMobile = window.innerWidth < 768;
+    
+    if (!isMobile) {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "smooth",
+      });
+    }
   }, [pathname]);
 
   return null;

@@ -20,8 +20,14 @@ import { projects } from "../data/mock";
 const ProjectModal = ({ project, isOpen, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const modalRef = useRef();
-
   const [touchStartX, setTouchStartX] = useState(0);
+
+  // Reset image index when modal opens with new project
+  useEffect(() => {
+    if (isOpen && project) {
+      setCurrentImageIndex(0);
+    }
+  }, [isOpen, project]);
 
   const handleTouchStart = (e) => {
     setTouchStartX(e.touches[0].clientX);
@@ -29,11 +35,14 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
 
   const handleTouchEnd = (e) => {
     const touchEndX = e.changedTouches[0].clientX;
-    if (touchStartX - touchEndX > 50) {
-      nextImage(); // swipe left → next
-    }
-    if (touchEndX - touchStartX > 50) {
-      prevImage(); // swipe right → previous
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        nextImage();
+      } else {
+        prevImage();
+      }
     }
   };
 
@@ -49,25 +58,35 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
         }
       };
 
+      const handleKeyNavigation = (e) => {
+        if (e.key === "ArrowLeft") {
+          prevImage();
+        } else if (e.key === "ArrowRight") {
+          nextImage();
+        }
+      };
+
       document.addEventListener("keydown", handleEscape);
+      document.addEventListener("keydown", handleKeyNavigation);
 
       return () => {
         document.body.style.overflow = originalStyle;
         document.removeEventListener("keydown", handleEscape);
+        document.removeEventListener("keydown", handleKeyNavigation);
       };
     }
   }, [isOpen, onClose]);
 
   const nextImage = () => {
-    console.log("nextImage called, current index:", currentImageIndex);
-    console.log("Gallery length:", project.gallery?.length);
-    setCurrentImageIndex((prev) =>
+    if (!project?.gallery) return;
+    setCurrentImageIndex((prev) => 
       prev === project.gallery.length - 1 ? 0 : prev + 1
     );
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) =>
+    if (!project?.gallery) return;
+    setCurrentImageIndex((prev) => 
       prev === 0 ? project.gallery.length - 1 : prev - 1
     );
   };
@@ -103,42 +122,55 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
           <div className="relative">
             {/* Image Gallery */}
             <div
-              className="relative h-80 overflow-hidden"
+              className="relative h-80 overflow-hidden bg-black"
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
               <img
+                key={currentImageIndex}
                 src={project.gallery[currentImageIndex]}
                 alt={`${project.title} - Image ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-opacity duration-300"
               />
 
               {project.gallery.length > 1 && (
                 <>
                   <button
-                    onClick={prevImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/30 backdrop-blur-sm text-white rounded-full hover:bg-black/50 transition-all duration-300"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prevImage();
+                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/30 backdrop-blur-sm text-white rounded-full hover:bg-black/50 transition-all duration-300 z-10"
+                    aria-label="Previous image"
                   >
-                    <ChevronLeft size={20} />
+                    <ChevronLeft size={24} />
                   </button>
                   <button
-                    onClick={nextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/30 backdrop-blur-sm text-white rounded-full hover:bg-black/50 transition-all duration-300"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      nextImage();
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/30 backdrop-blur-sm text-white rounded-full hover:bg-black/50 transition-all duration-300 z-10"
+                    aria-label="Next image"
                   >
-                    <ChevronRight size={20} />
+                    <ChevronRight size={24} />
                   </button>
 
                   {/* Image indicators */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                     {project.gallery.map((_, index) => (
                       <button
                         key={index}
-                        onClick={() => setCurrentImageIndex(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImageIndex(index);
+                        }}
                         className={`w-2 h-2 rounded-full transition-all duration-300 ${
                           index === currentImageIndex
-                            ? "bg-white"
-                            : "bg-white/40"
+                            ? "bg-white w-8"
+                            : "bg-white/40 hover:bg-white/75"
                         }`}
+                        aria-label={`Go to image ${index + 1}`}
                       />
                     ))}
                   </div>
@@ -146,7 +178,7 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
               )}
 
               {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
               {/* Project badges */}
               <div className="absolute top-4 left-4 flex gap-2">
@@ -164,12 +196,21 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                       ? "from-blue-500 to-cyan-500"
                       : project.category === "Security"
                       ? "from-red-500 to-orange-500"
+                      : project.category === "App"
+                      ? "from-red-500 to-orange-500"
                       : "from-green-500 to-emerald-500"
                   }`}
                 >
                   {project.category}
                 </span>
               </div>
+
+              {/* Image counter */}
+              {project.gallery.length > 1 && (
+                <div className="absolute top-4 right-16 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
+                  {currentImageIndex + 1} / {project.gallery.length}
+                </div>
+              )}
             </div>
           </div>
 
@@ -185,12 +226,12 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
               </p>
 
               {/* Action Buttons */}
-              <div className="flex gap-4 w-full">
+              <div className="flex gap-4 w-full flex-wrap">
                 <a
                   href={project.liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-chart-1 to-purple-500 text-white mobile: rounded-2xl font-medium hover:shadow-lg hover:shadow-chart-1/25 transition-all duration-300 sm:flex-1"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-chart-1 to-purple-500 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-chart-1/25 transition-all duration-300"
                 >
                   <ExternalLink size={18} />
                   View Live Project
@@ -200,7 +241,7 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                     href={project.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 py-3 bg-card/50 border border-border/50 text-muted-foreground sm:rounded-full font-medium hover:border-chart-1/50 hover:text-chart-1 transition-all duration-300 mobile: rounded-2xl sm:flex-1"
+                    className="flex items-center gap-2 px-6 py-3 bg-card/50 border border-border/50 text-muted-foreground rounded-2xl font-medium hover:border-chart-1/50 hover:text-chart-1 transition-all duration-300"
                   >
                     <Github size={18} />
                     View Code
@@ -230,7 +271,7 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                   <span className="font-medium text-foreground">Team Size</span>
                 </div>
                 <p className="text-muted-foreground">
-                  {project.teamSize} members
+                  {project.teamSize} {project.teamSize === 1 ? 'member' : 'members'}
                 </p>
               </div>
 
@@ -338,9 +379,10 @@ const ProjectsSection = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const categories = ["All", "Design", "Dev", "Security", "Experimental"];
+  const categories = ["All", "App", "Design", "Dev", "Security", "Experimental"];
 
   const categoryColors = {
+    App: "from-green-500 to-emerald-500",
     Design: "from-purple-500 to-pink-500",
     Dev: "from-blue-500 to-cyan-500",
     Security: "from-red-500 to-orange-500",

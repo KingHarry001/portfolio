@@ -28,7 +28,7 @@ const Hero = () => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-screen flex flex-col items-center justify-center">
         <h1 className=" text-7xl font-azonix Azonix-Regular cursor-target text-center font-bold animate-pulse bg-gradient-to-r from-[#9c43fe] via-[#4cc2e9] to-[#1014cc] bg-clip-text text-transparent">
           {displayText}
-          {/* <span className="animate-pulse">|</span> */}
+          <span className="animate-pulse">|</span>
         </h1>
       </div>
     </div>

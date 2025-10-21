@@ -119,7 +119,7 @@ const WebDev = () => {
                 }}
               >
                 <div className="text-left p-4 border-solid border-stone-100">
-                  <h3 className="text-chart-1 font-bold">Seo Optimized</h3>
+                  <h3 className="font-bold">Seo Optimized</h3>
                 </div>
                 <div className="w-full h-0.5 bg-white" />
                 <div className="w-full h-full px-10 flex flex-col items-center justify-center">
@@ -146,7 +146,7 @@ const WebDev = () => {
                 }}
               >
                 <div className="text-left p-4 border-solid border-stone-100">
-                  <h3 className="text-chart-1 font-bold">High-Converting Design</h3>
+                  <h3 className="font-bold">High-Converting Design</h3>
                 </div>
                 <div className="w-full h-0.5 bg-white" />
                 <div className="w-full h-full px-10 flex flex-col items-center justify-center">
@@ -173,7 +173,7 @@ const WebDev = () => {
                 }}
               >
                 <div className="text-left p-4 border-solid border-stone-100">
-                  <h3 className="text-chart-1 font-bold">Peak Performance on Any Screen</h3>
+                  <h3 className="font-bold">Peak Performance on Any Screen</h3>
                 </div>
                 <div className="w-full h-0.5 bg-white" />
                 <div className="w-full h-full px-10 flex flex-col items-center justify-center">
@@ -200,7 +200,7 @@ const WebDev = () => {
                 }}
               >
                 <div className="text-left p-4 border-solid border-stone-100">
-                  <h3 className="text-chart-1 font-bold">Fast Turnaround Time</h3>
+                  <h3 className="font-bold">Fast Turnaround Time</h3>
                 </div>
                 <div className="w-full h-0.5 bg-white" />
                 <div className="w-full h-full px-10 flex flex-col items-center justify-center ">

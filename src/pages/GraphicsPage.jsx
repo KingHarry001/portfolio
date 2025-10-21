@@ -11,10 +11,10 @@ import {
   MapPin,
 } from "lucide-react";
 import InfiniteScroll from "../components/react-ui/InfiniteScroll";
-import Nexus1 from "../assets/nexus1.png";
-import Nexus2 from "../assets/nexus2.png";
-import Nexus3 from "../assets/nexus3.png";
-import Nexus4 from "../assets/nexus4.png";
+import Nexus1 from "../assets/Nexus1.png";
+import Nexus2 from "../assets/Nexus2.png";
+import Nexus3 from "../assets/Nexus3.png";
+import Nexus4 from "../assets/Nexus4.png";
 
 const features = [
   {

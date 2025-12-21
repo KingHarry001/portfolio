@@ -77,12 +77,12 @@ const Header = () => {
     {
       name: "Services",
       href: "#services",
-      children: [
-        { name: "Graphics", href: "/graphic-design" },
-        { name: "Web Development", href: "/web-development" },
-        { name: "UI/UX Design", href: "/uiux-design" },
-        { name: "Security Consulting", href: "/security-consulting" },
-      ],
+      // children: [
+      //   { name: "Graphics", href: "/graphic-design" },
+      //   { name: "Web Development", href: "/web-development" },
+      //   { name: "UI/UX Design", href: "/uiux-design" },
+      //   { name: "Security Consulting", href: "/security-consulting" },
+      // ],
     },
     { name: "Projects", href: "#projects" },
     { name: "Blog", href: "#blog" },

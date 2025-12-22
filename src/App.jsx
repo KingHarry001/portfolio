@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./index.css";
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
 import AboutSection from "./components/AboutSection";
@@ -8,7 +9,6 @@ import BlogSection from "./components/BlogSection";
 import ContactSection from "./components/ContactSection";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
-import "./index.css";
 import { VscHome, VscAccount, VscSettingsGear, VscSend } from "react-icons/vsc";
 import Dock from "./components/react-ui/Dock";
 import TargetCursor from "./components/react-ui/TargetCursor";
@@ -21,6 +21,8 @@ import TermsOfServices from "./pages/TermsOfServices";
 import TestimonialsSection from "./components/TestimonialsSection";
 import { useEffect } from "react";
 import ScrollToTop from "./components/react-ui/ScrollToTop";
+import HireMeButton from "./components/HireMe";
+// import HireMeButton from './components/HireMeButton';
 
 const scrollToSection = (id) => {
   const section = document.getElementById(id);
@@ -142,6 +144,7 @@ function App() {
           <Route path="/terms-of-service" element={<TermsOfServices />} />
         </Routes>
         <ContactSection />
+        <HireMeButton />
         <Footer />
       </BrowserRouter>
     </div>

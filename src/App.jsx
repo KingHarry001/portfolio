@@ -22,6 +22,7 @@ import TestimonialsSection from "./components/TestimonialsSection";
 import { useEffect } from "react";
 import ScrollToTop from "./components/react-ui/ScrollToTop";
 import HireMeButton from "./components/HireMe";
+import AppStore from "./pages/AppStore";
 // import HireMeButton from './components/HireMeButton';
 
 const scrollToSection = (id) => {
@@ -142,9 +143,10 @@ function App() {
           <Route path="/security-consulting" element={<CyberSec />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfServices />} />
+          <Route path="/apps" element={<AppStore />} />
         </Routes>
         <ContactSection />
-        <HireMeButton />
+        {/* <HireMeButton /> */}
         <Footer />
       </BrowserRouter>
     </div>

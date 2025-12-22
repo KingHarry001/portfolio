@@ -15,7 +15,9 @@ import {
   ChevronRight,
   Clock,
 } from "lucide-react";
-import { projects } from "../data/mock";
+// UPDATED: Import from Supabase hook instead of mock data
+import { useProjects } from "../hooks/useSupabase";
+
 
 const ProjectModal = ({ project, isOpen, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -374,10 +376,13 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
 
 const ProjectsSection = () => {
   const [activeFilter, setActiveFilter] = useState("All");
-  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [filteredProjects, setFilteredProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // UPDATED: Fetch projects from Supabase
+  const { data: projects, loading: projectsLoading, error: projectsError } = useProjects();
 
   const categories = ["All", "App", "Design", "Dev", "Security", "Experimental"];
 
@@ -389,16 +394,23 @@ const ProjectsSection = () => {
     Experimental: "from-green-500 to-emerald-500",
   };
 
+  // UPDATED: Initialize filtered projects when data loads
+  useEffect(() => {
+    if (projects) {
+      setFilteredProjects(projects);
+    }
+  }, [projects]);
+
   const handleFilterChange = (category) => {
     setIsLoading(true);
     setActiveFilter(category);
 
     setTimeout(() => {
       if (category === "All") {
-        setFilteredProjects(projects);
+        setFilteredProjects(projects || []);
       } else {
         setFilteredProjects(
-          projects.filter((project) => project.category === category)
+          (projects || []).filter((project) => project.category === category)
         );
       }
       setIsLoading(false);
@@ -414,6 +426,53 @@ const ProjectsSection = () => {
     setIsModalOpen(false);
     setTimeout(() => setSelectedProject(null), 300);
   };
+
+  // UPDATED: Show loading state
+  if (projectsLoading) {
+    return (
+      <section className="relative py-20 bg-background overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-chart-1 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading projects...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // UPDATED: Show error state
+  if (projectsError) {
+    return (
+      <section className="relative py-20 bg-background overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <p className="text-red-500 mb-4">Error loading projects</p>
+              <p className="text-muted-foreground">{projectsError}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // UPDATED: Show empty state
+  if (!projects || projects.length === 0) {
+    return (
+      <section className="relative py-20 bg-background overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center py-20">
+            <Code2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-foreground mb-2">No Projects Yet</h3>
+            <p className="text-muted-foreground">Check back soon for amazing projects!</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -569,7 +628,7 @@ const ProjectsSection = () => {
 
                 {/* Project Tags */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {project.tags.slice(0, 3).map((tag, tagIndex) => (
+                  {project.tags && project.tags.slice(0, 3).map((tag, tagIndex) => (
                     <span
                       key={tagIndex}
                       className="px-2.5 py-1 bg-gradient-to-r from-chart-1/10 to-purple-500/10 border border-chart-1/20 text-chart-1 text-xs font-medium rounded-full"
@@ -577,7 +636,7 @@ const ProjectsSection = () => {
                       {tag}
                     </span>
                   ))}
-                  {project.tags.length > 3 && (
+                  {project.tags && project.tags.length > 3 && (
                     <span className="px-2.5 py-1 bg-muted/50 text-muted-foreground text-xs font-medium rounded-full">
                       +{project.tags.length - 3}
                     </span>
@@ -615,12 +674,12 @@ const ProjectsSection = () => {
           </button>
         </div>
 
-        {/* Project Statistics */}
+        {/* Project Statistics - UPDATED to use dynamic data */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-16 border-t border-border/50">
           <div className="text-center group">
             <div className="relative">
               <div className="text-4xl font-bold text-chart-1 mb-2">
-                {projects.length}
+                {projects?.length || 0}
               </div>
               <div className="absolute -inset-2 bg-chart-1/5 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
@@ -632,7 +691,7 @@ const ProjectsSection = () => {
           <div className="text-center group">
             <div className="relative">
               <div className="text-4xl font-bold text-chart-1 mb-2">
-                {projects.filter((p) => p.featured).length}
+                {projects?.filter((p) => p.featured).length || 0}
               </div>
               <div className="absolute -inset-2 bg-chart-1/5 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>

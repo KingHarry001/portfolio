@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Moon, Sun, Menu, X } from "lucide-react";
 import { personalInfo } from "../../data/mock";
-import ThemeToggle from "../react-ui/ThemeToggle";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
@@ -86,12 +85,6 @@ const Header = () => {
     {
       name: "Services",
       href: "#services",
-      // children: [
-      //   { name: "Graphics", href: "/graphic-design" },
-      //   { name: "Web Development", href: "/web-development" },
-      //   { name: "UI/UX Design", href: "/uiux-design" },
-      //   { name: "Security Consulting", href: "/security-consulting" },
-      // ],
     },
     { name: "Projects", href: "#projects" },
     { name: "Blog", href: "#blog" },
@@ -148,21 +141,33 @@ const Header = () => {
     return location.pathname === child.href;
   };
 
+  // Function to open theme modal using global state
+  const handleOpenThemeModal = () => {
+    if (typeof window !== 'undefined' && window.openThemeModal) {
+      window.openThemeModal();
+    }
+  };
+
   return (
     <header
-      className={`fixed top-0 w-full z-50 transition-all duration-500 ease-out ${
+      className={`fixed top-0 w-full transition-all duration-500 ease-out ${
         isScrolled
           ? "bg-background/90 text-foreground backdrop-blur-xl border-b border-white/10 shadow-lg"
           : "bg-transparent"
       }`}
+      style={{ zIndex: 40 }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <a href="/admin"
+            <a
+              href="/"
               className="text-2xl font-bold text-foreground hover:text-chart-1 transition-all duration-300 cursor-pointer hover:scale-105 transform"
-              onClick={() => scrollToSection("#hero")}
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection("#hero");
+              }}
             >
               {personalInfo.name
                 .split(" ")
@@ -225,11 +230,12 @@ const Header = () => {
                 {/* Animated Dropdown */}
                 {item.children && (
                   <div
-                    className={`absolute bg-background/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl top-full left-0 mt-3 min-w-[200px] z-50 overflow-hidden transition-all duration-300 ease-out transform origin-top ${
+                    className={`absolute bg-background/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl top-full left-0 mt-3 min-w-[200px] overflow-hidden transition-all duration-300 ease-out transform origin-top ${
                       openDropdown === item.name
                         ? "opacity-100 scale-100 translate-y-0"
                         : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
                     }`}
+                    style={{ zIndex: 50 }}
                     onMouseEnter={() => setOpenDropdown(item.name)}
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
@@ -266,7 +272,24 @@ const Header = () => {
 
           {/* Theme Toggle & Mobile Menu */}
           <div className="flex items-center space-x-4">
-            <ThemeToggle />
+            {/* Theme selector button */}
+            <button 
+              onClick={handleOpenThemeModal}
+              className="p-2 rounded-lg hover:bg-muted transition-colors group"
+              aria-label="Open theme selector"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="currentColor"
+                className="text-foreground group-hover:scale-110 transition-transform"
+                viewBox="0 0 16 16"
+              >
+                <path d="M12.433 10.07C14.133 10.585 16 11.15 16 8a8 8 0 1 0-8 8c1.996 0 1.826-1.504 1.649-3.08-.124-1.101-.252-2.237.351-2.92.465-.527 1.42-.237 2.433.07M8 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m4.5 3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3M5 6.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m.5 6.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+              </svg>
+            </button>
+
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 transform hover:scale-110"

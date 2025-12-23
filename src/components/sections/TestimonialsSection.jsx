@@ -1,20 +1,24 @@
 // src/components/TestimonialsSection.jsx - UPDATED TO USE SUPABASE
 import { useState, useEffect } from "react";
-import { testimonialsAPI } from "../api/supabase";
+import { testimonialsAPI } from "../../api/supabase";
 
 const TestimonialCard = ({ item, isActive }) => {
   return (
     <div
       className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-        isActive ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+        isActive
+          ? "opacity-100 scale-100"
+          : "opacity-0 scale-95 pointer-events-none"
       }`}
     >
       <div className="flex items-center justify-center h-full px-4">
         <article
-          onClick={() => item.url && window.open(item.url, "_blank", "noopener,noreferrer")}
+          onClick={() =>
+            item.url && window.open(item.url, "_blank", "noopener,noreferrer")
+          }
           className="group relative flex flex-col md:flex-row max-w-5xl w-full rounded-3xl overflow-hidden border-2 transition-all duration-500 cursor-pointer hover:scale-[1.02] bg-gradient-to-br from-gray-900 to-black"
           style={{
-            borderColor: '#00FFD1',
+            borderColor: "#00FFD1",
           }}
         >
           {/* Image Section */}
@@ -65,7 +69,9 @@ const TestimonialCard = ({ item, isActive }) => {
                     <svg
                       key={i}
                       className={`w-5 h-5 ${
-                        i < item.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'
+                        i < item.rating
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-600"
                       }`}
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -96,7 +102,7 @@ const TestimonialsSection = () => {
         const data = await testimonialsAPI.getAll();
         setTestimonials(data || []);
       } catch (error) {
-        console.error('Error fetching testimonials:', error);
+        console.error("Error fetching testimonials:", error);
       } finally {
         setLoading(false);
       }
@@ -108,7 +114,7 @@ const TestimonialsSection = () => {
   // Auto-rotate testimonials
   useEffect(() => {
     if (isPaused || testimonials.length === 0) return;
-    
+
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % testimonials.length);
     }, 5000);
@@ -121,7 +127,9 @@ const TestimonialsSection = () => {
   };
 
   const goToPrev = () => {
-    setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    setCurrent(
+      (prev) => (prev - 1 + testimonials.length) % testimonials.length
+    );
   };
 
   const goToNext = () => {
@@ -162,8 +170,12 @@ const TestimonialsSection = () => {
             </h2>
             <div className="py-20">
               <div className="text-6xl mb-4">💬</div>
-              <h3 className="text-2xl font-bold text-white/60 mb-2">No Testimonials Yet</h3>
-              <p className="text-white/40">Check back soon for client reviews!</p>
+              <h3 className="text-2xl font-bold text-white/60 mb-2">
+                No Testimonials Yet
+              </h3>
+              <p className="text-white/40">
+                Check back soon for client reviews!
+              </p>
             </div>
           </div>
         </div>
@@ -180,7 +192,7 @@ const TestimonialsSection = () => {
     >
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/5 to-transparent pointer-events-none" />
-      
+
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
@@ -190,7 +202,9 @@ const TestimonialsSection = () => {
               monials
             </span>
           </h2>
-          <p className="text-white/60 text-lg">What clients say about working with Harrison</p>
+          <p className="text-white/60 text-lg">
+            What clients say about working with Harrison
+          </p>
         </div>
 
         {/* Carousel */}
@@ -211,8 +225,18 @@ const TestimonialsSection = () => {
                 className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300"
                 aria-label="Previous testimonial"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </button>
               <button
@@ -220,8 +244,18 @@ const TestimonialsSection = () => {
                 className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300"
                 aria-label="Next testimonial"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             </>
@@ -257,13 +291,16 @@ const TestimonialsSection = () => {
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-cyan-400 mb-2">
-                {testimonials.filter(t => t.featured).length}
+                {testimonials.filter((t) => t.featured).length}
               </div>
               <div className="text-white/60">Featured Reviews</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-cyan-400 mb-2">
-                {(testimonials.reduce((sum, t) => sum + (t.rating || 5), 0) / testimonials.length).toFixed(1)}
+                {(
+                  testimonials.reduce((sum, t) => sum + (t.rating || 5), 0) /
+                  testimonials.length
+                ).toFixed(1)}
               </div>
               <div className="text-white/60">Avg Rating</div>
             </div>

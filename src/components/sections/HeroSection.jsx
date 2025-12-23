@@ -6,7 +6,7 @@ import React, {
   useMemo,
 } from "react";
 import { ChevronDown, Download, ExternalLink } from "lucide-react";
-import { personalInfo } from "../data/mock";
+import { personalInfo } from "../../data/mock";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Moon, Sun, Menu, X } from "lucide-react";
-import { personalInfo } from "../data/mock";
-import ThemeToggle from "./react-ui/ThemeToggle";
+import { personalInfo } from "../../data/mock";
+import ThemeToggle from "../react-ui/ThemeToggle";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
@@ -15,12 +15,20 @@ const Header = () => {
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
-      
+
       // Only update active section on home page
       if (location.pathname === "/") {
-        const sections = ["hero", "about", "services", "projects", "blog", "testimonial", "contact"];
+        const sections = [
+          "hero",
+          "about",
+          "services",
+          "projects",
+          "blog",
+          "testimonial",
+          "contact",
+        ];
         let currentSection = "";
-        
+
         // Check sections from bottom to top to handle overlapping
         for (let i = sections.length - 1; i >= 0; i--) {
           const section = sections[i];
@@ -28,14 +36,14 @@ const Header = () => {
           if (element) {
             const rect = element.getBoundingClientRect();
             const threshold = window.innerHeight * 0.3; // 30% of viewport
-            
+
             if (rect.top <= threshold) {
               currentSection = `#${section}`;
               break;
             }
           }
         }
-        
+
         if (currentSection && currentSection !== activeSection) {
           setActiveSection(currentSection);
         }
@@ -126,9 +134,9 @@ const Header = () => {
   const isActive = (item) => {
     if (item.children) {
       // Only highlight parent if we're actually on a child route, not on home page sections
-      return item.children.some(child => child.href === location.pathname);
+      return item.children.some((child) => child.href === location.pathname);
     }
-    
+
     if (item.href.startsWith("#")) {
       return location.pathname === "/" && activeSection === item.href;
     } else {
@@ -169,9 +177,7 @@ const Header = () => {
               <div
                 key={item.name}
                 className="relative flex items-center gap-1"
-                onMouseEnter={() =>
-                  item.children && setOpenDropdown(item.name)
-                }
+                onMouseEnter={() => item.children && setOpenDropdown(item.name)}
                 onMouseLeave={() =>
                   item.children && setTimeout(() => setOpenDropdown(null), 300)
                 }
@@ -185,17 +191,17 @@ const Header = () => {
                   }`}
                 >
                   {item.name}
-                  
+
                   {/* Animated underline */}
-                  <span 
+                  <span
                     className={`absolute -bottom-1 left-0 h-0.5 bg-chart-1 rounded-full transition-all duration-300 ease-out ${
-                      isActive(item) 
-                        ? "w-full opacity-100" 
+                      isActive(item)
+                        ? "w-full opacity-100"
                         : "w-0 opacity-0 group-hover:w-full group-hover:opacity-70"
                     }`}
                   ></span>
                 </button>
-                
+
                 {item.children && (
                   <span
                     onClick={(e) => {
@@ -205,11 +211,11 @@ const Header = () => {
                       );
                     }}
                     className={`text-xs cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 ${
-                      isActive(item) 
-                        ? "text-chart-1 rotate-180" 
-                        : openDropdown === item.name 
-                          ? "text-foreground rotate-180"
-                          : "text-muted-foreground hover:text-foreground"
+                      isActive(item)
+                        ? "text-chart-1 rotate-180"
+                        : openDropdown === item.name
+                        ? "text-foreground rotate-180"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     &#9662;
@@ -236,11 +242,12 @@ const Header = () => {
                             ? "text-chart-1 bg-chart-1/20 shadow-inner"
                             : "text-muted-foreground hover:text-foreground hover:bg-white/10"
                         }`}
-                        style={{ 
+                        style={{
                           animationDelay: `${index * 50}ms`,
-                          animation: openDropdown === item.name 
-                            ? `slideInFromTop 0.3s ease-out forwards` 
-                            : 'none'
+                          animation:
+                            openDropdown === item.name
+                              ? `slideInFromTop 0.3s ease-out forwards`
+                              : "none",
                         }}
                       >
                         <div className="flex items-center justify-between">
@@ -264,7 +271,11 @@ const Header = () => {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 transform hover:scale-110"
             >
-              <div className={`transition-transform duration-300 ${isMobileMenuOpen ? 'rotate-90' : ''}`}>
+              <div
+                className={`transition-transform duration-300 ${
+                  isMobileMenuOpen ? "rotate-90" : ""
+                }`}
+              >
                 {isMobileMenuOpen ? (
                   <X size={20} className="text-foreground" />
                 ) : (
@@ -278,19 +289,17 @@ const Header = () => {
         {/* Mobile Navigation */}
         <div
           className={`md:hidden bg-background/95 backdrop-blur-xl border-t border-white/10 transition-all duration-300 ease-out overflow-hidden ${
-            isMobileMenuOpen
-              ? "max-h-screen opacity-100"
-              : "max-h-0 opacity-0"
+            isMobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navItems.map((item, index) => (
-              <div 
+              <div
                 key={item.name}
                 className={`transition-all duration-300 ease-out transform ${
-                  isMobileMenuOpen 
-                    ? 'translate-x-0 opacity-100' 
-                    : '-translate-x-4 opacity-0'
+                  isMobileMenuOpen
+                    ? "translate-x-0 opacity-100"
+                    : "-translate-x-4 opacity-0"
                 }`}
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
@@ -308,7 +317,7 @@ const Header = () => {
                       <span className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-chart-1 rounded-r-full"></span>
                     )}
                   </button>
-                  
+
                   {item.children && (
                     <span
                       onClick={() =>
@@ -319,7 +328,9 @@ const Header = () => {
                       className={`px-3 py-2 cursor-pointer transition-all duration-300 transform hover:scale-110 ${
                         openDropdown === item.name ? "rotate-180" : ""
                       } ${
-                        isActive(item) ? "text-chart-1" : "text-muted-foreground"
+                        isActive(item)
+                          ? "text-chart-1"
+                          : "text-muted-foreground"
                       }`}
                     >
                       ▼
@@ -345,11 +356,12 @@ const Header = () => {
                             ? "text-chart-1 bg-chart-1/20 shadow-inner"
                             : "text-muted-foreground hover:text-foreground hover:bg-white/10"
                         }`}
-                        style={{ 
+                        style={{
                           animationDelay: `${childIndex * 100}ms`,
-                          transform: openDropdown === item.name 
-                            ? 'translateX(0)' 
-                            : 'translateX(-10px)'
+                          transform:
+                            openDropdown === item.name
+                              ? "translateX(0)"
+                              : "translateX(-10px)",
                         }}
                       >
                         <div className="flex items-center justify-between">
@@ -367,7 +379,7 @@ const Header = () => {
           </div>
         </div>
       </div>
-      
+
       <style jsx>{`
         @keyframes slideInFromTop {
           from {

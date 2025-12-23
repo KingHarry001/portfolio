@@ -1,10 +1,10 @@
 // src/components/AboutSection.jsx - UPDATED TO USE SUPABASE
 import React, { useEffect, useRef, useState } from "react";
 import { Code, Palette, Shield, Zap, Award, TrendingUp } from "lucide-react";
-import { personalInfo } from "../data/mock";
+import { personalInfo } from "../../data/mock";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { skillsAPI, certificationsAPI } from "../api/supabase";
+import { skillsAPI, certificationsAPI } from "../../api/supabase";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,7 +12,7 @@ const AboutSection = () => {
   const [skills, setSkills] = useState([]);
   const [certifications, setCertifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const sectionRef = useRef(null);
   const aboutTextRef = useRef(null);
   const profileImageRef = useRef(null);
@@ -26,12 +26,12 @@ const AboutSection = () => {
       try {
         const [skillsData, certsData] = await Promise.all([
           skillsAPI.getAll(),
-          certificationsAPI.getAll()
+          certificationsAPI.getAll(),
         ]);
         setSkills(skillsData || []);
         setCertifications(certsData || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
         // Fallback to mock data if needed
       } finally {
         setLoading(false);
@@ -55,20 +55,20 @@ const AboutSection = () => {
     if (loading) return;
 
     const ctx = gsap.context(() => {
-      gsap.set([aboutTextRef.current, profileImageRef.current], { 
+      gsap.set([aboutTextRef.current, profileImageRef.current], {
         opacity: 0,
-        y: 50 
+        y: 50,
       });
 
-      gsap.set(skillsRef.current?.children || [], { 
-        opacity: 0, 
+      gsap.set(skillsRef.current?.children || [], {
+        opacity: 0,
         y: 60,
-        scale: 0.9
+        scale: 0.9,
       });
 
-      gsap.set([certificationsRef.current, journeyRef.current], { 
-        opacity: 0, 
-        x: -30 
+      gsap.set([certificationsRef.current, journeyRef.current], {
+        opacity: 0,
+        x: -30,
       });
 
       const tl1 = gsap.timeline({
@@ -76,51 +76,60 @@ const AboutSection = () => {
           trigger: sectionRef.current,
           start: "top 80%",
           end: "top 20%",
-          toggleActions: "play none none reverse"
-        }
+          toggleActions: "play none none reverse",
+        },
       });
 
-      tl1.to(aboutTextRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        ease: "power3.out"
-      })
-      .to(profileImageRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        ease: "power3.out",
-        rotate: 360,
-        scale: 1.1
-      }, "-=0.7")
-      .to(profileImageRef.current, {
-        scale: 1,
-        duration: 0.3,
-        ease: "back.out(1.7)"
-      });
+      tl1
+        .to(aboutTextRef.current, {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: "power3.out",
+        })
+        .to(
+          profileImageRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: "power3.out",
+            rotate: 360,
+            scale: 1.1,
+          },
+          "-=0.7"
+        )
+        .to(profileImageRef.current, {
+          scale: 1,
+          duration: 0.3,
+          ease: "back.out(1.7)",
+        });
 
-      gsap.timeline({
-        scrollTrigger: {
-          trigger: skillsRef.current,
-          start: "top 85%",
-          end: "bottom 20%",
-          toggleActions: "play none none reverse"
-        }
-      }).to(skillsRef.current?.children || [], {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.8,
-        stagger: 0.2,
-        ease: "back.out(1.4)"
-      });
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: skillsRef.current,
+            start: "top 85%",
+            end: "bottom 20%",
+            toggleActions: "play none none reverse",
+          },
+        })
+        .to(skillsRef.current?.children || [], {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+          stagger: 0.2,
+          ease: "back.out(1.4)",
+        });
 
-      const skillBars = skillsRef.current?.querySelectorAll('[data-skill-bar]') || [];
+      const skillBars =
+        skillsRef.current?.querySelectorAll("[data-skill-bar]") || [];
       skillBars.forEach((bar, index) => {
-        const targetWidth = bar.getAttribute('data-skill-level');
-        gsap.fromTo(bar, 
-          { width: '0%' },
+        const targetWidth = bar.getAttribute("data-skill-level");
+        gsap.fromTo(
+          bar,
+          { width: "0%" },
           {
             width: `${targetWidth}%`,
             duration: 1.5,
@@ -129,28 +138,32 @@ const AboutSection = () => {
             scrollTrigger: {
               trigger: bar,
               start: "top 90%",
-              toggleActions: "play none none reverse"
-            }
+              toggleActions: "play none none reverse",
+            },
           }
         );
       });
 
-      gsap.timeline({
-        scrollTrigger: {
-          trigger: certificationsRef.current,
-          start: "top 85%",
-          toggleActions: "play none none reverse"
-        }
-      }).to([certificationsRef.current, journeyRef.current], {
-        opacity: 1,
-        x: 0,
-        duration: 1,
-        stagger: 0.3,
-        ease: "power3.out"
-      });
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: certificationsRef.current,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        })
+        .to([certificationsRef.current, journeyRef.current], {
+          opacity: 1,
+          x: 0,
+          duration: 1,
+          stagger: 0.3,
+          ease: "power3.out",
+        });
 
-      const certCards = certificationsRef.current?.querySelectorAll('[data-cert-card]') || [];
-      gsap.fromTo(certCards,
+      const certCards =
+        certificationsRef.current?.querySelectorAll("[data-cert-card]") || [];
+      gsap.fromTo(
+        certCards,
         { opacity: 0, scale: 0.8, rotateY: -15 },
         {
           opacity: 1,
@@ -162,13 +175,15 @@ const AboutSection = () => {
           scrollTrigger: {
             trigger: certificationsRef.current,
             start: "top 80%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
 
-      const journeyCards = journeyRef.current?.querySelectorAll('[data-journey-card]') || [];
-      gsap.fromTo(journeyCards,
+      const journeyCards =
+        journeyRef.current?.querySelectorAll("[data-journey-card]") || [];
+      gsap.fromTo(
+        journeyCards,
         { opacity: 0, x: 30, scale: 0.9 },
         {
           opacity: 1,
@@ -180,49 +195,49 @@ const AboutSection = () => {
           scrollTrigger: {
             trigger: journeyRef.current,
             start: "top 85%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
 
-      const cards = sectionRef.current?.querySelectorAll('[data-hover-card]') || [];
-      cards.forEach(card => {
-        card.addEventListener('mouseenter', () => {
+      const cards =
+        sectionRef.current?.querySelectorAll("[data-hover-card]") || [];
+      cards.forEach((card) => {
+        card.addEventListener("mouseenter", () => {
           gsap.to(card, { scale: 1.05, duration: 0.3, ease: "power2.out" });
         });
-        card.addEventListener('mouseleave', () => {
+        card.addEventListener("mouseleave", () => {
           gsap.to(card, { scale: 1, duration: 0.3, ease: "power2.out" });
         });
       });
-
     }, sectionRef);
 
     return () => ctx.revert();
   }, [loading, skills.length, certifications.length]);
 
   const categoryIcons = {
-    'Graphic Design': Palette,
-    'Frontend': Code,
-    'Backend': Code,
-    'Programming': Code,
-    'Security': Shield,
-    'Crypto': Shield,
-    'AI/ML': Code,
+    "Graphic Design": Palette,
+    Frontend: Code,
+    Backend: Code,
+    Programming: Code,
+    Security: Shield,
+    Crypto: Shield,
+    "AI/ML": Code,
   };
 
   const highlights = [
     {
       icon: <TrendingUp className="w-5 h-5" />,
-      text: "Started as a graphic designer, evolved into full-stack development"
+      text: "Started as a graphic designer, evolved into full-stack development",
     },
     {
       icon: <Shield className="w-5 h-5" />,
-      text: "Currently pursuing cybersecurity certifications to expand expertise"
+      text: "Currently pursuing cybersecurity certifications to expand expertise",
     },
     {
       icon: <Zap className="w-5 h-5" />,
-      text: "Passionate about crypto and emerging web technologies"
-    }
+      text: "Passionate about crypto and emerging web technologies",
+    },
   ];
 
   if (loading) {
@@ -241,7 +256,6 @@ const AboutSection = () => {
   return (
     <section id="about" className="py-24 bg-background" ref={sectionRef}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        
         {/* Header & Profile Section Side by Side */}
         <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
           {/* Left - About Me Text */}
@@ -268,12 +282,15 @@ const AboutSection = () => {
           </div>
 
           {/* Right - Profile Image */}
-          <div className="flex justify-center lg:justify-end" ref={profileImageRef}>
+          <div
+            className="flex justify-center lg:justify-end"
+            ref={profileImageRef}
+          >
             <div className="relative">
               <div className="w-80 h-80">
                 <div className="relative overflow-hidden rounded-2xl cursor-target group">
                   <img
-                    src='../King.jpg'
+                    src="../King.jpg"
                     alt={personalInfo.name}
                     className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
                   />
@@ -288,12 +305,15 @@ const AboutSection = () => {
         {/* Skills Section */}
         <div className="mb-24" ref={skillsRef}>
           <div className="text-center mb-16">
-            <h3 className="text-3xl font-bold text-foreground mb-4">Skills & Expertise</h3>
+            <h3 className="text-3xl font-bold text-foreground mb-4">
+              Skills & Expertise
+            </h3>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              A diverse skill set spanning creative design, technical development, and emerging technologies
+              A diverse skill set spanning creative design, technical
+              development, and emerging technologies
             </p>
           </div>
-          
+
           {Object.keys(groupedSkills).length === 0 ? (
             <div className="text-center py-12">
               <Code className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -301,53 +321,54 @@ const AboutSection = () => {
             </div>
           ) : (
             <div className="grid lg:grid-cols-3 gap-12">
-              {Object.entries(groupedSkills).map(([category, categorySkills], index) => {
-                const Icon = categoryIcons[category] || Code;
-                
-                return (
-                  <div key={index} className="space-y-8" data-hover-card>
-                    <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-chart-1/20 to-chart-1/10 border border-chart-1/20 rounded-2xl mb-4">
-                        <div className="text-chart-1">
-                          <Icon className="w-6 h-6" />
-                        </div>
-                      </div>
-                      <h4 className="text-xl font-semibold text-foreground">
-                        {category}
-                      </h4>
-                    </div>
+              {Object.entries(groupedSkills).map(
+                ([category, categorySkills], index) => {
+                  const Icon = categoryIcons[category] || Code;
 
-                    <div className="space-y-6">
-                      {categorySkills.map((skill) => (
-                        <div key={skill.id} className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-foreground font-medium">
-                              {skill.name}
-                            </span>
-                            <span className="text-sm font-semibold text-chart-1">
-                              {skill.level}%
-                            </span>
-                          </div>
-                          <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-chart-1 to-[#6FD2C0] rounded-full transition-all duration-1000 ease-out"
-                              data-skill-bar
-                              data-skill-level={skill.level}
-                            ></div>
+                  return (
+                    <div key={index} className="space-y-8" data-hover-card>
+                      <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-chart-1/20 to-chart-1/10 border border-chart-1/20 rounded-2xl mb-4">
+                          <div className="text-chart-1">
+                            <Icon className="w-6 h-6" />
                           </div>
                         </div>
-                      ))}
+                        <h4 className="text-xl font-semibold text-foreground">
+                          {category}
+                        </h4>
+                      </div>
+
+                      <div className="space-y-6">
+                        {categorySkills.map((skill) => (
+                          <div key={skill.id} className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-foreground font-medium">
+                                {skill.name}
+                              </span>
+                              <span className="text-sm font-semibold text-chart-1">
+                                {skill.level}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-chart-1 to-[#6FD2C0] rounded-full transition-all duration-1000 ease-out"
+                                data-skill-bar
+                                data-skill-level={skill.level}
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                }
+              )}
             </div>
           )}
         </div>
 
         {/* Two Column Layout for Certifications and Highlights */}
         <div className="grid lg:grid-cols-2 gap-16">
-          
           {/* Certifications */}
           <div className="space-y-8" ref={certificationsRef}>
             <div className="text-center lg:text-left">
@@ -361,11 +382,13 @@ const AboutSection = () => {
                 Continuous learning and professional development
               </p>
             </div>
-            
+
             {certifications.length === 0 ? (
               <div className="text-center py-12">
                 <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No certifications added yet</p>
+                <p className="text-muted-foreground">
+                  No certifications added yet
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -409,17 +432,15 @@ const AboutSection = () => {
 
             <div className="space-y-6">
               {highlights.map((highlight, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="group p-6 bg-gradient-to-br from-white/5 to-chart-1/5 border border-chart-1/20 rounded-xl hover:border-chart-1/30 transition-all duration-300 cursor-target"
                   data-journey-card
                   data-hover-card
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-10 h-10 bg-chart-1/20 rounded-full flex items-center justify-center group-hover:bg-chart-1/30 transition-colors">
-                      <div className="text-chart-1">
-                        {highlight.icon}
-                      </div>
+                      <div className="text-chart-1">{highlight.icon}</div>
                     </div>
                     <p className="text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
                       {highlight.text}

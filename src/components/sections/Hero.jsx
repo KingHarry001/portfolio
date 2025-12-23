@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Orb from "./react-ui/Orb";
+import Orb from "../react-ui/Orb";
 
 const Hero = () => {
   const [displayText, setDisplayText] = useState("");

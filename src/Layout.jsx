@@ -1,8 +1,8 @@
 // Layouts.jsx (or in a separate file)
 import { Outlet, useLocation } from "react-router-dom";
-import Header from "./components/Header";
-import ContactSection from "./components/ContactSection";
-import Footer from "./components/Footer";
+import Header from "./components/sections/Header";
+import ContactSection from "./components/sections/ContactSection";
+import Footer from "./components/sections/Footer";
 
 export const MainLayout = () => {
   return (

@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Clock,
 } from "lucide-react";
-import { useProjects } from "../hooks/useSupabase";
+import { useProjects } from "../../hooks/useSupabase";
 
 const ProjectModal = ({ project, isOpen, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

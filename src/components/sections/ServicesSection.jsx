@@ -9,7 +9,7 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
-import { servicesAPI } from "../api/supabase";
+import { servicesAPI } from "../../api/supabase";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
 
@@ -19,7 +19,7 @@ const ServicesSection = () => {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const sectionRef = useRef();
   const headerRef = useRef();
   const cardsRef = useRef();
@@ -33,7 +33,7 @@ const ServicesSection = () => {
         const data = await servicesAPI.getActive(); // Only get active services
         setServices(data || []);
       } catch (error) {
-        console.error('Error fetching services:', error);
+        console.error("Error fetching services:", error);
       } finally {
         setLoading(false);
       }
@@ -223,7 +223,10 @@ const ServicesSection = () => {
 
   if (loading) {
     return (
-      <section id="services" className="relative py-20 bg-background overflow-hidden">
+      <section
+        id="services"
+        className="relative py-20 bg-background overflow-hidden"
+      >
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-chart-1 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -281,8 +284,12 @@ const ServicesSection = () => {
         {services.length === 0 ? (
           <div className="text-center py-20">
             <Sparkles className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-foreground mb-2">No Services Available</h3>
-            <p className="text-muted-foreground">Check back soon for our service offerings!</p>
+            <h3 className="text-2xl font-bold text-foreground mb-2">
+              No Services Available
+            </h3>
+            <p className="text-muted-foreground">
+              Check back soon for our service offerings!
+            </p>
           </div>
         ) : (
           <div ref={cardsRef} className="grid md:grid-cols-2 gap-8 mb-16">
@@ -301,7 +308,9 @@ const ServicesSection = () => {
                 <div className="mb-6 relative">
                   <div className="service-icon w-16 h-16 bg-gradient-to-br from-chart-1/20 to-purple-500/20 border border-chart-1/30 rounded-xl flex items-center justify-center text-chart-1 mb-4 backdrop-blur-sm relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-chart-1/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative z-10">{iconMap[service.icon] || iconMap.code}</div>
+                    <div className="relative z-10">
+                      {iconMap[service.icon] || iconMap.code}
+                    </div>
                   </div>
 
                   <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-chart-1 transition-colors duration-300">

@@ -160,7 +160,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <span
+            <a href="/admin"
               className="text-2xl font-bold text-foreground hover:text-chart-1 transition-all duration-300 cursor-pointer hover:scale-105 transform"
               onClick={() => scrollToSection("#hero")}
             >
@@ -168,7 +168,7 @@ const Header = () => {
                 .split(" ")
                 .map((name) => name[0])
                 .join("")}
-            </span>
+            </a>
           </div>
 
           {/* Desktop Navigation */}

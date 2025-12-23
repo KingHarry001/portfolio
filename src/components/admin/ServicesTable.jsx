@@ -1,3 +1,4 @@
+// src/components/admin/ServicesTable.jsx - FIXED
 import { Plus, Star, Edit, Trash2 } from 'lucide-react';
 
 const ServicesTable = ({ services, onAddService, onEditService, onDeleteService }) => {
@@ -6,23 +7,16 @@ const ServicesTable = ({ services, onAddService, onEditService, onDeleteService 
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold text-white">Services</h3>
         <button
-          onClick={onAddService}
-          className="px-3 py-3 border border-gray-300 dark:border-gray-600 hover:border-orange-600 dark:hover:border-orange-500 rounded-[10px] hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
-            aria-label="Add to cart"
-          >
-            <svg
-              className="w-4 h-4 text-gray-600 dark:text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            console.log('Add service clicked');
+            onAddService();
+          }}
+          className="px-4 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Service
         </button>
       </div>
 
@@ -44,14 +38,26 @@ const ServicesTable = ({ services, onAddService, onEditService, onDeleteService 
             
             <div className="flex gap-2">
               <button
-                onClick={() => onEditService(service)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Edit service clicked:', service.id);
+                  onEditService(service);
+                }}
                 className="flex-1 px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 flex items-center justify-center gap-2"
               >
                 <Edit className="w-4 h-4" />
                 Edit
               </button>
               <button
-                onClick={() => onDeleteService(service.id)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Delete service clicked:', service.id);
+                  onDeleteService(service.id);
+                }}
                 className="flex-1 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 flex items-center justify-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />

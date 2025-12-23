@@ -17,9 +17,11 @@ export const MainLayout = () => {
 
 export const AuthLayout = () => {
   return (
-    <>
-      <Outlet />
-    </>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Outlet />
+      </div>
+    </div>
   );
 };
 

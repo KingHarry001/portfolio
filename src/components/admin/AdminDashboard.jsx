@@ -1,4 +1,4 @@
-// src/components/admin/AdminDashboard.jsx - UPDATED
+// src/components/admin/AdminDashboard.jsx - UPDATED WITH APPS
 import { useState, useEffect } from 'react';
 import { Loader } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
@@ -9,8 +9,10 @@ import BlogPostsTable from './BlogPostsTable';
 import TestimonialsTable from './TestimonialsTable';
 import SkillsTable from './SkillsTable';
 import CertificationsTable from './CertificationsTable';
+import AppsTable from './AppsTable';
 import Notification from './Notification';
 import ProjectFormModal from './ProjectFormModal';
+import AppFormModal from './AppFormModal';
 import GenericFormModal from './GenericFormModal';
 import { 
   projectsAPI, 
@@ -18,7 +20,8 @@ import {
   blogAPI, 
   testimonialsAPI,
   skillsAPI,
-  certificationsAPI 
+  certificationsAPI,
+  appsAPI
 } from '../../api/supabase';
 import FloatingUserButton from './FloatingUserButton';
 
@@ -30,9 +33,10 @@ const AdminDashboard = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [skills, setSkills] = useState([]);
   const [certifications, setCertifications] = useState([]);
+  const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(null); // 'project', 'service', 'skill', 'certification', etc.
+  const [modalType, setModalType] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,14 +75,19 @@ const AdminDashboard = () => {
           const certData = await certificationsAPI.getAll();
           setCertifications(certData || []);
           break;
+        case 'apps':
+          const appData = await appsAPI.getAll({ published: undefined });
+          setApps(appData || []);
+          break;
         case 'overview':
-          const [p, s, b, t, sk, c] = await Promise.all([
+          const [p, s, b, t, sk, c, a] = await Promise.all([
             projectsAPI.getAll({ showDrafts: true }),
             servicesAPI.getAll(),
             blogAPI.getAll(),
             testimonialsAPI.getAll(),
             skillsAPI.getAll(),
-            certificationsAPI.getAll()
+            certificationsAPI.getAll(),
+            appsAPI.getAll({ published: undefined })
           ]);
           setProjects(p || []);
           setServices(s || []);
@@ -86,6 +95,7 @@ const AdminDashboard = () => {
           setTestimonials(t || []);
           setSkills(sk || []);
           setCertifications(c || []);
+          setApps(a || []);
           break;
       }
     } catch (error) {
@@ -107,12 +117,14 @@ const AdminDashboard = () => {
   };
 
   const handleEdit = (type, item) => {
+    console.log('handleEdit called:', type, item);
     setModalType(type);
     setEditingItem(item);
     setShowModal(true);
   };
 
   const handleDelete = async (type, id) => {
+    console.log('handleDelete called:', type, id);
     if (!window.confirm(`Delete this ${type}?`)) return;
 
     try {
@@ -135,10 +147,14 @@ const AdminDashboard = () => {
         case 'certification':
           await certificationsAPI.delete(id);
           break;
+        case 'app':
+          await appsAPI.delete(id);
+          break;
       }
       showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`);
       fetchData();
     } catch (error) {
+      console.error('Delete error:', error);
       showNotification('Error: ' + error.message, 'error');
     }
   };
@@ -175,6 +191,7 @@ const AdminDashboard = () => {
               testimonials={testimonials}
               skills={skills}
               certifications={certifications}
+              apps={apps}
             />
             
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 sm:p-6">
@@ -182,9 +199,9 @@ const AdminDashboard = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {[
                   { label: 'New Project', emoji: '🚀', action: () => { setActiveTab('projects'); handleAdd('project'); } },
+                  { label: 'New App', emoji: '📱', action: () => { setActiveTab('apps'); handleAdd('app'); } },
                   { label: 'New Skill', emoji: '💪', action: () => { setActiveTab('skills'); handleAdd('skill'); } },
-                  { label: 'Add Service', emoji: '⭐', action: () => { setActiveTab('services'); handleAdd('service'); } },
-                  { label: 'New Cert', emoji: '🏆', action: () => { setActiveTab('certifications'); handleAdd('certification'); } }
+                  { label: 'Add Service', emoji: '⭐', action: () => { setActiveTab('services'); handleAdd('service'); } }
                 ].map((action, idx) => (
                   <button
                     key={idx}
@@ -237,6 +254,16 @@ const AdminDashboard = () => {
             onAddProject={() => handleAdd('project')}
             onEditProject={(project) => handleEdit('project', project)}
             onDeleteProject={(id) => handleDelete('project', id)}
+          />
+        );
+
+      case 'apps':
+        return (
+          <AppsTable 
+            apps={apps}
+            onAddApp={() => handleAdd('app')}
+            onEditApp={(app) => handleEdit('app', app)}
+            onDeleteApp={(id) => handleDelete('app', id)}
           />
         );
 
@@ -318,12 +345,12 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-black text-white">
       {notification && <Notification message={notification.message} type={notification.type} />}
       
-      <div className="flex flex-col sm:flex-row">
+      <div className="flex flex-col sm:flex-row min-h-screen">
         {/* Mobile Sidebar Toggle */}
         {sidebarOpen && (
-          <div className="sm:hidden fixed inset-0 z-40">
+          <div className="sm:hidden fixed inset-0 z-50">
             <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-            <div className="fixed left-0 top-0 bottom-0 w-64 bg-gray-900 z-50">
+            <div className="fixed left-0 top-0 bottom-0 w-64 bg-gray-900 z-50 overflow-y-auto">
               <AdminSidebar 
                 activeTab={activeTab} 
                 setActiveTab={(tab) => {
@@ -335,32 +362,39 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Desktop Sidebar */}
-        <div className="hidden sm:block w-64 bg-gray-900 border-r border-gray-800 min-h-screen p-6 sticky top-0">
-          <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* Desktop Sidebar - Fixed */}
+        <div className="hidden sm:block sm:w-64 bg-gray-900 border-r border-gray-800 fixed left-0 top-0 bottom-0 overflow-y-auto z-40">
+          <div className="p-6">
+            <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          </div>
         </div>
         
-        {/* Main Content */}
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {/* Mobile Header */}
-          <div className="sm:hidden flex items-center justify-between mb-6">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 bg-gray-800 rounded-lg"
-            >
-              <span className="text-white">☰</span>
-            </button>
-            <h1 className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-              Admin Panel
-            </h1>
-            <div className="w-10"></div>
+        {/* Main Content - with left margin to account for fixed sidebar */}
+        <div className="flex-1 sm:ml-64 min-h-screen">
+          {/* Mobile Header - Fixed */}
+          <div className="sm:hidden fixed top-0 left-0 right-0 bg-gray-900 border-b border-gray-800 z-30">
+            <div className="flex items-center justify-between p-4">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <span className="text-white text-xl">☰</span>
+              </button>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+                Admin Panel
+              </h1>
+              <div className="w-10"></div>
+            </div>
           </div>
           
-          {renderContent()}
+          {/* Content Area with padding for mobile header */}
+          <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-6">
+            {renderContent()}
+          </div>
         </div>
       </div>
 
-      {/* Modal - conditionally render based on type */}
+      {/* Modals */}
       {showModal && modalType === 'project' && (
         <ProjectFormModal
           editingItem={editingItem}
@@ -375,7 +409,21 @@ const AdminDashboard = () => {
         />
       )}
 
-      {showModal && modalType !== 'project' && (
+      {showModal && modalType === 'app' && (
+        <AppFormModal
+          editingItem={editingItem}
+          setShowModal={setShowModal}
+          onSuccess={() => {
+            fetchData();
+            showNotification(
+              editingItem ? 'App updated successfully!' : 'App created successfully!'
+            );
+          }}
+          onError={(error) => showNotification('Error: ' + error.message, 'error')}
+        />
+      )}
+
+      {showModal && modalType !== 'project' && modalType !== 'app' && (
         <GenericFormModal
           type={modalType}
           editingItem={editingItem}

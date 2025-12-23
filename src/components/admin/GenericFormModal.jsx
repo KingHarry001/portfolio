@@ -1,7 +1,7 @@
-// src/components/admin/GenericFormModal.jsx
+// src/components/admin/GenericFormModal.jsx - FIXED
 import { useState } from 'react';
 import { X, Save, Loader } from 'lucide-react';
-import { skillsAPI, certificationsAPI, servicesAPI, testimonialsAPI } from '../../api/supabase';
+import { skillsAPI, certificationsAPI, servicesAPI, testimonialsAPI, blogAPI } from '../../api/supabase';
 
 const formConfigs = {
   skill: {
@@ -55,6 +55,23 @@ const formConfigs = {
       { name: 'featured', label: 'Featured', type: 'checkbox', required: false },
     ],
     api: testimonialsAPI
+  },
+  blog: {
+    title: 'Blog Post',
+    fields: [
+      { name: 'title', label: 'Post Title', type: 'text', required: true },
+      { name: 'slug', label: 'Slug', type: 'text', required: true },
+      { name: 'excerpt', label: 'Excerpt', type: 'textarea', required: true },
+      { name: 'content', label: 'Content', type: 'textarea', required: true, rows: 8 },
+      { name: 'category', label: 'Category', type: 'select', required: true, options: [
+        'Technology', 'Design', 'Development', 'Security', 'Tutorial', 'News'
+      ]},
+      { name: 'featured_image', label: 'Featured Image URL', type: 'url', required: false },
+      { name: 'author', label: 'Author', type: 'text', required: false },
+      { name: 'publish_date', label: 'Publish Date', type: 'date', required: false },
+      { name: 'published', label: 'Published', type: 'checkbox', required: false },
+    ],
+    api: blogAPI
   }
 };
 
@@ -72,6 +89,8 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
         initialData[field.name] = false;
       } else if (field.type === 'number') {
         initialData[field.name] = field.min || 0;
+      } else if (field.type === 'date') {
+        initialData[field.name] = new Date().toISOString().split('T')[0];
       } else {
         initialData[field.name] = '';
       }
@@ -83,6 +102,14 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Auto-generate slug from title for blog posts
+    if (field === 'title' && type === 'blog' && !editingItem) {
+      const slug = value.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      setFormData(prev => ({ ...prev, slug }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -105,6 +132,7 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
       setShowModal(false);
       onSuccess();
     } catch (error) {
+      console.error('Error saving:', error);
       onError(error);
     } finally {
       setSaving(false);
@@ -119,7 +147,7 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
         return (
           <textarea
             required={field.required}
-            rows={field.name === 'features' ? 5 : 3}
+            rows={field.rows || (field.name === 'features' ? 5 : 3)}
             value={Array.isArray(value) ? value.join('\n') : value}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
             placeholder={field.name === 'features' ? 'Enter each feature on a new line' : `Enter ${field.label.toLowerCase()}`}
@@ -165,6 +193,17 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
             value={value}
             onChange={(e) => handleInputChange(field.name, parseFloat(e.target.value) || 0)}
             placeholder={`Enter ${field.label.toLowerCase()}`}
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
+          />
+        );
+      
+      case 'date':
+        return (
+          <input
+            type="date"
+            required={field.required}
+            value={value}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
             className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
           />
         );

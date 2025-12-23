@@ -1,13 +1,14 @@
-// src/components/admin/AdminSidebar.jsx - UPDATED
+// src/components/admin/AdminSidebar.jsx - UPDATED WITH APPS
 import { 
   BarChart3, Briefcase, Star, FileText, MessageSquare, Image, 
-  Code, Award
+  Code, Award, Smartphone
 } from 'lucide-react';
 
 const AdminSidebar = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'projects', label: 'Projects', icon: Briefcase },
+    { id: 'apps', label: 'Apps', icon: Smartphone },
     { id: 'skills', label: 'Skills', icon: Code },
     { id: 'certifications', label: 'Certifications', icon: Award },
     { id: 'services', label: 'Services', icon: Star },

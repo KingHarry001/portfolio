@@ -1,4 +1,4 @@
-// src/components/admin/CertificationsTable.jsx
+// src/components/admin/CertificationsTable.jsx - FIXED
 import { Plus, Award, Edit, Trash2, ExternalLink } from 'lucide-react';
 
 const CertificationsTable = ({ certifications, onAddCertification, onEditCertification, onDeleteCertification }) => {
@@ -10,7 +10,12 @@ const CertificationsTable = ({ certifications, onAddCertification, onEditCertifi
           <p className="text-gray-400">Manage your professional certifications</p>
         </div>
         <button
-          onClick={onAddCertification}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            console.log('Add certification clicked');
+            onAddCertification();
+          }}
           className="px-4 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors inline-flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
@@ -23,7 +28,11 @@ const CertificationsTable = ({ certifications, onAddCertification, onEditCertifi
           <Award className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <p className="text-gray-400 text-lg mb-4">No certifications added yet</p>
           <button
-            onClick={onAddCertification}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onAddCertification();
+            }}
             className="px-6 py-3 bg-cyan-500 text-white rounded-lg font-medium hover:bg-cyan-600 transition-colors inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -67,14 +76,26 @@ const CertificationsTable = ({ certifications, onAddCertification, onEditCertifi
 
               <div className="flex gap-2 pt-4 border-t border-gray-700">
                 <button
-                  onClick={() => onEditCertification(cert)}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Edit certification clicked:', cert.id);
+                    onEditCertification(cert);
+                  }}
                   className="flex-1 px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <Edit className="w-4 h-4" />
                   Edit
                 </button>
                 <button
-                  onClick={() => onDeleteCertification(cert.id)}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Delete certification clicked:', cert.id);
+                    onDeleteCertification(cert.id);
+                  }}
                   className="flex-1 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />

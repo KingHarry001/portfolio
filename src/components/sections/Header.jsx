@@ -162,12 +162,12 @@ const Header = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <a
-              href="/"
+              href="/admin"
               className="text-2xl font-bold text-foreground hover:text-chart-1 transition-all duration-300 cursor-pointer hover:scale-105 transform"
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection("#hero");
-              }}
+              // onClick={(e) => {
+              //   e.preventDefault();
+              //   scrollToSection("#hero");
+              // }}
             >
               {personalInfo.name
                 .split(" ")
@@ -290,7 +290,7 @@ const Header = () => {
               </svg>
             </button>
 
-            <button
+            {/* <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 transform hover:scale-110"
             >
@@ -305,12 +305,12 @@ const Header = () => {
                   <Menu size={20} className="text-foreground" />
                 )}
               </div>
-            </button>
+            </button> */}
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        <div
+        {/* <div
           className={`md:hidden bg-background/95 backdrop-blur-xl border-t border-white/10 transition-all duration-300 ease-out overflow-hidden ${
             isMobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
           }`}
@@ -361,7 +361,7 @@ const Header = () => {
                   )}
                 </div>
 
-                {/* Mobile Dropdown */}
+                Mobile Dropdown
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-out ${
                     item.children && openDropdown === item.name
@@ -400,7 +400,7 @@ const Header = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
 
       <style jsx>{`

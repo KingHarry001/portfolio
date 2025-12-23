@@ -28,6 +28,7 @@ import { SignIn, SignUp } from "@clerk/clerk-react";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import { AdminLayout, AuthLayout, MainLayout } from "./Layout";
 import ThemeSelectorModal from "./components/react-ui/ThemeSelectorModal";
+import BottomNavigation from "./components/react-ui/BottomNavigation";
 
 const scrollToSection = (id) => {
   const section = document.getElementById(id);
@@ -137,7 +138,7 @@ function App() {
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
   // Make the modal state available globally via window object
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     window.openThemeModal = () => setIsThemeModalOpen(true);
     window.closeThemeModal = () => setIsThemeModalOpen(false);
   }
@@ -146,7 +147,8 @@ function App() {
     <div className="App">
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       <BrowserRouter>
-        <ScrollToTop />
+        <BottomNavigation />
+        {/* <ScrollToTop /> */}
         <Routes>
           {/* Routes with Main Layout */}
           <Route element={<MainLayout />}>

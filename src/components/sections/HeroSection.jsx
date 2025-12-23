@@ -387,17 +387,15 @@ const HeroSection = () => {
     return () => clearTimeout(timeout);
   }, [char, deleting, roleIndex, roles]);
 
-  // Memoized scroll function with GSAP smooth scroll
   const scrollToAbout = useCallback(() => {
-    const element = document.querySelector("#about");
-    if (element) {
-      gsap.to(window, {
-        duration: 1.5,
-        scrollTo: { y: element, offsetY: 100 },
-        ease: "power2.inOut",
-      });
-    }
-  }, []);
+  const element = document.querySelector("#about");
+  if (element) {
+    element.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start' 
+    });
+  }
+}, []);
 
   // Memoized resume download handler
   const handleResumeDownload = useCallback(() => {

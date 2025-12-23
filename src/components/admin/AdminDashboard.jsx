@@ -182,7 +182,7 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            <FloatingUserButton />
+            {/* <FloatingUserButton /> */}
 
             <AdminStats 
               projects={projects}

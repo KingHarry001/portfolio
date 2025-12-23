@@ -414,7 +414,7 @@ const Footer = () => {
         </div>
       </footer>
 
-      {/* Scroll to Top Button */}
+      {/* Scroll to Top Button
       {showScrollTop && (
         <button
           onClick={scrollToTop}
@@ -426,7 +426,7 @@ const Footer = () => {
             className="group-hover:-translate-y-1 transition-transform duration-300" 
           />
         </button>
-      )}
+      )} */}
     </>
   );
 };

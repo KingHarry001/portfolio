@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { skillsAPI, certificationsAPI } from "../../api/supabase";
 
 gsap.registerPlugin(ScrollTrigger);
+gsap.config({ force3D: true });
 
 const AboutSection = () => {
   const [skills, setSkills] = useState([]);
@@ -86,6 +87,7 @@ const AboutSection = () => {
           y: 0,
           duration: 1,
           ease: "power3.out",
+          clearProps: "all", // Add this
         })
         .to(
           profileImageRef.current,
@@ -96,14 +98,10 @@ const AboutSection = () => {
             ease: "power3.out",
             rotate: 360,
             scale: 1.1,
+            clearProps: "rotate", // Clear rotation after
           },
           "-=0.7"
-        )
-        .to(profileImageRef.current, {
-          scale: 1,
-          duration: 0.3,
-          ease: "back.out(1.7)",
-        });
+        );
 
       gsap
         .timeline({

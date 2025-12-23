@@ -1,12 +1,18 @@
-import React, { useEffect, useRef } from "react";
+// src/components/AboutSection.jsx - UPDATED TO USE SUPABASE
+import React, { useEffect, useRef, useState } from "react";
 import { Code, Palette, Shield, Zap, Award, TrendingUp } from "lucide-react";
-import { personalInfo, skills, certifications } from "../data/mock";
+import { personalInfo } from "../data/mock";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { skillsAPI, certificationsAPI } from "../api/supabase";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const AboutSection = () => {
+  const [skills, setSkills] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const sectionRef = useRef(null);
   const aboutTextRef = useRef(null);
   const profileImageRef = useRef(null);
@@ -14,15 +20,47 @@ const AboutSection = () => {
   const certificationsRef = useRef(null);
   const journeyRef = useRef(null);
 
+  // Fetch data from Supabase
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [skillsData, certsData] = await Promise.all([
+          skillsAPI.getAll(),
+          certificationsAPI.getAll()
+        ]);
+        setSkills(skillsData || []);
+        setCertifications(certsData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Fallback to mock data if needed
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Group skills by category
+  const groupedSkills = skills.reduce((acc, skill) => {
+    if (!acc[skill.category]) {
+      acc[skill.category] = [];
+    }
+    acc[skill.category].push(skill);
+    return acc;
+  }, {});
+
+  // GSAP animations (same as before)
+  useEffect(() => {
+    if (loading) return;
+
     const ctx = gsap.context(() => {
-      // Initial setup - set elements to invisible
       gsap.set([aboutTextRef.current, profileImageRef.current], { 
         opacity: 0,
         y: 50 
       });
 
-      gsap.set(skillsRef.current.children, { 
+      gsap.set(skillsRef.current?.children || [], { 
         opacity: 0, 
         y: 60,
         scale: 0.9
@@ -33,7 +71,6 @@ const AboutSection = () => {
         x: -30 
       });
 
-      // About Me and Image Animation
       const tl1 = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
@@ -63,7 +100,6 @@ const AboutSection = () => {
         ease: "back.out(1.7)"
       });
 
-      // Skills Animation
       gsap.timeline({
         scrollTrigger: {
           trigger: skillsRef.current,
@@ -71,7 +107,7 @@ const AboutSection = () => {
           end: "bottom 20%",
           toggleActions: "play none none reverse"
         }
-      }).to(skillsRef.current.children, {
+      }).to(skillsRef.current?.children || [], {
         opacity: 1,
         y: 0,
         scale: 1,
@@ -80,8 +116,7 @@ const AboutSection = () => {
         ease: "back.out(1.4)"
       });
 
-      // Animate skill bars with delay
-      const skillBars = skillsRef.current.querySelectorAll('[data-skill-bar]');
+      const skillBars = skillsRef.current?.querySelectorAll('[data-skill-bar]') || [];
       skillBars.forEach((bar, index) => {
         const targetWidth = bar.getAttribute('data-skill-level');
         gsap.fromTo(bar, 
@@ -100,7 +135,6 @@ const AboutSection = () => {
         );
       });
 
-      // Certifications and Journey Animation
       gsap.timeline({
         scrollTrigger: {
           trigger: certificationsRef.current,
@@ -115,8 +149,7 @@ const AboutSection = () => {
         ease: "power3.out"
       });
 
-      // Individual certification cards animation
-      const certCards = certificationsRef.current.querySelectorAll('[data-cert-card]');
+      const certCards = certificationsRef.current?.querySelectorAll('[data-cert-card]') || [];
       gsap.fromTo(certCards,
         { opacity: 0, scale: 0.8, rotateY: -15 },
         {
@@ -134,8 +167,7 @@ const AboutSection = () => {
         }
       );
 
-      // Journey highlights animation
-      const journeyCards = journeyRef.current.querySelectorAll('[data-journey-card]');
+      const journeyCards = journeyRef.current?.querySelectorAll('[data-journey-card]') || [];
       gsap.fromTo(journeyCards,
         { opacity: 0, x: 30, scale: 0.9 },
         {
@@ -153,8 +185,7 @@ const AboutSection = () => {
         }
       );
 
-      // Hover animations for interactive elements
-      const cards = sectionRef.current.querySelectorAll('[data-hover-card]');
+      const cards = sectionRef.current?.querySelectorAll('[data-hover-card]') || [];
       cards.forEach(card => {
         card.addEventListener('mouseenter', () => {
           gsap.to(card, { scale: 1.05, duration: 0.3, ease: "power2.out" });
@@ -167,24 +198,17 @@ const AboutSection = () => {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
-  const skillCategories = [
-    {
-      title: "Design Excellence",
-      icon: <Palette className="w-6 h-6" />,
-      skills: skills.design,
-    },
-    {
-      title: "Development Power",
-      icon: <Code className="w-6 h-6" />,
-      skills: skills.development,
-    },
-    {
-      title: "Emerging Technologies",
-      icon: <Shield className="w-6 h-6" />,
-      skills: skills.emerging,
-    },
-  ];
+  }, [loading, skills.length, certifications.length]);
+
+  const categoryIcons = {
+    'Graphic Design': Palette,
+    'Frontend': Code,
+    'Backend': Code,
+    'Programming': Code,
+    'Security': Shield,
+    'Crypto': Shield,
+    'AI/ML': Code,
+  };
 
   const highlights = [
     {
@@ -200,6 +224,19 @@ const AboutSection = () => {
       text: "Passionate about crypto and emerging web technologies"
     }
   ];
+
+  if (loading) {
+    return (
+      <section id="about" className="py-24 bg-background">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-chart-1 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="about" className="py-24 bg-background" ref={sectionRef}>
@@ -242,7 +279,6 @@ const AboutSection = () => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-tr from-chart-1/20 to-transparent"></div>
                 </div>
-                {/* Decorative Border */}
                 <div className="absolute -inset-6 bg-gradient-to-r from-chart-1/20 via-transparent to-[#00FFD1]/20 -z-10 blur-xl rounded-3xl"></div>
               </div>
             </div>
@@ -258,44 +294,55 @@ const AboutSection = () => {
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-12">
-            {skillCategories.map((category, index) => (
-              <div key={index} className="space-y-8" data-hover-card>
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-chart-1/20 to-chart-1/10 border border-chart-1/20 rounded-2xl mb-4">
-                    <div className="text-chart-1">
-                      {category.icon}
+          {Object.keys(groupedSkills).length === 0 ? (
+            <div className="text-center py-12">
+              <Code className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No skills added yet</p>
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-3 gap-12">
+              {Object.entries(groupedSkills).map(([category, categorySkills], index) => {
+                const Icon = categoryIcons[category] || Code;
+                
+                return (
+                  <div key={index} className="space-y-8" data-hover-card>
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-chart-1/20 to-chart-1/10 border border-chart-1/20 rounded-2xl mb-4">
+                        <div className="text-chart-1">
+                          <Icon className="w-6 h-6" />
+                        </div>
+                      </div>
+                      <h4 className="text-xl font-semibold text-foreground">
+                        {category}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-6">
+                      {categorySkills.map((skill) => (
+                        <div key={skill.id} className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-foreground font-medium">
+                              {skill.name}
+                            </span>
+                            <span className="text-sm font-semibold text-chart-1">
+                              {skill.level}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-chart-1 to-[#6FD2C0] rounded-full transition-all duration-1000 ease-out"
+                              data-skill-bar
+                              data-skill-level={skill.level}
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <h4 className="text-xl font-semibold text-foreground">
-                    {category.title}
-                  </h4>
-                </div>
-
-                <div className="space-y-6">
-                  {category.skills.map((skill, skillIndex) => (
-                    <div key={skillIndex} className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-foreground font-medium">
-                          {skill.name}
-                        </span>
-                        <span className="text-sm font-semibold text-chart-1">
-                          {skill.level}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-chart-1 to-[#6FD2C0] rounded-full transition-all duration-1000 ease-out"
-                          data-skill-bar
-                          data-skill-level={skill.level}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Two Column Layout for Certifications and Highlights */}
@@ -315,28 +362,35 @@ const AboutSection = () => {
               </p>
             </div>
             
-            <div className="space-y-4">
-              {certifications.map((cert) => (
-                <div
-                  key={cert.id}
-                  className="group p-6 bg-card border border-border rounded-xl hover:border-chart-1/30 transition-all duration-300 cursor-target hover:shadow-lg hover:shadow-chart-1/10"
-                  data-cert-card
-                  data-hover-card
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="font-semibold text-foreground group-hover:text-chart-1 transition-colors">
-                        {cert.name}
+            {certifications.length === 0 ? (
+              <div className="text-center py-12">
+                <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No certifications added yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {certifications.map((cert) => (
+                  <div
+                    key={cert.id}
+                    className="group p-6 bg-card border border-border rounded-xl hover:border-chart-1/30 transition-all duration-300 cursor-target hover:shadow-lg hover:shadow-chart-1/10"
+                    data-cert-card
+                    data-hover-card
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="font-semibold text-foreground group-hover:text-chart-1 transition-colors">
+                          {cert.name}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {cert.issuer} • {cert.year}
+                        </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {cert.issuer} • {cert.year}
-                      </div>
+                      <Zap className="w-5 h-5 text-chart-1 group-hover:scale-110 transition-transform" />
                     </div>
-                    <Zap className="w-5 h-5 text-chart-1 group-hover:scale-110 transition-transform" />
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Journey Highlights */}

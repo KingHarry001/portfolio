@@ -1,19 +1,23 @@
+// src/components/admin/AdminSidebar.jsx - UPDATED
 import { 
-  BarChart3, Briefcase, Star, FileText, MessageSquare, Image, Settings 
+  BarChart3, Briefcase, Star, FileText, MessageSquare, Image, 
+  Code, Award
 } from 'lucide-react';
 
 const AdminSidebar = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'projects', label: 'Projects', icon: Briefcase },
+    { id: 'skills', label: 'Skills', icon: Code },
+    { id: 'certifications', label: 'Certifications', icon: Award },
     { id: 'services', label: 'Services', icon: Star },
-    { id: 'blog', label: 'Blog Posts', icon: FileText },
     { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
+    { id: 'blog', label: 'Blog Posts', icon: FileText },
     { id: 'media', label: 'Media Library', icon: Image },
   ];
 
   return (
-    <div className="w-64 bg-gray-900 border-r border-gray-800 min-h-screen p-6 sticky top-0">
+    <div className="space-y-2">
       <h1 className="text-2xl font-bold mb-8 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
         Admin Panel
       </h1>

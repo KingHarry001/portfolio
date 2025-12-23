@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
   ExternalLink,
   Github,
@@ -15,21 +15,49 @@ import {
   ChevronRight,
   Clock,
 } from "lucide-react";
-// UPDATED: Import from Supabase hook instead of mock data
 import { useProjects } from "../hooks/useSupabase";
-
 
 const ProjectModal = ({ project, isOpen, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const modalRef = useRef();
   const [touchStartX, setTouchStartX] = useState(0);
 
+  // Normalize project data to handle both snake_case and camelCase
+  const normalizedProject = useMemo(() => {
+    if (!project) return null;
+
+    return {
+      ...project,
+      // Handle both naming conventions
+      keyFeatures: project.key_features || project.keyFeatures || [],
+      clientName: project.client_name || project.clientName || "",
+      completionDate: project.completion_date || project.completionDate,
+      liveUrl: project.live_url || project.liveUrl,
+      githubUrl: project.github_url || project.githubUrl,
+      // Ensure arrays are arrays
+      tags: Array.isArray(project.tags) ? project.tags : [],
+      gallery: Array.isArray(project.gallery)
+        ? project.gallery
+        : project.image
+        ? [project.image]
+        : [],
+      challenges: Array.isArray(project.challenges) ? project.challenges : [],
+      results: Array.isArray(project.results) ? project.results : [],
+      // Combine both naming conventions for arrays
+      keyFeaturesArray: Array.isArray(project.key_features)
+        ? project.key_features
+        : Array.isArray(project.keyFeatures)
+        ? project.keyFeatures
+        : [],
+    };
+  }, [project]);
+
   // Reset image index when modal opens with new project
   useEffect(() => {
-    if (isOpen && project) {
+    if (isOpen && normalizedProject) {
       setCurrentImageIndex(0);
     }
-  }, [isOpen, project]);
+  }, [isOpen, normalizedProject]);
 
   const handleTouchStart = (e) => {
     setTouchStartX(e.touches[0].clientX);
@@ -38,7 +66,7 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
   const handleTouchEnd = (e) => {
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX - touchEndX;
-    
+
     if (Math.abs(diff) > 50) {
       if (diff > 0) {
         nextImage();
@@ -80,20 +108,22 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
   }, [isOpen, onClose]);
 
   const nextImage = () => {
-    if (!project?.gallery) return;
-    setCurrentImageIndex((prev) => 
-      prev === project.gallery.length - 1 ? 0 : prev + 1
+    if (!normalizedProject?.gallery || normalizedProject.gallery.length <= 1)
+      return;
+    setCurrentImageIndex((prev) =>
+      prev === normalizedProject.gallery.length - 1 ? 0 : prev + 1
     );
   };
 
   const prevImage = () => {
-    if (!project?.gallery) return;
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? project.gallery.length - 1 : prev - 1
+    if (!normalizedProject?.gallery || normalizedProject.gallery.length <= 1)
+      return;
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? normalizedProject.gallery.length - 1 : prev - 1
     );
   };
 
-  if (!isOpen || !project) return null;
+  if (!isOpen || !normalizedProject) return null;
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -130,12 +160,14 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
             >
               <img
                 key={currentImageIndex}
-                src={project.gallery[currentImageIndex]}
-                alt={`${project.title} - Image ${currentImageIndex + 1}`}
+                src={normalizedProject.gallery[currentImageIndex]}
+                alt={`${normalizedProject.title} - Image ${
+                  currentImageIndex + 1
+                }`}
                 className="w-full h-full object-cover transition-opacity duration-300"
               />
 
-              {project.gallery.length > 1 && (
+              {normalizedProject.gallery.length > 1 && (
                 <>
                   <button
                     onClick={(e) => {
@@ -160,7 +192,7 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
 
                   {/* Image indicators */}
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                    {project.gallery.map((_, index) => (
+                    {normalizedProject.gallery.map((_, index) => (
                       <button
                         key={index}
                         onClick={(e) => {
@@ -184,7 +216,7 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
 
               {/* Project badges */}
               <div className="absolute top-4 left-4 flex gap-2">
-                {project.featured && (
+                {normalizedProject.featured && (
                   <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
                     <Star size={14} className="fill-current" />
                     Featured
@@ -192,25 +224,25 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                 )}
                 <span
                   className={`px-3 py-1.5 text-sm font-medium rounded-full text-white bg-gradient-to-r ${
-                    project.category === "Design"
+                    normalizedProject.category === "Design"
                       ? "from-purple-500 to-pink-500"
-                      : project.category === "Dev"
+                      : normalizedProject.category === "Dev"
                       ? "from-blue-500 to-cyan-500"
-                      : project.category === "Security"
+                      : normalizedProject.category === "Security"
                       ? "from-red-500 to-orange-500"
-                      : project.category === "App"
+                      : normalizedProject.category === "App"
                       ? "from-red-500 to-orange-500"
                       : "from-green-500 to-emerald-500"
                   }`}
                 >
-                  {project.category}
+                  {normalizedProject.category}
                 </span>
               </div>
 
               {/* Image counter */}
-              {project.gallery.length > 1 && (
+              {normalizedProject.gallery.length > 1 && (
                 <div className="absolute top-4 right-16 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
-                  {currentImageIndex + 1} / {project.gallery.length}
+                  {currentImageIndex + 1} / {normalizedProject.gallery.length}
                 </div>
               )}
             </div>
@@ -221,26 +253,29 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
             {/* Title and Description */}
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-foreground mb-4">
-                {project.title}
+                {normalizedProject.title}
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                {project.fullDescription}
+                {normalizedProject.full_description ||
+                  normalizedProject.fullDescription}
               </p>
 
               {/* Action Buttons */}
               <div className="flex gap-4 w-full flex-wrap">
-                <a
-                  href={project.liveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-chart-1 to-purple-500 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-chart-1/25 transition-all duration-300"
-                >
-                  <ExternalLink size={18} />
-                  View Live Project
-                </a>
-                {project.githubUrl && (
+                {normalizedProject.liveUrl && (
                   <a
-                    href={project.githubUrl}
+                    href={normalizedProject.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-chart-1 to-purple-500 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-chart-1/25 transition-all duration-300"
+                  >
+                    <ExternalLink size={18} />
+                    View Live Project
+                  </a>
+                )}
+                {normalizedProject.githubUrl && (
+                  <a
+                    href={normalizedProject.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-6 py-3 bg-card/50 border border-border/50 text-muted-foreground rounded-2xl font-medium hover:border-chart-1/50 hover:text-chart-1 transition-all duration-300"
@@ -254,44 +289,66 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
 
             {/* Project Details Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="w-5 h-5 text-chart-1" />
-                  <span className="font-medium text-foreground">Completed</span>
+              {normalizedProject.completionDate && (
+                <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="w-5 h-5 text-chart-1" />
+                    <span className="font-medium text-foreground">
+                      Completed
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground">
+                    {new Date(
+                      normalizedProject.completionDate
+                    ).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
                 </div>
-                <p className="text-muted-foreground">
-                  {new Date(project.completionDate).toLocaleDateString(
-                    "en-US",
-                    { year: "numeric", month: "long", day: "numeric" }
-                  )}
-                </p>
-              </div>
+              )}
 
-              <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-5 h-5 text-chart-1" />
-                  <span className="font-medium text-foreground">Team Size</span>
+              {normalizedProject.teamSize && (
+                <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-5 h-5 text-chart-1" />
+                    <span className="font-medium text-foreground">
+                      Team Size
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground">
+                    {normalizedProject.teamSize}{" "}
+                    {normalizedProject.teamSize === 1 ? "member" : "members"}
+                  </p>
                 </div>
-                <p className="text-muted-foreground">
-                  {project.teamSize} {project.teamSize === 1 ? 'member' : 'members'}
-                </p>
-              </div>
+              )}
 
-              <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-5 h-5 text-chart-1" />
-                  <span className="font-medium text-foreground">Duration</span>
+              {normalizedProject.duration && (
+                <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-5 h-5 text-chart-1" />
+                    <span className="font-medium text-foreground">
+                      Duration
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground">
+                    {normalizedProject.duration}
+                  </p>
                 </div>
-                <p className="text-muted-foreground">{project.duration}</p>
-              </div>
+              )}
 
-              <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Award className="w-5 h-5 text-chart-1" />
-                  <span className="font-medium text-foreground">Client</span>
+              {normalizedProject.clientName && (
+                <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className="w-5 h-5 text-chart-1" />
+                    <span className="font-medium text-foreground">Client</span>
+                  </div>
+                  <p className="text-muted-foreground">
+                    {normalizedProject.clientName}
+                  </p>
                 </div>
-                <p className="text-muted-foreground">{project.clientName}</p>
-              </div>
+              )}
             </div>
 
             {/* Technologies */}
@@ -300,14 +357,20 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                 Technologies Used
               </h3>
               <div className="flex flex-wrap gap-3">
-                {project.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-4 py-2 bg-gradient-to-r from-chart-1/10 to-purple-500/10 border border-chart-1/20 text-chart-1 font-medium rounded-full"
-                  >
-                    {tag}
+                {normalizedProject.tags.length > 0 ? (
+                  normalizedProject.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 bg-gradient-to-r from-chart-1/10 to-purple-500/10 border border-chart-1/20 text-chart-1 font-medium rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-muted-foreground">
+                    No tags specified
                   </span>
-                ))}
+                )}
               </div>
             </div>
 
@@ -319,15 +382,21 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                   Key Features
                 </h3>
                 <ul className="space-y-2">
-                  {project.keyFeatures.map((feature, index) => (
-                    <li
-                      key={index}
-                      className="text-muted-foreground flex items-start gap-2"
-                    >
-                      <div className="w-1.5 h-1.5 bg-chart-1 rounded-full mt-2 flex-shrink-0"></div>
-                      {feature}
+                  {normalizedProject.keyFeaturesArray.length > 0 ? (
+                    normalizedProject.keyFeaturesArray.map((feature, index) => (
+                      <li
+                        key={index}
+                        className="text-muted-foreground flex items-start gap-2"
+                      >
+                        <div className="w-1.5 h-1.5 bg-chart-1 rounded-full mt-2 flex-shrink-0"></div>
+                        {feature}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-muted-foreground">
+                      No key features specified
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
 
@@ -337,15 +406,21 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                   Challenges
                 </h3>
                 <ul className="space-y-2">
-                  {project.challenges.map((challenge, index) => (
-                    <li
-                      key={index}
-                      className="text-muted-foreground flex items-start gap-2"
-                    >
-                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-                      {challenge}
+                  {normalizedProject.challenges.length > 0 ? (
+                    normalizedProject.challenges.map((challenge, index) => (
+                      <li
+                        key={index}
+                        className="text-muted-foreground flex items-start gap-2"
+                      >
+                        <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                        {challenge}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-muted-foreground">
+                      No challenges specified
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
 
@@ -355,15 +430,21 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                   Results
                 </h3>
                 <ul className="space-y-2">
-                  {project.results.map((result, index) => (
-                    <li
-                      key={index}
-                      className="text-muted-foreground flex items-start gap-2"
-                    >
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                      {result}
+                  {normalizedProject.results.length > 0 ? (
+                    normalizedProject.results.map((result, index) => (
+                      <li
+                        key={index}
+                        className="text-muted-foreground flex items-start gap-2"
+                      >
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        {result}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-muted-foreground">
+                      No results specified
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
             </div>
@@ -382,9 +463,20 @@ const ProjectsSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // UPDATED: Fetch projects from Supabase
-  const { data: projects, loading: projectsLoading, error: projectsError } = useProjects();
+  const {
+    data: projects,
+    loading: projectsLoading,
+    error: projectsError,
+  } = useProjects();
 
-  const categories = ["All", "App", "Design", "Dev", "Security", "Experimental"];
+  const categories = [
+    "All",
+    "App",
+    "Design",
+    "Dev",
+    "Security",
+    "Experimental",
+  ];
 
   const categoryColors = {
     App: "from-green-500 to-emerald-500",
@@ -466,8 +558,12 @@ const ProjectsSection = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center py-20">
             <Code2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-foreground mb-2">No Projects Yet</h3>
-            <p className="text-muted-foreground">Check back soon for amazing projects!</p>
+            <h3 className="text-2xl font-bold text-foreground mb-2">
+              No Projects Yet
+            </h3>
+            <p className="text-muted-foreground">
+              Check back soon for amazing projects!
+            </p>
           </div>
         </div>
       </section>
@@ -628,19 +724,23 @@ const ProjectsSection = () => {
 
                 {/* Project Tags */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {project.tags && project.tags.slice(0, 3).map((tag, tagIndex) => (
-                    <span
-                      key={tagIndex}
-                      className="px-2.5 py-1 bg-gradient-to-r from-chart-1/10 to-purple-500/10 border border-chart-1/20 text-chart-1 text-xs font-medium rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {project.tags && project.tags.length > 3 && (
-                    <span className="px-2.5 py-1 bg-muted/50 text-muted-foreground text-xs font-medium rounded-full">
-                      +{project.tags.length - 3}
-                    </span>
-                  )}
+                  {project.tags &&
+                    Array.isArray(project.tags) &&
+                    project.tags.slice(0, 3).map((tag, tagIndex) => (
+                      <span
+                        key={tagIndex}
+                        className="px-2.5 py-1 bg-gradient-to-r from-chart-1/10 to-purple-500/10 border border-chart-1/20 text-chart-1 text-xs font-medium rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  {project.tags &&
+                    Array.isArray(project.tags) &&
+                    project.tags.length > 3 && (
+                      <span className="px-2.5 py-1 bg-muted/50 text-muted-foreground text-xs font-medium rounded-full">
+                        +{project.tags.length - 3}
+                      </span>
+                    )}
                 </div>
 
                 {/* View Project Button */}

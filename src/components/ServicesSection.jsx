@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+// src/components/ServicesSection.jsx - UPDATED TO USE SUPABASE
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Palette,
@@ -8,7 +9,7 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
-import { services } from "../data/mock";
+import { servicesAPI } from "../api/supabase";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
 
@@ -16,11 +17,30 @@ gsap.registerPlugin(ScrollTrigger);
 
 const ServicesSection = () => {
   const navigate = useNavigate();
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const sectionRef = useRef();
   const headerRef = useRef();
   const cardsRef = useRef();
   const bottomCtaRef = useRef();
   const securityBadgeRef = useRef();
+
+  // Fetch services from Supabase
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const data = await servicesAPI.getActive(); // Only get active services
+        setServices(data || []);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   const iconMap = {
     palette: <Palette className="w-8 h-8" />,
@@ -40,16 +60,17 @@ const ServicesSection = () => {
     navigate(`/${slug}`);
   };
 
-  // Main scroll animations
+  // GSAP animations
   useEffect(() => {
+    if (loading) return;
+
     const ctx = gsap.context(() => {
-      // Set initial states
-      gsap.set(headerRef.current.children, {
+      gsap.set(headerRef.current?.children || [], {
         opacity: 0,
         y: 50,
       });
 
-      gsap.set(cardsRef.current.children, {
+      gsap.set(cardsRef.current?.children || [], {
         opacity: 0,
         y: 80,
         scale: 0.9,
@@ -60,13 +81,12 @@ const ServicesSection = () => {
         y: 40,
       });
 
-      // Header animation
       ScrollTrigger.create({
         trigger: headerRef.current,
         start: "top 85%",
         toggleActions: "play none none reverse",
         onEnter: () => {
-          gsap.to(headerRef.current.children, {
+          gsap.to(headerRef.current?.children || [], {
             opacity: 1,
             y: 0,
             duration: 0.8,
@@ -76,13 +96,12 @@ const ServicesSection = () => {
         },
       });
 
-      // Staggered card animations
       ScrollTrigger.create({
         trigger: cardsRef.current,
         start: "top 80%",
         toggleActions: "play none none reverse",
         onEnter: () => {
-          gsap.to(cardsRef.current.children, {
+          gsap.to(cardsRef.current?.children || [], {
             opacity: 1,
             y: 0,
             scale: 1,
@@ -93,7 +112,6 @@ const ServicesSection = () => {
         },
       });
 
-      // Bottom elements animation
       ScrollTrigger.create({
         trigger: securityBadgeRef.current,
         start: "top 90%",
@@ -109,15 +127,13 @@ const ServicesSection = () => {
         },
       });
 
-      // Individual card hover enhancements
-      const cards = gsap.utils.toArray(cardsRef.current.children);
-      cards.forEach((card, index) => {
+      const cards = gsap.utils.toArray(cardsRef.current?.children || []);
+      cards.forEach((card) => {
         const icon = card.querySelector(".service-icon");
         const hoverOverlay = card.querySelector(".hover-overlay");
         const ctaButton = card.querySelector(".cta-button");
         const features = card.querySelectorAll(".feature-item");
 
-        // Enhanced hover animations
         card.addEventListener("mouseenter", () => {
           gsap.to(card, {
             y: -8,
@@ -126,26 +142,31 @@ const ServicesSection = () => {
             ease: "power2.out",
           });
 
-          gsap.to(icon, {
-            scale: 1.1,
-            rotationY: 15,
-            duration: 0.4,
-            ease: "back.out(1.7)",
-          });
+          if (icon) {
+            gsap.to(icon, {
+              scale: 1.1,
+              rotationY: 15,
+              duration: 0.4,
+              ease: "back.out(1.7)",
+            });
+          }
 
-          gsap.to(hoverOverlay, {
-            opacity: 1,
-            duration: 0.4,
-            ease: "power2.out",
-          });
+          if (hoverOverlay) {
+            gsap.to(hoverOverlay, {
+              opacity: 1,
+              duration: 0.4,
+              ease: "power2.out",
+            });
+          }
 
-          gsap.to(ctaButton, {
-            scale: 1.05,
-            duration: 0.3,
-            ease: "power2.out",
-          });
+          if (ctaButton) {
+            gsap.to(ctaButton, {
+              scale: 1.05,
+              duration: 0.3,
+              ease: "power2.out",
+            });
+          }
 
-          // Animate features on hover
           gsap.to(features, {
             x: 5,
             duration: 0.3,
@@ -162,24 +183,30 @@ const ServicesSection = () => {
             ease: "power2.out",
           });
 
-          gsap.to(icon, {
-            scale: 1,
-            rotationY: 0,
-            duration: 0.4,
-            ease: "power2.out",
-          });
+          if (icon) {
+            gsap.to(icon, {
+              scale: 1,
+              rotationY: 0,
+              duration: 0.4,
+              ease: "power2.out",
+            });
+          }
 
-          gsap.to(hoverOverlay, {
-            opacity: 0,
-            duration: 0.4,
-            ease: "power2.out",
-          });
+          if (hoverOverlay) {
+            gsap.to(hoverOverlay, {
+              opacity: 0,
+              duration: 0.4,
+              ease: "power2.out",
+            });
+          }
 
-          gsap.to(ctaButton, {
-            scale: 1,
-            duration: 0.3,
-            ease: "power2.out",
-          });
+          if (ctaButton) {
+            gsap.to(ctaButton, {
+              scale: 1,
+              duration: 0.3,
+              ease: "power2.out",
+            });
+          }
 
           gsap.to(features, {
             x: 0,
@@ -192,7 +219,20 @@ const ServicesSection = () => {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [loading, services.length]);
+
+  if (loading) {
+    return (
+      <section id="services" className="relative py-20 bg-background overflow-hidden">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-chart-1 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading services...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -212,18 +252,6 @@ const ServicesSection = () => {
           style={{ animationDelay: "2s" }}
         ></div>
       </div>
-
-      {/* Grid pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
-          `,
-          backgroundSize: "50px 50px",
-        }}
-      />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
         {/* Enhanced header */}
@@ -250,84 +278,91 @@ const ServicesSection = () => {
         </div>
 
         {/* Enhanced service cards */}
-        <div ref={cardsRef} className="grid md:grid-cols-2 gap-8 mb-16">
-          {services.map((service, index) => (
-            <div
-              key={service.id}
-              className="group relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-8 hover:border-chart-1/30 transition-all duration-500 cursor-pointer overflow-hidden"
-            >
-              {/* Hover overlay */}
-              <div className="hover-overlay absolute inset-0 bg-gradient-to-br from-chart-1/5 via-purple-500/5 to-transparent opacity-0 pointer-events-none rounded-2xl"></div>
+        {services.length === 0 ? (
+          <div className="text-center py-20">
+            <Sparkles className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-foreground mb-2">No Services Available</h3>
+            <p className="text-muted-foreground">Check back soon for our service offerings!</p>
+          </div>
+        ) : (
+          <div ref={cardsRef} className="grid md:grid-cols-2 gap-8 mb-16">
+            {services.map((service, index) => (
+              <div
+                key={service.id}
+                className="group relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-8 hover:border-chart-1/30 transition-all duration-500 cursor-pointer overflow-hidden"
+              >
+                {/* Hover overlay */}
+                <div className="hover-overlay absolute inset-0 bg-gradient-to-br from-chart-1/5 via-purple-500/5 to-transparent opacity-0 pointer-events-none rounded-2xl"></div>
 
-              {/* Glowing border effect */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-chart-1/20 via-purple-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 -z-10"></div>
+                {/* Glowing border effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-chart-1/20 via-purple-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 -z-10"></div>
 
-              {/* Service Icon */}
-              <div className="mb-6 relative">
-                <div className="service-icon w-16 h-16 bg-gradient-to-br from-chart-1/20 to-purple-500/20 border border-chart-1/30 rounded-xl flex items-center justify-center text-chart-1 mb-4 backdrop-blur-sm relative overflow-hidden">
-                  {/* Icon background glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-chart-1/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative z-10">{iconMap[service.icon]}</div>
+                {/* Service Icon */}
+                <div className="mb-6 relative">
+                  <div className="service-icon w-16 h-16 bg-gradient-to-br from-chart-1/20 to-purple-500/20 border border-chart-1/30 rounded-xl flex items-center justify-center text-chart-1 mb-4 backdrop-blur-sm relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-chart-1/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative z-10">{iconMap[service.icon] || iconMap.code}</div>
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-chart-1 transition-colors duration-300">
+                    {service.title}
+                  </h3>
+
+                  <p className="text-muted-foreground leading-relaxed">
+                    {service.description}
+                  </p>
                 </div>
 
-                <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-chart-1 transition-colors duration-300">
-                  {service.title}
-                </h3>
-
-                <p className="text-muted-foreground leading-relaxed">
-                  {service.description}
-                </p>
-              </div>
-
-              {/* Service Features */}
-              <div className="mb-8">
-                <h4 className="text-foreground font-semibold mb-4 flex items-center gap-2">
-                  <div className="w-1 h-4 bg-gradient-to-b from-chart-1 to-purple-500 rounded"></div>
-                  What's Included:
-                </h4>
-                <ul className="space-y-3">
-                  {service.features.map((feature, featureIndex) => (
-                    <li
-                      key={featureIndex}
-                      className="feature-item flex items-center gap-3 text-muted-foreground group-hover:text-foreground transition-colors duration-300"
-                    >
-                      <div className="w-2 h-2 bg-gradient-to-r from-chart-1 to-purple-500 rounded-full flex-shrink-0"></div>
-                      <span className="flex-1">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Pricing & CTA */}
-              <div className="flex items-center justify-between pt-6 border-t border-border/50 relative">
-                <div>
-                  <div className="text-2xl font-bold bg-gradient-to-r from-chart-1 to-purple-400 bg-clip-text text-transparent">
-                    {service.startingPrice}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {service.duration}
-                  </div>
+                {/* Service Features */}
+                <div className="mb-8">
+                  <h4 className="text-foreground font-semibold mb-4 flex items-center gap-2">
+                    <div className="w-1 h-4 bg-gradient-to-b from-chart-1 to-purple-500 rounded"></div>
+                    What's Included:
+                  </h4>
+                  <ul className="space-y-3">
+                    {service.features.map((feature, featureIndex) => (
+                      <li
+                        key={featureIndex}
+                        className="feature-item flex items-center gap-3 text-muted-foreground group-hover:text-foreground transition-colors duration-300"
+                      >
+                        <div className="w-2 h-2 bg-gradient-to-r from-chart-1 to-purple-500 rounded-full flex-shrink-0"></div>
+                        <span className="flex-1">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
-                <button
-                  onClick={() => handleServiceInquiry(service.title)}
-                  className="btn-cta group/btn rounded-2xl"
-                >
-                  Get Started
-                  <ArrowRight
-                    size={16}
-                    className="group-hover/btn:translate-x-1 transition-transform duration-300"
-                  />
-                </button>
-              </div>
+                {/* Pricing & CTA */}
+                <div className="flex items-center justify-between pt-6 border-t border-border/50 relative">
+                  <div>
+                    <div className="text-2xl font-bold bg-gradient-to-r from-chart-1 to-purple-400 bg-clip-text text-transparent">
+                      {service.starting_price}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {service.duration}
+                    </div>
+                  </div>
 
-              {/* Card index indicator */}
-              <div className="absolute top-4 right-4 w-8 h-8 bg-chart-1/10 border border-chart-1/20 rounded-full flex items-center justify-center text-chart-1 text-sm font-medium">
-                {index + 1}
+                  <button
+                    onClick={() => handleServiceInquiry(service.title)}
+                    className="cta-button btn-cta group/btn rounded-2xl"
+                  >
+                    Get Started
+                    <ArrowRight
+                      size={16}
+                      className="group-hover/btn:translate-x-1 transition-transform duration-300"
+                    />
+                  </button>
+                </div>
+
+                {/* Card index indicator */}
+                <div className="absolute top-4 right-4 w-8 h-8 bg-chart-1/10 border border-chart-1/20 rounded-full flex items-center justify-center text-chart-1 text-sm font-medium">
+                  {index + 1}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Enhanced security badge */}
         <div ref={securityBadgeRef} className="flex justify-center mb-12">

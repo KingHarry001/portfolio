@@ -1,3 +1,4 @@
+// src/components/admin/AdminDashboard.jsx - UPDATED
 import { useState, useEffect } from 'react';
 import { Loader } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
@@ -6,9 +7,19 @@ import ProjectsTable from './ProjectsTable';
 import ServicesTable from './ServicesTable';
 import BlogPostsTable from './BlogPostsTable';
 import TestimonialsTable from './TestimonialsTable';
+import SkillsTable from './SkillsTable';
+import CertificationsTable from './CertificationsTable';
 import Notification from './Notification';
 import ProjectFormModal from './ProjectFormModal';
-import { projectsAPI, servicesAPI, blogAPI, testimonialsAPI } from '../../api/supabase';
+import GenericFormModal from './GenericFormModal';
+import { 
+  projectsAPI, 
+  servicesAPI, 
+  blogAPI, 
+  testimonialsAPI,
+  skillsAPI,
+  certificationsAPI 
+} from '../../api/supabase';
 import FloatingUserButton from './FloatingUserButton';
 
 const AdminDashboard = () => {
@@ -17,8 +28,11 @@ const AdminDashboard = () => {
   const [services, setServices] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [certifications, setCertifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState(null); // 'project', 'service', 'skill', 'certification', etc.
   const [editingItem, setEditingItem] = useState(null);
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,17 +63,29 @@ const AdminDashboard = () => {
           const testimonialData = await testimonialsAPI.getAll();
           setTestimonials(testimonialData || []);
           break;
+        case 'skills':
+          const skillData = await skillsAPI.getAll();
+          setSkills(skillData || []);
+          break;
+        case 'certifications':
+          const certData = await certificationsAPI.getAll();
+          setCertifications(certData || []);
+          break;
         case 'overview':
-          const [p, s, b, t] = await Promise.all([
+          const [p, s, b, t, sk, c] = await Promise.all([
             projectsAPI.getAll({ showDrafts: true }),
             servicesAPI.getAll(),
             blogAPI.getAll(),
-            testimonialsAPI.getAll()
+            testimonialsAPI.getAll(),
+            skillsAPI.getAll(),
+            certificationsAPI.getAll()
           ]);
           setProjects(p || []);
           setServices(s || []);
           setBlogs(b || []);
           setTestimonials(t || []);
+          setSkills(sk || []);
+          setCertifications(c || []);
           break;
       }
     } catch (error) {
@@ -72,6 +98,49 @@ const AdminDashboard = () => {
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleAdd = (type) => {
+    setModalType(type);
+    setEditingItem(null);
+    setShowModal(true);
+  };
+
+  const handleEdit = (type, item) => {
+    setModalType(type);
+    setEditingItem(item);
+    setShowModal(true);
+  };
+
+  const handleDelete = async (type, id) => {
+    if (!window.confirm(`Delete this ${type}?`)) return;
+
+    try {
+      switch(type) {
+        case 'project':
+          await projectsAPI.delete(id, 'admin-user-id');
+          break;
+        case 'service':
+          await servicesAPI.delete(id);
+          break;
+        case 'blog':
+          await blogAPI.delete(id);
+          break;
+        case 'testimonial':
+          await testimonialsAPI.delete(id);
+          break;
+        case 'skill':
+          await skillsAPI.delete(id);
+          break;
+        case 'certification':
+          await certificationsAPI.delete(id);
+          break;
+      }
+      showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`);
+      fetchData();
+    } catch (error) {
+      showNotification('Error: ' + error.message, 'error');
+    }
   };
 
   const renderContent = () => {
@@ -104,16 +173,18 @@ const AdminDashboard = () => {
               services={services}
               blogs={blogs}
               testimonials={testimonials}
+              skills={skills}
+              certifications={certifications}
             />
             
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 sm:p-6">
               <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {[
-                  { label: 'New Project', emoji: '🚀', action: () => { setActiveTab('projects'); setShowModal(true); } },
-                  { label: 'New Post', emoji: '📝', action: () => setActiveTab('blog') },
-                  { label: 'Add Service', emoji: '⭐', action: () => setActiveTab('services') },
-                  { label: 'Upload Media', emoji: '🖼️', action: () => setActiveTab('media') }
+                  { label: 'New Project', emoji: '🚀', action: () => { setActiveTab('projects'); handleAdd('project'); } },
+                  { label: 'New Skill', emoji: '💪', action: () => { setActiveTab('skills'); handleAdd('skill'); } },
+                  { label: 'Add Service', emoji: '⭐', action: () => { setActiveTab('services'); handleAdd('service'); } },
+                  { label: 'New Cert', emoji: '🏆', action: () => { setActiveTab('certifications'); handleAdd('certification'); } }
                 ].map((action, idx) => (
                   <button
                     key={idx}
@@ -163,25 +234,9 @@ const AdminDashboard = () => {
             setSearchQuery={setSearchQuery}
             filterCategory={filterCategory}
             setFilterCategory={setFilterCategory}
-            onAddProject={() => {
-              setEditingItem(null);
-              setShowModal(true);
-            }}
-            onEditProject={(project) => {
-              setEditingItem(project);
-              setShowModal(true);
-            }}
-            onDeleteProject={async (projectId) => {
-              if (window.confirm('Delete this project?')) {
-                try {
-                  await projectsAPI.delete(projectId, 'admin-user-id');
-                  showNotification('Project deleted successfully!');
-                  fetchData();
-                } catch (error) {
-                  showNotification('Error deleting project: ' + error.message, 'error');
-                }
-              }
-            }}
+            onAddProject={() => handleAdd('project')}
+            onEditProject={(project) => handleEdit('project', project)}
+            onDeleteProject={(id) => handleDelete('project', id)}
           />
         );
 
@@ -189,25 +244,29 @@ const AdminDashboard = () => {
         return (
           <ServicesTable 
             services={services}
-            onAddService={() => {
-              setEditingItem(null);
-              setShowModal(true);
-            }}
-            onEditService={(service) => {
-              setEditingItem(service);
-              setShowModal(true);
-            }}
-            onDeleteService={async (serviceId) => {
-              if (window.confirm('Delete this service?')) {
-                try {
-                  await servicesAPI.delete(serviceId);
-                  showNotification('Service deleted successfully!');
-                  fetchData();
-                } catch (error) {
-                  showNotification('Error: ' + error.message, 'error');
-                }
-              }
-            }}
+            onAddService={() => handleAdd('service')}
+            onEditService={(service) => handleEdit('service', service)}
+            onDeleteService={(id) => handleDelete('service', id)}
+          />
+        );
+
+      case 'skills':
+        return (
+          <SkillsTable 
+            skills={skills}
+            onAddSkill={() => handleAdd('skill')}
+            onEditSkill={(skill) => handleEdit('skill', skill)}
+            onDeleteSkill={(id) => handleDelete('skill', id)}
+          />
+        );
+
+      case 'certifications':
+        return (
+          <CertificationsTable 
+            certifications={certifications}
+            onAddCertification={() => handleAdd('certification')}
+            onEditCertification={(cert) => handleEdit('certification', cert)}
+            onDeleteCertification={(id) => handleDelete('certification', id)}
           />
         );
 
@@ -215,25 +274,9 @@ const AdminDashboard = () => {
         return (
           <BlogPostsTable 
             blogs={blogs}
-            onAddPost={() => {
-              setEditingItem(null);
-              setShowModal(true);
-            }}
-            onEditPost={(post) => {
-              setEditingItem(post);
-              setShowModal(true);
-            }}
-            onDeletePost={async (postId) => {
-              if (window.confirm('Delete this post?')) {
-                try {
-                  await blogAPI.delete(postId);
-                  showNotification('Post deleted!');
-                  fetchData();
-                } catch (error) {
-                  showNotification('Error: ' + error.message, 'error');
-                }
-              }
-            }}
+            onAddPost={() => handleAdd('blog')}
+            onEditPost={(post) => handleEdit('blog', post)}
+            onDeletePost={(id) => handleDelete('blog', id)}
           />
         );
 
@@ -241,25 +284,9 @@ const AdminDashboard = () => {
         return (
           <TestimonialsTable 
             testimonials={testimonials}
-            onAddTestimonial={() => {
-              setEditingItem(null);
-              setShowModal(true);
-            }}
-            onEditTestimonial={(testimonial) => {
-              setEditingItem(testimonial);
-              setShowModal(true);
-            }}
-            onDeleteTestimonial={async (testimonialId) => {
-              if (window.confirm('Delete this testimonial?')) {
-                try {
-                  await testimonialsAPI.delete(testimonialId);
-                  showNotification('Testimonial deleted!');
-                  fetchData();
-                } catch (error) {
-                  showNotification('Error: ' + error.message, 'error');
-                }
-              }
-            }}
+            onAddTestimonial={() => handleAdd('testimonial')}
+            onEditTestimonial={(testimonial) => handleEdit('testimonial', testimonial)}
+            onDeleteTestimonial={(id) => handleDelete('testimonial', id)}
           />
         );
 
@@ -326,14 +353,15 @@ const AdminDashboard = () => {
             <h1 className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
               Admin Panel
             </h1>
-            <div className="w-10"></div> {/* Spacer for alignment */}
+            <div className="w-10"></div>
           </div>
           
           {renderContent()}
         </div>
       </div>
 
-      {showModal && (
+      {/* Modal - conditionally render based on type */}
+      {showModal && modalType === 'project' && (
         <ProjectFormModal
           editingItem={editingItem}
           setShowModal={setShowModal}
@@ -341,6 +369,23 @@ const AdminDashboard = () => {
             fetchData();
             showNotification(
               editingItem ? 'Project updated successfully!' : 'Project created successfully!'
+            );
+          }}
+          onError={(error) => showNotification('Error: ' + error.message, 'error')}
+        />
+      )}
+
+      {showModal && modalType !== 'project' && (
+        <GenericFormModal
+          type={modalType}
+          editingItem={editingItem}
+          setShowModal={setShowModal}
+          onSuccess={() => {
+            fetchData();
+            showNotification(
+              editingItem 
+                ? `${modalType.charAt(0).toUpperCase() + modalType.slice(1)} updated successfully!` 
+                : `${modalType.charAt(0).toUpperCase() + modalType.slice(1)} created successfully!`
             );
           }}
           onError={(error) => showNotification('Error: ' + error.message, 'error')}

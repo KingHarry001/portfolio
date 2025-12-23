@@ -23,6 +23,10 @@ import { useEffect } from "react";
 import ScrollToTop from "./components/react-ui/ScrollToTop";
 import HireMeButton from "./components/HireMe";
 import AppStore from "./pages/AppStore";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { SignIn, SignUp } from "@clerk/clerk-react";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import { AdminLayout, AuthLayout, MainLayout } from "./Layout";
 // import HireMeButton from './components/HireMeButton';
 
 const scrollToSection = (id) => {
@@ -134,20 +138,37 @@ function App() {
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       <BrowserRouter>
         <ScrollToTop />
-        <Header />
         <Routes>
-          <Route path="/" element={<Portfolio />} />
-          <Route path="/graphic-design" element={<GraphicsPage />} />
-          <Route path="/web-development" element={<WebDev />} />
-          <Route path="/uiux-design" element={<Uidesign />} />
-          <Route path="/security-consulting" element={<CyberSec />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-service" element={<TermsOfServices />} />
-          <Route path="/apps" element={<AppStore />} />
+          {/* Routes with Main Layout */}
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Portfolio />} />
+            <Route path="/graphic-design" element={<GraphicsPage />} />
+            <Route path="/web-development" element={<WebDev />} />
+            <Route path="/uiux-design" element={<Uidesign />} />
+            <Route path="/security-consulting" element={<CyberSec />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfServices />} />
+            <Route path="/apps" element={<AppStore />} />
+          </Route>
+
+          {/* Routes with Auth Layout (no header/footer) */}
+          <Route element={<AuthLayout />}>
+            <Route path="/sign-in" element={<SignIn />} />
+            <Route path="/sign-up" element={<SignUp />} />
+          </Route>
+
+          {/* Routes with Admin Layout (no header/footer) */}
+          <Route element={<AdminLayout />}>
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute adminOnly>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
         </Routes>
-        <ContactSection />
-        {/* <HireMeButton /> */}
-        <Footer />
       </BrowserRouter>
     </div>
   );

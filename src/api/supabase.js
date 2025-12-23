@@ -2,11 +2,11 @@
 import { supabase, uploadFile, deleteFile } from '../lib/supabase';
 
 // ==================== PROJECTS API ====================
-
 export const projectsAPI = {
-  // Get all projects
   getAll: async (filters = {}) => {
-    let query = supabase.from('projects').select('*');
+    let query = supabase
+      .from('projects')
+      .select('*');
 
     if (filters.category) {
       query = query.eq('category', filters.category);
@@ -16,61 +16,77 @@ export const projectsAPI = {
       query = query.eq('featured', filters.featured);
     }
 
+    // Only show published for public
+    if (!filters.showDrafts) {
+      query = query.eq('published', true);
+    }
+
     const { data, error } = await query.order('created_at', { ascending: false });
-
     if (error) throw error;
     return data;
   },
 
-  // Get single project
-  getById: async (id) => {
+  create: async (projectData, userId) => {
     const { data, error } = await supabase
       .from('projects')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return data;
-  },
-
-  // Create project
-  create: async (projectData) => {
-    const { data, error } = await supabase
-      .from('projects')
-      .insert(projectData)
+      .insert({
+        ...projectData,
+        user_id: userId,
+        created_by: userId
+      })
       .select()
       .single();
 
     if (error) throw error;
+
+    // Log action
+    await auditLog('create', 'projects', data.id, userId, projectData);
+    
     return data;
   },
 
-  // Update project
-  update: async (id, projectData) => {
+  update: async (id, projectData, userId) => {
     const { data, error } = await supabase
       .from('projects')
-      .update(projectData)
+      .update({
+        ...projectData,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
+
+    await auditLog('update', 'projects', id, userId, projectData);
+    
     return data;
   },
 
-  // Delete project
-  delete: async (id) => {
+  delete: async (id, userId) => {
     const { error } = await supabase
       .from('projects')
       .delete()
       .eq('id', id);
 
     if (error) throw error;
+
+    await auditLog('delete', 'projects', id, userId, null);
+    
     return true;
   },
 };
 
+// Audit logging
+async function auditLog(action, tableName, recordId, userId, changes) {
+  await supabase.from('audit_logs').insert({
+    user_id: userId,
+    action,
+    table_name: tableName,
+    record_id: recordId,
+    changes
+  });
+}
 // ==================== APPS API ====================
 
 export const appsAPI = {

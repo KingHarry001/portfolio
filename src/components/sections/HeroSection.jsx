@@ -9,6 +9,7 @@ import { ChevronDown, Download, ExternalLink } from "lucide-react";
 import { personalInfo } from "../../data/mock";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
+import { resumesAPI } from "../../api/supabase";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,6 +20,7 @@ const HeroSection = () => {
   const [roleIndex, setRoleIndex] = useState(0);
   const [char, setChar] = useState(0);
   const [deleting, setDeleting] = useState(false);
+  const [activeResume, setActiveResume] = useState(null);
 
   const fullText = personalInfo.tagline;
   const statsRef = useRef();
@@ -387,20 +389,36 @@ const HeroSection = () => {
     return () => clearTimeout(timeout);
   }, [char, deleting, roleIndex, roles]);
 
-  const scrollToAbout = useCallback(() => {
-  const element = document.querySelector("#about");
-  if (element) {
-    element.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start' 
-    });
-  }
-}, []);
+    useEffect(() => {
+    const fetchActiveResume = async () => {
+      try {
+        const resume = await resumesAPI.getActive();
+        setActiveResume(resume);
+      } catch (error) {
+        console.error("Error fetching resume:", error);
+      }
+    };
 
-  // Memoized resume download handler
+    fetchActiveResume();
+  }, []);
+
+  const scrollToAbout = useCallback(() => {
+    const element = document.querySelector("#about");
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, []);
+
   const handleResumeDownload = useCallback(() => {
-    window.open(fileDownloadURL, "_blank");
-  }, [fileDownloadURL]);
+    if (activeResume?.file_url) {
+      window.open(activeResume.file_url, "_blank");
+    } else {
+      console.log("No active resume available");
+    }
+  }, [activeResume]);
 
   return (
     <section
@@ -485,14 +503,16 @@ const HeroSection = () => {
                 <ExternalLink size={18} />
               </button>
 
-              <button
-                onClick={handleResumeDownload}
-                className="btn-secondary"
-                aria-label="Download resume"
-              >
-                <Download size={18} />
-                <span>Download Resume</span>
-              </button>
+              {activeResume && (
+                <button
+                  onClick={handleResumeDownload}
+                  className="btn-secondary"
+                  aria-label="Download resume"
+                >
+                  <Download size={18} />
+                  <span>Download Resume</span>
+                </button>
+              )}
             </div>
             {/* Quick Stats */}
             <div

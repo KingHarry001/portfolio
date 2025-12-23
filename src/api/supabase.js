@@ -423,3 +423,135 @@ async function auditLog(action, tableName, recordId, userId, changes) {
     changes,
   });
 }
+
+// ==================== RESUMES API ====================
+export const resumesAPI = {
+  getAll: async () => {
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('*')
+      .order('upload_date', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  },
+
+  getActive: async () => {
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('*')
+      .eq('is_active', true)
+      .order('upload_date', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    return data;
+  },
+
+  create: async (resumeData) => {
+    const { data, error } = await supabase
+      .from('resumes')
+      .insert(resumeData)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  update: async (id, resumeData) => {
+    const { data, error } = await supabase
+      .from('resumes')
+      .update({
+        ...resumeData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  delete: async (id) => {
+    // Get resume data to delete file from storage
+    const { data: resume } = await supabase
+      .from('resumes')
+      .select('file_url')
+      .eq('id', id)
+      .single();
+
+    if (resume?.file_url) {
+      try {
+        // Extract file path from URL
+        const urlParts = resume.file_url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        
+        // Delete from storage
+        await supabase.storage
+          .from('resumes')
+          .remove([fileName]);
+      } catch (storageError) {
+        console.error('Error deleting file from storage:', storageError);
+        // Continue with database deletion even if storage deletion fails
+      }
+    }
+
+    // Delete from database
+    const { error } = await supabase
+      .from('resumes')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  },
+
+  setActive: async (id) => {
+    // First, set all resumes to inactive
+    await supabase
+      .from('resumes')
+      .update({ is_active: false })
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all
+
+    // Then set the selected one to active
+    const { data, error } = await supabase
+      .from('resumes')
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  uploadFile: async (file) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+    const filePath = fileName;
+
+    // Upload to Supabase storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('resumes')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (uploadError) throw uploadError;
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('resumes')
+      .getPublicUrl(filePath);
+
+    return {
+      file_url: publicUrl,
+      file_name: file.name,
+      file_size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+    };
+  },
+};

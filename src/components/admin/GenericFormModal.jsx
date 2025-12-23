@@ -1,98 +1,228 @@
 // src/components/admin/GenericFormModal.jsx - FIXED
-import { useState } from 'react';
-import { X, Save, Loader } from 'lucide-react';
-import { skillsAPI, certificationsAPI, servicesAPI, testimonialsAPI, blogAPI } from '../../api/supabase';
+import { useState } from "react";
+import { X, Save, Loader } from "lucide-react";
+import Loading from "../layouts/loading";
+import {
+  skillsAPI,
+  certificationsAPI,
+  servicesAPI,
+  testimonialsAPI,
+  blogAPI,
+} from "../../api/supabase";
 
 const formConfigs = {
   skill: {
-    title: 'Skill',
+    title: "Skill",
     fields: [
-      { name: 'name', label: 'Skill Name', type: 'text', required: true },
-      { name: 'category', label: 'Category', type: 'select', required: true, options: [
-        'Graphic Design', 'Frontend', 'Backend', 'Programming', 'Security', 'Crypto', 'AI/ML'
-      ]},
-      { name: 'level', label: 'Level (%)', type: 'number', required: true, min: 0, max: 100 },
-      { name: 'display_order', label: 'Display Order', type: 'number', required: false },
+      { name: "name", label: "Skill Name", type: "text", required: true },
+      {
+        name: "category",
+        label: "Category",
+        type: "select",
+        required: true,
+        options: [
+          "Graphic Design",
+          "Frontend",
+          "Backend",
+          "Programming",
+          "Security",
+          "Crypto",
+          "AI/ML",
+        ],
+      },
+      {
+        name: "level",
+        label: "Level (%)",
+        type: "number",
+        required: true,
+        min: 0,
+        max: 100,
+      },
+      {
+        name: "display_order",
+        label: "Display Order",
+        type: "number",
+        required: false,
+      },
     ],
-    api: skillsAPI
+    api: skillsAPI,
   },
   certification: {
-    title: 'Certification',
+    title: "Certification",
     fields: [
-      { name: 'name', label: 'Certification Name', type: 'text', required: true },
-      { name: 'issuer', label: 'Issuer/Organization', type: 'text', required: true },
-      { name: 'year', label: 'Year', type: 'text', required: true },
-      { name: 'credential_url', label: 'Credential URL', type: 'url', required: false },
+      {
+        name: "name",
+        label: "Certification Name",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "issuer",
+        label: "Issuer/Organization",
+        type: "text",
+        required: true,
+      },
+      { name: "year", label: "Year", type: "text", required: true },
+      {
+        name: "credential_url",
+        label: "Credential URL",
+        type: "url",
+        required: false,
+      },
     ],
-    api: certificationsAPI
+    api: certificationsAPI,
   },
   service: {
-    title: 'Service',
+    title: "Service",
     fields: [
-      { name: 'title', label: 'Service Title', type: 'text', required: true },
-      { name: 'description', label: 'Description', type: 'textarea', required: true },
-      { name: 'icon', label: 'Icon Name', type: 'select', required: true, options: [
-        'palette', 'code', 'smartphone', 'shield'
-      ]},
-      { name: 'features', label: 'Features (one per line)', type: 'textarea', required: true },
-      { name: 'starting_price', label: 'Starting Price', type: 'text', required: true },
-      { name: 'duration', label: 'Duration', type: 'text', required: true },
-      { name: 'display_order', label: 'Display Order', type: 'number', required: false },
-      { name: 'active', label: 'Active', type: 'checkbox', required: false },
+      { name: "title", label: "Service Title", type: "text", required: true },
+      {
+        name: "description",
+        label: "Description",
+        type: "textarea",
+        required: true,
+      },
+      {
+        name: "icon",
+        label: "Icon Name",
+        type: "select",
+        required: true,
+        options: ["palette", "code", "smartphone", "shield"],
+      },
+      {
+        name: "features",
+        label: "Features (one per line)",
+        type: "textarea",
+        required: true,
+      },
+      {
+        name: "starting_price",
+        label: "Starting Price",
+        type: "text",
+        required: true,
+      },
+      { name: "duration", label: "Duration", type: "text", required: true },
+      {
+        name: "display_order",
+        label: "Display Order",
+        type: "number",
+        required: false,
+      },
+      { name: "active", label: "Active", type: "checkbox", required: false },
     ],
-    api: servicesAPI
+    api: servicesAPI,
   },
   testimonial: {
-    title: 'Testimonial',
+    title: "Testimonial",
     fields: [
-      { name: 'name', label: 'Client Name', type: 'text', required: true },
-      { name: 'role', label: 'Role/Position', type: 'text', required: true },
-      { name: 'company', label: 'Company', type: 'text', required: false },
-      { name: 'content', label: 'Testimonial Content', type: 'textarea', required: true },
-      { name: 'avatar_url', label: 'Avatar URL', type: 'url', required: false },
-      { name: 'rating', label: 'Rating (1-5)', type: 'number', required: false, min: 1, max: 5 },
-      { name: 'display_order', label: 'Display Order', type: 'number', required: false },
-      { name: 'featured', label: 'Featured', type: 'checkbox', required: false },
+      { name: "name", label: "Client Name", type: "text", required: true },
+      { name: "role", label: "Role/Position", type: "text", required: true },
+      { name: "company", label: "Company", type: "text", required: false },
+      {
+        name: "content",
+        label: "Testimonial Content",
+        type: "textarea",
+        required: true,
+      },
+      { name: "avatar_url", label: "Avatar URL", type: "url", required: false },
+      {
+        name: "rating",
+        label: "Rating (1-5)",
+        type: "number",
+        required: false,
+        min: 1,
+        max: 5,
+      },
+      {
+        name: "display_order",
+        label: "Display Order",
+        type: "number",
+        required: false,
+      },
+      {
+        name: "featured",
+        label: "Featured",
+        type: "checkbox",
+        required: false,
+      },
     ],
-    api: testimonialsAPI
+    api: testimonialsAPI,
   },
   blog: {
-    title: 'Blog Post',
+    title: "Blog Post",
     fields: [
-      { name: 'title', label: 'Post Title', type: 'text', required: true },
-      { name: 'slug', label: 'Slug', type: 'text', required: true },
-      { name: 'excerpt', label: 'Excerpt', type: 'textarea', required: true },
-      { name: 'content', label: 'Content', type: 'textarea', required: true, rows: 8 },
-      { name: 'category', label: 'Category', type: 'select', required: true, options: [
-        'Technology', 'Design', 'Development', 'Security', 'Tutorial', 'News'
-      ]},
-      { name: 'featured_image', label: 'Featured Image URL', type: 'url', required: false },
-      { name: 'author', label: 'Author', type: 'text', required: false },
-      { name: 'publish_date', label: 'Publish Date', type: 'date', required: false },
-      { name: 'published', label: 'Published', type: 'checkbox', required: false },
+      { name: "title", label: "Post Title", type: "text", required: true },
+      { name: "slug", label: "Slug", type: "text", required: true },
+      { name: "excerpt", label: "Excerpt", type: "textarea", required: true },
+      {
+        name: "content",
+        label: "Content",
+        type: "textarea",
+        required: true,
+        rows: 8,
+      },
+      {
+        name: "category",
+        label: "Category",
+        type: "select",
+        required: true,
+        options: [
+          "Technology",
+          "Design",
+          "Development",
+          "Security",
+          "Tutorial",
+          "News",
+        ],
+      },
+      {
+        name: "featured_image",
+        label: "Featured Image URL",
+        type: "url",
+        required: false,
+      },
+      { name: "author", label: "Author", type: "text", required: false },
+      {
+        name: "publish_date",
+        label: "Publish Date",
+        type: "date",
+        required: false,
+      },
+      {
+        name: "published",
+        label: "Published",
+        type: "checkbox",
+        required: false,
+      },
     ],
-    api: blogAPI
-  }
+    api: blogAPI,
+  },
 };
 
-const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError }) => {
+const GenericFormModal = ({
+  type,
+  editingItem,
+  setShowModal,
+  onSuccess,
+  onError,
+}) => {
   const config = formConfigs[type];
   const [saving, setSaving] = useState(false);
-  
+
   // Initialize form data
   const getInitialData = () => {
     if (editingItem) return editingItem;
-    
+
     const initialData = {};
-    config.fields.forEach(field => {
-      if (field.type === 'checkbox') {
+    config.fields.forEach((field) => {
+      if (field.type === "checkbox") {
         initialData[field.name] = false;
-      } else if (field.type === 'number') {
+      } else if (field.type === "number") {
         initialData[field.name] = field.min || 0;
-      } else if (field.type === 'date') {
-        initialData[field.name] = new Date().toISOString().split('T')[0];
+      } else if (field.type === "date") {
+        initialData[field.name] = new Date().toISOString().split("T")[0];
       } else {
-        initialData[field.name] = '';
+        initialData[field.name] = "";
       }
     });
     return initialData;
@@ -101,14 +231,15 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
   const [formData, setFormData] = useState(getInitialData());
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     // Auto-generate slug from title for blog posts
-    if (field === 'title' && type === 'blog' && !editingItem) {
-      const slug = value.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-      setFormData(prev => ({ ...prev, slug }));
+    if (field === "title" && type === "blog" && !editingItem) {
+      const slug = value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+      setFormData((prev) => ({ ...prev, slug }));
     }
   };
 
@@ -119,8 +250,11 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
     try {
       // Process features array if it exists (for services)
       let cleanData = { ...formData };
-      if (cleanData.features && typeof cleanData.features === 'string') {
-        cleanData.features = cleanData.features.split('\n').map(f => f.trim()).filter(Boolean);
+      if (cleanData.features && typeof cleanData.features === "string") {
+        cleanData.features = cleanData.features
+          .split("\n")
+          .map((f) => f.trim())
+          .filter(Boolean);
       }
 
       if (editingItem) {
@@ -132,7 +266,7 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
       setShowModal(false);
       onSuccess();
     } catch (error) {
-      console.error('Error saving:', error);
+      console.error("Error saving:", error);
       onError(error);
     } finally {
       setSaving(false);
@@ -140,22 +274,26 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
   };
 
   const renderField = (field) => {
-    const value = formData[field.name] || '';
+    const value = formData[field.name] || "";
 
     switch (field.type) {
-      case 'textarea':
+      case "textarea":
         return (
           <textarea
             required={field.required}
-            rows={field.rows || (field.name === 'features' ? 5 : 3)}
-            value={Array.isArray(value) ? value.join('\n') : value}
+            rows={field.rows || (field.name === "features" ? 5 : 3)}
+            value={Array.isArray(value) ? value.join("\n") : value}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
-            placeholder={field.name === 'features' ? 'Enter each feature on a new line' : `Enter ${field.label.toLowerCase()}`}
+            placeholder={
+              field.name === "features"
+                ? "Enter each feature on a new line"
+                : `Enter ${field.label.toLowerCase()}`
+            }
             className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors resize-vertical"
           />
         );
-      
-      case 'select':
+
+      case "select":
         return (
           <select
             required={field.required}
@@ -164,26 +302,28 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
             className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
           >
             <option value="">Select {field.label}</option>
-            {field.options.map(option => (
-              <option key={option} value={option}>{option}</option>
+            {field.options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
             ))}
           </select>
         );
-      
-      case 'checkbox':
+
+      case "checkbox":
         return (
           <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               checked={value}
               onChange={(e) => handleInputChange(field.name, e.target.checked)}
-              className="sr-only peer" 
+              className="sr-only peer"
             />
             <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
           </label>
         );
-      
-      case 'number':
+
+      case "number":
         return (
           <input
             type="number"
@@ -191,13 +331,15 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
             min={field.min}
             max={field.max}
             value={value}
-            onChange={(e) => handleInputChange(field.name, parseFloat(e.target.value) || 0)}
+            onChange={(e) =>
+              handleInputChange(field.name, parseFloat(e.target.value) || 0)
+            }
             placeholder={`Enter ${field.label.toLowerCase()}`}
             className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
           />
         );
-      
-      case 'date':
+
+      case "date":
         return (
           <input
             type="date"
@@ -207,7 +349,7 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
             className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
           />
         );
-      
+
       default:
         return (
           <input
@@ -230,7 +372,7 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
             <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
               {editingItem ? `Edit ${config.title}` : `Add New ${config.title}`}
             </h3>
-            <button 
+            <button
               type="button"
               onClick={() => setShowModal(false)}
               className="p-1 sm:p-2 hover:bg-gray-800 rounded-lg transition-colors"
@@ -243,7 +385,8 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
             {config.fields.map((field) => (
               <div key={field.name}>
                 <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  {field.label} {field.required && <span className="text-red-400">*</span>}
+                  {field.label}{" "}
+                  {field.required && <span className="text-red-400">*</span>}
                 </label>
                 {renderField(field)}
               </div>
@@ -257,20 +400,24 @@ const GenericFormModal = ({ type, editingItem, setShowModal, onSuccess, onError 
               >
                 Cancel
               </button>
-              <button 
+              <button
                 type="submit"
                 disabled={saving}
                 className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg font-medium hover:from-cyan-600 hover:to-purple-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 disabled:opacity-50"
               >
                 {saving ? (
                   <>
-                    <Loader className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                    <Loader />
                     <span>Saving...</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>{editingItem ? `Update ${config.title}` : `Create ${config.title}`}</span>
+                    <span>
+                      {editingItem
+                        ? `Update ${config.title}`
+                        : `Create ${config.title}`}
+                    </span>
                   </>
                 )}
               </button>

@@ -420,7 +420,7 @@ const AppFormModal = ({ editingItem, setShowModal, onSuccess, onError }) => {
               >
                 {saving ? (
                   <>
-                    <Loader className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                    <Loader />
                     <span>Saving...</span>
                   </>
                 ) : (

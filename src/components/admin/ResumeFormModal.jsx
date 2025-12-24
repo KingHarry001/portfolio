@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { X, Upload, Loader, Save, FileText } from "lucide-react";
 import { resumesAPI } from "../../api/supabase";
-import Loading from "../layouts/loading";
+import Loading from "../../components/LoadingSpinner3D";
 
 const ResumeFormModal = ({ editingItem, setShowModal, onSuccess, onError }) => {
   const [formData, setFormData] = useState(

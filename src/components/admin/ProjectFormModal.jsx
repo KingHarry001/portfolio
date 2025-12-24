@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Upload, Loader, Save, Plus, Trash2 } from "lucide-react";
 import { projectsAPI } from "../../api/supabase";
-import Loading from "../layouts/loading";
+import Loading from "../../components/LoadingSpinner3D";
 
 const ProjectFormModal = ({
   editingItem,
@@ -151,7 +151,7 @@ const ProjectFormModal = ({
       throw error;
     }
   };
-  
+
   // Update your upload handlers:
   const handleFeaturedImageUpload = async (file) => {
     if (!file) return;

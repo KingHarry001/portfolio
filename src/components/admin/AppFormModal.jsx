@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { appsAPI, usersAPI } from "../../api/supabase";
 import { X, Upload, Loader, Save, Plus, Trash2, Download } from "lucide-react";
-import Loading from "../layouts/loading";
+import Loading from "../../components/LoadingSpinner3D";
 
 const categories = [
   "Productivity",
@@ -101,7 +101,7 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
         // REMOVED: rating, rating_count, downloads - these are dynamic
         privacy_policy_url: "",
         support_url: "",
-        release_date: new Date().toISOString().split('T')[0],
+        release_date: new Date().toISOString().split("T")[0],
         featured: false,
         published: true,
         tags: [],
@@ -155,7 +155,7 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
 
   const handleIconUpload = async (file) => {
     if (!file) return;
-    
+
     setUploadingIcon(true);
     try {
       const imageUrl = await uploadImage(file);
@@ -170,7 +170,7 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
 
   const handleScreenshotsUpload = async (files) => {
     if (!files || files.length === 0) return;
-    
+
     setUploadingScreenshots(true);
     try {
       const uploadPromises = Array.from(files).map((file) => uploadImage(file));
@@ -200,7 +200,7 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
       onError(new Error("Please select a file"));
       return;
     }
-    
+
     if (!file.name.endsWith(".apk")) {
       onError(new Error("Please select an APK file (.apk)"));
       return;
@@ -208,7 +208,13 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
 
     setUploadingApk(true);
     try {
-      console.log("APK file:", file.name, "Size:", (file.size / 1024 / 1024).toFixed(2), "MB");
+      console.log(
+        "APK file:",
+        file.name,
+        "Size:",
+        (file.size / 1024 / 1024).toFixed(2),
+        "MB"
+      );
 
       // In a real app, you would upload to Supabase Storage here
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -218,7 +224,6 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
       setApkFile(file);
       handleInputChange("download_url", mockApkUrl);
       handleInputChange("size", `${(file.size / 1024 / 1024).toFixed(2)} MB`);
-
     } catch (error) {
       console.error("APK upload error:", error);
       onError(new Error(`Failed to upload APK: ${error.message}`));
@@ -240,7 +245,7 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       if (!user) {
         throw new Error("You must be logged in");
@@ -291,7 +296,6 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
 
       onSuccess();
       onClose();
-      
     } catch (error) {
       console.error("App save error:", error);
       console.error("Error details:", error.message, error.code, error.details);
@@ -355,7 +359,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                 </label>
                 <select
                   value={formData.category}
-                  onChange={(e) => handleInputChange("category", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("category", e.target.value)
+                  }
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
                 >
                   <option value="">Select a category</option>
@@ -391,7 +397,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                 required
                 rows={2}
                 value={formData.short_description}
-                onChange={(e) => handleInputChange("short_description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("short_description", e.target.value)
+                }
                 placeholder="Brief description (50-100 characters)"
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
               />
@@ -404,7 +412,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
               <textarea
                 rows={4}
                 value={formData.long_description}
-                onChange={(e) => handleInputChange("long_description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("long_description", e.target.value)
+                }
                 placeholder="Detailed app description"
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
               />
@@ -540,7 +550,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                     <input
                       type="text"
                       value={item}
-                      onChange={(e) => handleArrayInput(field.id, index, e.target.value)}
+                      onChange={(e) =>
+                        handleArrayInput(field.id, index, e.target.value)
+                      }
                       placeholder={field.placeholder}
                       className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
                     />
@@ -632,7 +644,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                     <input
                       type="url"
                       value={formData.download_url || ""}
-                      onChange={(e) => handleInputChange("download_url", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("download_url", e.target.value)
+                      }
                       placeholder="Enter direct download URL"
                       className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
                     />
@@ -675,7 +689,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                 <input
                   type="text"
                   value={formData.min_android_version}
-                  onChange={(e) => handleInputChange("min_android_version", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("min_android_version", e.target.value)
+                  }
                   placeholder="8.0"
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
                 />
@@ -693,7 +709,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                 <input
                   type="text"
                   value={formData.developer_name}
-                  onChange={(e) => handleInputChange("developer_name", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("developer_name", e.target.value)
+                  }
                   placeholder="Harrison King"
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
                 />
@@ -705,7 +723,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                 <input
                   type="url"
                   value={formData.website_url}
-                  onChange={(e) => handleInputChange("website_url", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("website_url", e.target.value)
+                  }
                   placeholder="https://example.com"
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
                 />
@@ -721,7 +741,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                 <input
                   type="url"
                   value={formData.privacy_policy_url}
-                  onChange={(e) => handleInputChange("privacy_policy_url", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("privacy_policy_url", e.target.value)
+                  }
                   placeholder="https://example.com/privacy"
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
                 />
@@ -733,7 +755,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                 <input
                   type="url"
                   value={formData.support_url}
-                  onChange={(e) => handleInputChange("support_url", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("support_url", e.target.value)
+                  }
                   placeholder="https://example.com/support"
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
                 />
@@ -748,7 +772,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
               <input
                 type="date"
                 value={formData.release_date}
-                onChange={(e) => handleInputChange("release_date", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("release_date", e.target.value)
+                }
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
               />
             </div>
@@ -768,7 +794,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                   <input
                     type="checkbox"
                     checked={formData.featured}
-                    onChange={(e) => handleInputChange("featured", e.target.checked)}
+                    onChange={(e) =>
+                      handleInputChange("featured", e.target.checked)
+                    }
                     className="sr-only peer"
                   />
                   <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
@@ -788,7 +816,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
                   <input
                     type="checkbox"
                     checked={formData.published}
-                    onChange={(e) => handleInputChange("published", e.target.checked)}
+                    onChange={(e) =>
+                      handleInputChange("published", e.target.checked)
+                    }
                     className="sr-only peer"
                   />
                   <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
@@ -807,7 +837,12 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
               </button>
               <button
                 type="submit"
-                disabled={saving || uploadingIcon || uploadingScreenshots || uploadingApk}
+                disabled={
+                  saving ||
+                  uploadingIcon ||
+                  uploadingScreenshots ||
+                  uploadingApk
+                }
                 className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg font-medium hover:from-cyan-600 hover:to-purple-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 disabled:opacity-50"
               >
                 {saving ? (

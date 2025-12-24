@@ -8,7 +8,7 @@ import {
   testimonialsAPI,
   blogAPI,
 } from "../../api/supabase";
-import Loading from "../layouts/loading";
+import Loading from "../../components/LoadingSpinner3D";
 
 const formConfigs = {
   skill: {
@@ -206,14 +206,18 @@ const GenericFormModal = ({
   onError,
 }) => {
   const config = formConfigs[type];
-  
+
   if (!config) {
     console.error(`Invalid form type: ${type}`);
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-gray-900 rounded-xl p-6 max-w-md">
-          <h3 className="text-xl font-bold text-red-400 mb-4">Configuration Error</h3>
-          <p className="text-gray-400 mb-4">Form configuration for type "{type}" not found.</p>
+          <h3 className="text-xl font-bold text-red-400 mb-4">
+            Configuration Error
+          </h3>
+          <p className="text-gray-400 mb-4">
+            Form configuration for type "{type}" not found.
+          </p>
           <button
             onClick={() => setShowModal(false)}
             className="px-6 py-3 bg-gray-800 text-white rounded-lg"
@@ -231,15 +235,16 @@ const GenericFormModal = ({
   const getInitialData = () => {
     if (editingItem) {
       // Remove metadata fields that shouldn't be in the form
-      const { id, created_at, updated_at, updated_by, user_id, ...rest } = editingItem;
+      const { id, created_at, updated_at, updated_by, user_id, ...rest } =
+        editingItem;
       return rest;
     }
 
     // Initialize empty form based on type
     const initialData = {};
-    
+
     // Set default values for each field in the config
-    config.fields.forEach(field => {
+    config.fields.forEach((field) => {
       switch (field.type) {
         case "textarea":
           initialData[field.name] = "";
@@ -251,13 +256,20 @@ const GenericFormModal = ({
           initialData[field.name] = field.name === "published" ? false : true;
           break;
         case "number":
-          initialData[field.name] = field.name === "level" ? 0 : 
-                                   field.name === "display_order" ? 0 : 
-                                   field.name === "rating" ? 5 : 0;
+          initialData[field.name] =
+            field.name === "level"
+              ? 0
+              : field.name === "display_order"
+              ? 0
+              : field.name === "rating"
+              ? 5
+              : 0;
           break;
         case "date":
-          initialData[field.name] = field.name === "publish_date" ? 
-                                   new Date().toISOString().split('T')[0] : "";
+          initialData[field.name] =
+            field.name === "publish_date"
+              ? new Date().toISOString().split("T")[0]
+              : "";
           break;
         default:
           initialData[field.name] = "";
@@ -298,72 +310,78 @@ const GenericFormModal = ({
     }
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSaving(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
 
-  try {
-    // Process the form data for each type
-    let cleanData = { ...formData };
-    
-    // Process features for services
-    if (type === "service" && cleanData.features && typeof cleanData.features === "string") {
-      cleanData.features = cleanData.features
-        .split("\n")
-        .map((f) => f.trim())
-        .filter(Boolean);
-    }
+    try {
+      // Process the form data for each type
+      let cleanData = { ...formData };
 
-    // For blog posts, ensure required fields
-    if (type === "blog") {
-      if (!cleanData.slug) {
-        // Auto-generate slug if not provided
-        cleanData.slug = cleanData.title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
+      // Process features for services
+      if (
+        type === "service" &&
+        cleanData.features &&
+        typeof cleanData.features === "string"
+      ) {
+        cleanData.features = cleanData.features
+          .split("\n")
+          .map((f) => f.trim())
+          .filter(Boolean);
       }
-      
-      // Set publish_date if not provided
-      if (!cleanData.publish_date) {
-        cleanData.publish_date = new Date().toISOString().split('T')[0];
+
+      // For blog posts, ensure required fields
+      if (type === "blog") {
+        if (!cleanData.slug) {
+          // Auto-generate slug if not provided
+          cleanData.slug = cleanData.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+        }
+
+        // Set publish_date if not provided
+        if (!cleanData.publish_date) {
+          cleanData.publish_date = new Date().toISOString().split("T")[0];
+        }
+
+        // Set author if not provided
+        if (!cleanData.author) {
+          cleanData.author = "Harrison King";
+        }
       }
-      
-      // Set author if not provided
-      if (!cleanData.author) {
-        cleanData.author = "Harrison King";
+
+      console.log(`Submitting ${type} data:`, cleanData);
+
+      if (editingItem) {
+        await config.api.update(editingItem.id, cleanData);
+      } else {
+        await config.api.create(cleanData);
       }
-    }
 
-    console.log(`Submitting ${type} data:`, cleanData);
+      setShowModal(false);
+      onSuccess();
+    } catch (error) {
+      console.error(`Error saving ${type}:`, error);
+      console.error("Full error object:", JSON.stringify(error, null, 2));
 
-    if (editingItem) {
-      await config.api.update(editingItem.id, cleanData);
-    } else {
-      await config.api.create(cleanData);
-    }
+      let errorMessage = `Failed to save ${config.title.toLowerCase()}. `;
 
-    setShowModal(false);
-    onSuccess();
-  } catch (error) {
-    console.error(`Error saving ${type}:`, error);
-    console.error("Full error object:", JSON.stringify(error, null, 2));
-    
-    let errorMessage = `Failed to save ${config.title.toLowerCase()}. `;
-    
-    if (error.code === "PGRST116") {
-      errorMessage += "The database operation succeeded but didn't return data. ";
-      errorMessage += "This could be due to Row Level Security (RLS) policies. ";
-      errorMessage += "Check your RLS policies for the blog_posts table.";
-    } else if (error.message) {
-      errorMessage += error.message;
+      if (error.code === "PGRST116") {
+        errorMessage +=
+          "The database operation succeeded but didn't return data. ";
+        errorMessage +=
+          "This could be due to Row Level Security (RLS) policies. ";
+        errorMessage += "Check your RLS policies for the blog_posts table.";
+      } else if (error.message) {
+        errorMessage += error.message;
+      }
+
+      onError(new Error(errorMessage));
+    } finally {
+      setSaving(false);
     }
-    
-    onError(new Error(errorMessage));
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   const renderField = (field) => {
     const value = formData[field.name] || "";

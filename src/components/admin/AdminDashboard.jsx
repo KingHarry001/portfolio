@@ -1,4 +1,3 @@
-// src/components/admin/AdminDashboard.jsx - UPDATED WITH APPS
 import { useState, useEffect } from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminStats from "./AdminStats";
@@ -25,8 +24,7 @@ import {
   appsAPI,
   resumesAPI,
 } from "../../api/supabase";
-import FloatingUserButton from "./FloatingUserButton";
-import Loading from "../layouts/loading";
+import Loading from "../../components/LoadingSpinner3D";
 import AdminReviewsPanel from "./AdminReviewsPanel";
 import AdminPanel from "./AdminPanel";
 

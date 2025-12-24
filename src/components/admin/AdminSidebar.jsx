@@ -1,4 +1,4 @@
-// src/components/admin/AdminSidebar.jsx - UPDATED WITH APPS
+// src/components/admin/AdminSidebar.jsx - UPDATED WITH ADMIN TABS
 import {
   BarChart3,
   Briefcase,
@@ -9,9 +9,14 @@ import {
   Code,
   Award,
   Smartphone,
-  FileText as ResumeIcon, // Add this
+  FileText as ResumeIcon,
+  Users,           // Add this for User Management
+  Shield,          // Add this for admin protection
+  Star as ReviewsIcon, // Add this for Reviews
+  Settings,        // Optional: for Settings tab
 } from "lucide-react";
 
+// Alternative simpler version:
 const AdminSidebar = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: "overview", label: "Overview", icon: BarChart3 },
@@ -22,15 +27,14 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
     { id: "services", label: "Services", icon: Star },
     { id: "testimonials", label: "Testimonials", icon: MessageSquare },
     { id: "blog", label: "Blog Posts", icon: FileText },
-    { id: "resumes", label: "Resumes", icon: ResumeIcon }, // ADD THIS LINE
+    { id: "resumes", label: "Resumes", icon: ResumeIcon },
+    { id: "users", label: "User Management", icon: Users },
+    { id: "reviews", label: "Reviews", icon: ReviewsIcon },
     { id: "media", label: "Media Library", icon: Image },
   ];
 
   return (
     <div className="space-y-2">
-      <h1 className="text-2xl font-bold mb-8 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-        Admin Panel
-      </h1>
       <nav className="space-y-2">
         {tabs.map((tab) => (
           <button
@@ -40,7 +44,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
               activeTab === tab.id
                 ? "bg-cyan-500 text-white"
                 : "text-gray-400 hover:bg-gray-800 hover:text-white"
-            }`}
+            } `}
           >
             <tab.icon className="w-5 h-5" />
             {tab.label}

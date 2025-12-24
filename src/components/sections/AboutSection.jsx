@@ -1,27 +1,108 @@
-// src/components/AboutSection.jsx - UPDATED TO USE SUPABASE
 import React, { useEffect, useRef, useState } from "react";
-import { Code, Palette, Shield, Zap, Award, TrendingUp } from "lucide-react";
-import { personalInfo } from "../../data/mock";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { skillsAPI, certificationsAPI } from "../../api/supabase";
+import {
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
+import {
+  ArrowUpRight,
+  Code,
+  Cpu,
+  Globe,
+  Zap,
+  Download,
+  Award,
+  TrendingUp,
+  Shield,
+  Palette,
+  CheckCircle2,
+  Terminal,
+  Database,
+} from "lucide-react";
+import { skillsAPI, certificationsAPI } from "../../api/supabase"; // Keep your imports
+import King from "../../assets/King.png";
+import GlassCard from "../../components/GlassCard";
 
-gsap.registerPlugin(ScrollTrigger);
-gsap.config({ force3D: true });
+// --- 1. Spotlight Effect (Mouse Follower) ---
+function Spotlight({ mouseX, mouseY }) {
+  return (
+    <motion.div
+      className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 group-hover:opacity-100 z-30"
+      style={{
+        background: useMotionTemplate`
+          radial-gradient(
+            650px circle at ${mouseX}px ${mouseY}px,
+            rgba(14, 165, 233, 0.1),
+            transparent 80%
+          )
+        `,
+      }}
+    />
+  );
+}
 
+// --- 2. 3D Tilt Card ---
+const TiltCard = ({ children, className = "" }) => {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+  const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["15deg", "-15deg"]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-15deg", "15deg"]);
+
+  const handleMouseMove = (e) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      className={`relative group/card ${className}`}
+    >
+      <div
+        style={{ transform: "translateZ(75px)", transformStyle: "preserve-3d" }}
+        className="absolute inset-4 rounded-3xl bg-chart-1/20 blur-2xl group-hover/card:bg-chart-1/30 transition-colors duration-500 -z-10"
+      />
+      {children}
+    </motion.div>
+  );
+};
+
+// --- 3. Main Component ---
 const AboutSection = () => {
+  const containerRef = useRef(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Data States
   const [skills, setSkills] = useState([]);
   const [certifications, setCertifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const sectionRef = useRef(null);
-  const aboutTextRef = useRef(null);
-  const profileImageRef = useRef(null);
-  const skillsRef = useRef(null);
-  const certificationsRef = useRef(null);
-  const journeyRef = useRef(null);
-
-  // Fetch data from Supabase
+  // Fetch Data (Preserving your Supabase logic)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -33,425 +114,405 @@ const AboutSection = () => {
         setCertifications(certsData || []);
       } catch (error) {
         console.error("Error fetching data:", error);
-        // Fallback to mock data if needed
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  // Group skills by category
+  const handleMouseMove = ({ currentTarget, clientX, clientY }) => {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  };
+
+  // Group skills helper
   const groupedSkills = skills.reduce((acc, skill) => {
-    if (!acc[skill.category]) {
-      acc[skill.category] = [];
-    }
+    if (!acc[skill.category]) acc[skill.category] = [];
     acc[skill.category].push(skill);
     return acc;
   }, {});
 
-  // GSAP animations (same as before)
-  useEffect(() => {
-    if (loading) return;
-
-    const ctx = gsap.context(() => {
-      gsap.set([aboutTextRef.current, profileImageRef.current], {
-        opacity: 0,
-        y: 50,
-      });
-
-      gsap.set(skillsRef.current?.children || [], {
-        opacity: 0,
-        y: 60,
-        scale: 0.9,
-      });
-
-      gsap.set([certificationsRef.current, journeyRef.current], {
-        opacity: 0,
-        x: -30,
-      });
-
-      const tl1 = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 80%",
-          end: "top 20%",
-          toggleActions: "play none none reverse",
-        },
-      });
-
-      tl1
-        .to(aboutTextRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: "power3.out",
-          clearProps: "all", // Add this
-        })
-        .to(
-          profileImageRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: "power3.out",
-            rotate: 360,
-            scale: 1.1,
-            clearProps: "rotate", // Clear rotation after
-          },
-          "-=0.7"
-        );
-
-      gsap
-        .timeline({
-          scrollTrigger: {
-            trigger: skillsRef.current,
-            start: "top 85%",
-            end: "bottom 20%",
-            toggleActions: "play none none reverse",
-          },
-        })
-        .to(skillsRef.current?.children || [], {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          stagger: 0.2,
-          ease: "back.out(1.4)",
-        });
-
-      const skillBars =
-        skillsRef.current?.querySelectorAll("[data-skill-bar]") || [];
-      skillBars.forEach((bar, index) => {
-        const targetWidth = bar.getAttribute("data-skill-level");
-        gsap.fromTo(
-          bar,
-          { width: "0%" },
-          {
-            width: `${targetWidth}%`,
-            duration: 1.5,
-            delay: index * 0.1 + 0.5,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: bar,
-              start: "top 90%",
-              toggleActions: "play none none reverse",
-            },
-          }
-        );
-      });
-
-      gsap
-        .timeline({
-          scrollTrigger: {
-            trigger: certificationsRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
-          },
-        })
-        .to([certificationsRef.current, journeyRef.current], {
-          opacity: 1,
-          x: 0,
-          duration: 1,
-          stagger: 0.3,
-          ease: "power3.out",
-        });
-
-      const certCards =
-        certificationsRef.current?.querySelectorAll("[data-cert-card]") || [];
-      gsap.fromTo(
-        certCards,
-        { opacity: 0, scale: 0.8, rotateY: -15 },
-        {
-          opacity: 1,
-          scale: 1,
-          rotateY: 0,
-          duration: 0.6,
-          stagger: 0.15,
-          ease: "back.out(1.2)",
-          scrollTrigger: {
-            trigger: certificationsRef.current,
-            start: "top 80%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-
-      const journeyCards =
-        journeyRef.current?.querySelectorAll("[data-journey-card]") || [];
-      gsap.fromTo(
-        journeyCards,
-        { opacity: 0, x: 30, scale: 0.9 },
-        {
-          opacity: 1,
-          x: 0,
-          scale: 1,
-          duration: 0.7,
-          stagger: 0.2,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: journeyRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-
-      const cards =
-        sectionRef.current?.querySelectorAll("[data-hover-card]") || [];
-      cards.forEach((card) => {
-        card.addEventListener("mouseenter", () => {
-          gsap.to(card, { scale: 1.05, duration: 0.3, ease: "power2.out" });
-        });
-        card.addEventListener("mouseleave", () => {
-          gsap.to(card, { scale: 1, duration: 0.3, ease: "power2.out" });
-        });
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, [loading, skills.length, certifications.length]);
-
+  // Icons Map
   const categoryIcons = {
     "Graphic Design": Palette,
     Frontend: Code,
-    Backend: Code,
-    Programming: Code,
+    Backend: Database,
+    Programming: Terminal,
     Security: Shield,
     Crypto: Shield,
-    "AI/ML": Code,
+    "AI/ML": Cpu,
   };
 
-  const highlights = [
-    {
-      icon: <TrendingUp className="w-5 h-5" />,
-      text: "Started as a graphic designer, evolved into full-stack development",
-    },
-    {
-      icon: <Shield className="w-5 h-5" />,
-      text: "Currently pursuing cybersecurity certifications to expand expertise",
-    },
-    {
-      icon: <Zap className="w-5 h-5" />,
-      text: "Passionate about crypto and emerging web technologies",
-    },
-  ];
-
-  if (loading) {
+  if (loading)
     return (
-      <section id="about" className="py-24 bg-background">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-chart-1 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </section>
+      <div className="h-screen bg-black flex items-center justify-center text-chart-1">
+        Loading Assets...
+      </div>
     );
-  }
 
   return (
-    <section id="about" className="py-24 bg-background" ref={sectionRef}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Header & Profile Section Side by Side */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
-          {/* Left - About Me Text */}
-          <div className="space-y-8" ref={aboutTextRef}>
-            <h2 className="text-5xl lg:text-6xl font-bold text-foreground mb-6">
-              About{" "}
-              <span className="bg-gradient-to-r from-chart-1 to-foreground bg-clip-text text-transparent">
-                Me
+    <section
+      id="about"
+      className="relative min-h-screen bg-black py-32 overflow-hidden selection:bg-chart-1/30"
+      onMouseMove={handleMouseMove}
+      ref={containerRef}
+    >
+      {/* --- BACKGROUND FX --- */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_50%_200px,#00000000,transparent),radial-gradient(circle_800px_at_50%_600px,#00000000,transparent)]" />
+      <Spotlight mouseX={mouseX} mouseY={mouseY} />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+        {/* --- HEADER --- */}
+        <div className="mb-24 relative">
+          {/* Big Outline Text Background */}
+          <h1
+            className="absolute -top-20 -left-10 text-[10rem] md:text-[15rem] font-black text-transparent opacity-5 select-none pointer-events-none"
+            style={{ WebkitTextStroke: "2px #fff" }}
+          >
+            ABOUT
+          </h1>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="relative"
+          >
+            <span className="text-chart-1 font-mono text-sm tracking-widest uppercase">
+              // Who I Am
+            </span>
+            <h2 className="text-5xl md:text-7xl font-bold text-white mt-4 tracking-tighter">
+              Forging digital <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-chart-1 to-blue-500">
+                experiences.
               </span>
             </h2>
-            <div className="space-y-6">
-              <p className="text-xl text-muted-foreground leading-relaxed">
-                I'm a passionate creative technologist who bridges the gap
-                between stunning design and cutting-edge development. With over
-                3 years of experience, I've helped startups and established
-                companies bring their digital visions to life.
+          </motion.div>
+        </div>
+
+        {/* --- CONTENT GRID --- */}
+        <div className="grid lg:grid-cols-12 gap-12 items-center mb-24">
+          {/* LEFT: TEXT & STATS (Span 7) */}
+          <div className="lg:col-span-7 space-y-12">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="prose prose-invert prose-lg"
+            >
+              <p className="text-zinc-400 text-xl leading-relaxed">
+                I am a{" "}
+                <span className="text-white font-semibold">
+                  Full Stack Developer
+                </span>{" "}
+                and <span className="text-white font-semibold">Designer</span>{" "}
+                obsessed with performance and polish. I don't just write code; I
+                craft interfaces that feel alive.
               </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Currently expanding my expertise into cybersecurity and AI
-                integration, I'm always exploring the intersection of creativity
-                and emerging technologies like blockchain and Web3.
+              <p className="text-zinc-400 text-lg">
+                From pixel-perfect UI design to secure, scalable backend
+                architectures, I help brands navigate the digital landscape with
+                confidence.
               </p>
+            </motion.div>
+
+            {/* Bento Grid Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+              {[
+                { label: "Years Experience", value: "03+", icon: Clock },
+                { label: "Projects Shipped", value: "25+", icon: Code },
+                { label: "Happy Clients", value: "100%", icon: Zap },
+                { label: "Technologies", value: "15+", icon: Cpu },
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * i }}
+                  className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:bg-white/10 transition-colors"
+                >
+                  <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-50 transition-opacity">
+                    <stat.icon />
+                  </div>
+                  <div className="text-4xl font-bold text-white mb-1">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-zinc-500 uppercase tracking-wider font-medium">
+                    {stat.label}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-6 pt-4">
+              <button
+                onClick={() =>
+                  document.getElementById("contact").scrollIntoView()
+                }
+                className="group relative px-8 py-4 bg-white text-black font-bold rounded-full overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Let's Connect{" "}
+                  <ArrowUpRight className="group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
+                </span>
+                <div className="absolute inset-0 bg-chart-1 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              </button>
+
+              <button className="px-8 py-4 rounded-full border border-white/20 text-white font-medium hover:bg-white/5 transition-colors flex items-center gap-2">
+                <Download size={18} /> Download CV
+              </button>
             </div>
           </div>
 
-          {/* Right - Profile Image */}
-          <div
-            className="flex justify-center lg:justify-end"
-            ref={profileImageRef}
-          >
-            <div className="relative">
-              <div className="w-80 h-80">
-                <div className="relative overflow-hidden rounded-2xl cursor-target group">
-                  <img
-                    src="../King.jpg"
-                    alt={personalInfo.name}
-                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-chart-1/20 to-transparent"></div>
+          {/* RIGHT: 3D IMAGE (Span 5) */}
+          <div className="lg:col-span-5 flex justify-center perspective-1000">
+            <TiltCard className="w-full max-w-md aspect-[4/5]">
+              <div className="relative h-full w-full rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 shadow-2xl">
+                {/* Image */}
+                <img
+                  src={King}
+                  alt="Harrison King"
+                  className="h-full w-full object-cover grayscale group-hover/card:grayscale-0 transition-all duration-700 scale-105 group-hover/card:scale-110"
+                />
+
+                {/* Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+
+                {/* Floating Badge (3D Element) */}
+                <div
+                  style={{ transform: "translateZ(50px)" }}
+                  className="absolute bottom-8 left-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-chart-1 flex items-center justify-center text-black">
+                      <Globe size={20} />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-sm">Based in</p>
+                      <p className="text-zinc-400 text-xs">
+                        Lagos, Nigeria (GMT+1)
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute -inset-6 bg-gradient-to-r from-chart-1/20 via-transparent to-[#00FFD1]/20 -z-10 blur-xl rounded-3xl"></div>
               </div>
-            </div>
+            </TiltCard>
           </div>
         </div>
 
-        {/* Skills Section */}
-        <div className="mb-24" ref={skillsRef}>
-          <div className="text-center mb-16">
-            <h3 className="text-3xl font-bold text-foreground mb-4">
-              Skills & Expertise
-            </h3>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              A diverse skill set spanning creative design, technical
-              development, and emerging technologies
-            </p>
-          </div>
-
-          {Object.keys(groupedSkills).length === 0 ? (
-            <div className="text-center py-12">
-              <Code className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No skills added yet</p>
+        {/* --- SKILLS & EXPERTISE (Bento Grid) --- */}
+        <div className="mb-24">
+          <div className="mb-32">
+            <div className="flex items-center gap-4 mb-12">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/20" />
+              <motion.h3
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                className="text-2xl font-bold text-white mb-8 flex items-center gap-2"
+              >
+                <Cpu className="text-chart-1" /> Technical Arsenal
+              </motion.h3>
+              <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/20" />
             </div>
-          ) : (
-            <div className="grid lg:grid-cols-3 gap-12">
-              {Object.entries(groupedSkills).map(
-                ([category, categorySkills], index) => {
-                  const Icon = categoryIcons[category] || Code;
 
+            <div className="grid lg:grid-cols-3 gap-8">
+              {Object.entries(groupedSkills).map(
+                ([category, catSkills], idx) => {
+                  const Icon = categoryIcons[category] || Code;
                   return (
-                    <div key={index} className="space-y-8" data-hover-card>
-                      <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-chart-1/20 to-chart-1/10 border border-chart-1/20 rounded-2xl mb-4">
-                          <div className="text-chart-1">
-                            <Icon className="w-6 h-6" />
-                          </div>
+                    <GlassCard
+                      key={idx}
+                      className="p-8 hover:bg-white/5 transition-colors tilt-card"
+                    >
+                      <div className="flex items-center gap-4 mb-8">
+                        <div className="p-3 bg-white/5 rounded-xl text-chart-1">
+                          <Icon size={24} />
                         </div>
-                        <h4 className="text-xl font-semibold text-foreground">
+                        <h4 className="text-xl font-bold text-white">
                           {category}
                         </h4>
                       </div>
 
                       <div className="space-y-6">
-                        {categorySkills.map((skill) => (
-                          <div key={skill.id} className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-foreground font-medium">
+                        {catSkills.map((skill) => (
+                          <div
+                            key={skill.id}
+                            className="group"
+                            onMouseEnter={() => setActiveSkill(skill.name)}
+                            onMouseLeave={() => setActiveSkill(null)}
+                          >
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="text-zinc-400 group-hover:text-white transition-colors">
                                 {skill.name}
                               </span>
-                              <span className="text-sm font-semibold text-chart-1">
+                              <span className="text-chart-1">
                                 {skill.level}%
                               </span>
                             </div>
-                            <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-chart-1 to-[#6FD2C0] rounded-full transition-all duration-1000 ease-out"
-                                data-skill-bar
-                                data-skill-level={skill.level}
-                              ></div>
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                              <motion.div
+                                className="h-full bg-gradient-to-r from-chart-1 to-blue-500 rounded-full relative"
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${skill.level}%` }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                              >
+                                <div className="absolute inset-0 bg-white/30 w-full animate-[shimmer_2s_infinite]" />
+                              </motion.div>
                             </div>
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </GlassCard>
                   );
                 }
               )}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Two Column Layout for Certifications and Highlights */}
-        <div className="grid lg:grid-cols-2 gap-16">
+        {/* --- CERTS & JOURNEY (Split Layout) --- */}
+        <div className="grid lg:grid-cols-2 gap-12">
           {/* Certifications */}
-          <div className="space-y-8" ref={certificationsRef}>
-            <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-3 mb-4">
-                <Award className="w-6 h-6 text-chart-1" />
-                <h3 className="text-2xl font-bold text-foreground">
-                  Recent Certifications
-                </h3>
-              </div>
-              <p className="text-muted-foreground">
-                Continuous learning and professional development
-              </p>
-            </div>
+          <div className="space-y-8">
+            <motion.h3
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              className="text-2xl font-bold text-white flex items-center gap-2"
+            >
+              <Award className="text-chart-1" /> Certifications
+            </motion.h3>
 
-            {certifications.length === 0 ? (
-              <div className="text-center py-12">
-                <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No certifications added yet
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {certifications.map((cert) => (
-                  <div
-                    key={cert.id}
-                    className="group p-6 bg-card border border-border rounded-xl hover:border-chart-1/30 transition-all duration-300 cursor-target hover:shadow-lg hover:shadow-chart-1/10"
-                    data-cert-card
-                    data-hover-card
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <div className="font-semibold text-foreground group-hover:text-chart-1 transition-colors">
-                          {cert.name}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {cert.issuer} • {cert.year}
-                        </div>
-                      </div>
-                      <Zap className="w-5 h-5 text-chart-1 group-hover:scale-110 transition-transform" />
-                    </div>
+            <div className="space-y-4">
+              {certifications.map((cert, i) => (
+                <motion.div
+                  key={cert.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900/40 border border-white/5 hover:border-chart-1/30 transition-all group"
+                >
+                  <div className="h-12 w-12 rounded-full bg-chart-1/10 flex items-center justify-center text-chart-1 group-hover:scale-110 transition-transform">
+                    <Shield size={20} />
                   </div>
-                ))}
-              </div>
-            )}
+                  <div>
+                    <h4 className="text-white font-bold group-hover:text-chart-1 transition-colors">
+                      {cert.name}
+                    </h4>
+                    <p className="text-zinc-500 text-sm">
+                      {cert.issuer} • {cert.year}
+                    </p>
+                  </div>
+                  <CheckCircle2
+                    className="ml-auto text-green-500 opacity-50 group-hover:opacity-100 transition-opacity"
+                    size={18}
+                  />
+                </motion.div>
+              ))}
+            </div>
           </div>
 
           {/* Journey Highlights */}
-          <div className="space-y-8" ref={journeyRef}>
-            <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-3 mb-4">
-                <TrendingUp className="w-6 h-6 text-chart-1" />
-                <h3 className="text-2xl font-bold text-foreground">
-                  Journey Highlights
-                </h3>
-              </div>
-              <p className="text-muted-foreground">
-                Key milestones in my professional evolution
-              </p>
-            </div>
+          <div className="space-y-8">
+            <motion.h3
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              className="text-2xl font-bold text-white flex items-center gap-2"
+            >
+              <TrendingUp className="text-purple-500" /> Journey
+            </motion.h3>
 
-            <div className="space-y-6">
-              {highlights.map((highlight, index) => (
-                <div
-                  key={index}
-                  className="group p-6 bg-gradient-to-br from-white/5 to-chart-1/5 border border-chart-1/20 rounded-xl hover:border-chart-1/30 transition-all duration-300 cursor-target"
-                  data-journey-card
-                  data-hover-card
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 bg-chart-1/20 rounded-full flex items-center justify-center group-hover:bg-chart-1/30 transition-colors">
-                      <div className="text-chart-1">{highlight.icon}</div>
+            <div className="relative p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900/50 to-black overflow-hidden">
+              {/* Background texture */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px]" />
+
+              <div className="relative z-10 space-y-8">
+                {[
+                  {
+                    text: "Evolved from Graphic Design to Full Stack Architecture.",
+                    icon: Palette,
+                  },
+                  {
+                    text: "Building secure, decentralized applications.",
+                    icon: Code,
+                  },
+                  {
+                    text: "Exploring the frontiers of AI & Cybersecurity.",
+                    icon: Zap,
+                  },
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.1 }}
+                    className="flex gap-4"
+                  >
+                    <div className="mt-1">
+                      <div className="h-2 w-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
                     </div>
-                    <p className="text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
-                      {highlight.text}
+                    <p className="text-zinc-300 text-lg leading-relaxed">
+                      {item.text}
                     </p>
-                  </div>
-                </div>
-              ))}
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes scan {
+          0% {
+            transform: translateY(-100%);
+            opacity: 0;
+          }
+          50% {
+            opacity: 0.5;
+          }
+          100% {
+            transform: translateY(500%);
+            opacity: 0;
+          }
+        }
+        .animate-scan {
+          animation: scan 3s linear infinite;
+        }
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </section>
   );
 };
+
+// Helper Icon for stats
+const Clock = (props) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
 
 export default AboutSection;

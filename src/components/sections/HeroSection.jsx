@@ -54,16 +54,6 @@ const HeroSection = () => {
     []
   );
 
-  // Memoized stats data
-  const statsData = useMemo(
-    () => [
-      { value: "50+", label: "Projects Completed" },
-      { value: "3+", label: "Years Experience" },
-      { value: "25+", label: "Happy Clients" },
-    ],
-    []
-  );
-
   // UPDATED: Scroll-triggered animations instead of mount animations
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -513,22 +503,6 @@ const HeroSection = () => {
                   <span>Download Resume</span>
                 </button>
               )}
-            </div>
-            {/* Quick Stats */}
-            <div
-              ref={statsRef}
-              className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10"
-            >
-              {statsData.map((stat, index) => (
-                <div key={index} className="text-center sm:text-left">
-                  <div className="text-2xl font-bold text-foreground stats-value">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 

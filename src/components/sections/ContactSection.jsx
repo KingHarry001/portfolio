@@ -1,564 +1,298 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Mail,
-  Phone,
-  MapPin,
-  Send,
-  Calendar,
-  ExternalLink,
-  Github,
-  Twitter,
-  Instagram,
-  Linkedin,
-  Clock,
-  Globe,
-  CheckCircle,
-  AlertCircle,
-  MessageSquare,
-  ArrowRight,
+  Mail, Phone, MapPin, Send, Calendar, ExternalLink,
+  Github, Twitter, Instagram, Linkedin, Clock, Globe,
+  CheckCircle, AlertCircle, MessageSquare, ArrowRight,
+  Loader2
 } from "lucide-react";
 
+// --- Configuration ---
 const personalInfo = {
   email: "nexus.dynasty.org@gmail.com",
   phone: "+234 903 816 3213",
   location: "Lagos, Nigeria",
+  whatsappNumber: "2349038163213"
 };
 
-const socialLinks = {
-  github: "https://github.com/",
-  linkedin: "https://linkedin.com/",
-  instagram: "https://instagram.com/",
-  twitter: "https://twitter.com/",
-};
+const socialLinks = [
+  { name: "GitHub", url: "https://github.com/", icon: <Github size={20} />, color: "text-zinc-400 hover:text-white" },
+  { name: "LinkedIn", url: "https://linkedin.com/", icon: <Linkedin size={20} />, color: "text-blue-400 hover:text-blue-300" },
+  { name: "Instagram", url: "https://instagram.com/", icon: <Instagram size={20} />, color: "text-pink-400 hover:text-pink-300" },
+  { name: "Twitter", url: "https://twitter.com/", icon: <Twitter size={20} />, color: "text-cyan-400 hover:text-cyan-300" },
+];
 
 const ContactSection = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    company: "",
-    service: "",
-    message: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null); // 'success', 'error', null
-  const [formErrors, setFormErrors] = useState({});
-
-  const sectionRef = useRef();
+  const [formData, setFormData] = useState({ name: "", email: "", company: "", service: "", message: "" });
+  const [formStatus, setFormStatus] = useState("idle"); // idle, submitting, success, error
+  const [focusedField, setFocusedField] = useState(null);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    
-    // Clear error for this field when user starts typing
-    if (formErrors[name]) {
-      setFormErrors({
-        ...formErrors,
-        [name]: "",
-      });
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (formStatus === "error") setFormStatus("idle");
   };
-
-  const validateForm = () => {
-    const errors = {};
-    
-    if (!formData.name.trim()) {
-      errors.name = "Name is required";
-    }
-    
-    if (!formData.email.trim()) {
-      errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Please enter a valid email";
-    }
-    
-    if (!formData.message.trim()) {
-      errors.message = "Message is required";
-    } else if (formData.message.trim().length < 10) {
-      errors.message = "Message must be at least 10 characters";
-    }
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleCalendarBooking = () => {
-    setIsBookingOpen(true);
-    // Simulate calendar booking
-    setTimeout(() => {
-      setIsBookingOpen(false);
-      alert("Calendar booking would open here - integration with Calendly, etc.");
-    }, 1500);
-  };
-
-  const socialPlatforms = [
-    { name: "GitHub", url: socialLinks.github, icon: <Github size={24} />, color: "hover:text-gray-300" },
-    { name: "LinkedIn", url: socialLinks.linkedin, icon: <Linkedin size={24} />, color: "hover:text-blue-400" },
-    { name: "Instagram", url: socialLinks.instagram, icon: <Instagram size={24} />, color: "hover:text-pink-400" },
-    { name: "Twitter", url: socialLinks.twitter, icon: <Twitter size={24} />, color: "hover:text-cyan-400" },
-  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      setSubmitStatus('error');
-      setTimeout(() => setSubmitStatus(null), 3000);
+    if (!formData.name || !formData.email || !formData.message) {
+      setFormStatus("error");
       return;
     }
 
-    setIsSubmitting(true);
-    setSubmitStatus(null);
+    setFormStatus("submitting");
 
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const { name, email, company, service, message } = formData;
+    // Simulate API delay
+    await new Promise(r => setTimeout(r, 1500));
 
-      // Format message for WhatsApp
-      const formattedMessage = `🚀 New Project Inquiry
-
-👤 Name: ${name}
-📧 Email: ${email}
-🏢 Company: ${company || "N/A"}
-🛠️ Service: ${service || "General Inquiry"}
-
-💬 Message:
-${message}
-
----
-Sent from Portfolio Contact Form`;
-
-      const encodedMessage = encodeURIComponent(formattedMessage);
-      const phoneNumber = "2349038163213";
-      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-      
-      // Open WhatsApp
-      window.open(whatsappURL, "_blank");
-      
-      setSubmitStatus('success');
-      
-      // Reset form after successful submission
-      setTimeout(() => {
-        setFormData({
-          name: "",
-          email: "",
-          company: "",
-          service: "",
-          message: "",
-        });
-        setSubmitStatus(null);
-      }, 3000);
-
-    } catch (error) {
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Construct WhatsApp URL
+    const message = `🚀 New Inquiry\n\n👤 Name: ${formData.name}\n📧 Email: ${formData.email}\n🏢 Company: ${formData.company || "N/A"}\n🛠 Service: ${formData.service || "General"}\n\n💬 Message:\n${formData.message}`;
+    const whatsappURL = `https://wa.me/${personalInfo.whatsappNumber}?text=${encodeURIComponent(message)}`;
+    
+    window.open(whatsappURL, "_blank");
+    setFormStatus("success");
+    setFormData({ name: "", email: "", company: "", service: "", message: "" });
+    
+    setTimeout(() => setFormStatus("idle"), 5000);
   };
 
-  // Animation setup
-  useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
+  // --- Animation Variants ---
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('animate-in');
-        }
-      });
-    }, observerOptions);
-
-    const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
-    elementsToAnimate.forEach(el => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, []);
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
 
   return (
-    <>
-      <style jsx>{`
-        .animate-on-scroll {
-          opacity: 0;
-          transform: translateY(60px);
-          transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .animate-on-scroll.animate-in {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        
-        .contact-card {
-          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        .contact-card:hover {
-          transform: translateY(-4px) scale(1.02);
-          box-shadow: 0 20px 40px -12px rgba(0, 255, 209, 0.3);
-        }
-        
-        .social-link {
-          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        .social-link:hover {
-          transform: translateY(-8px) rotate(5deg) scale(1.1);
-          box-shadow: 0 15px 30px -8px rgba(0, 255, 209, 0.4);
-        }
-        
-        .form-input {
-          transition: all 0.3s ease;
-        }
-        
-        .form-input:focus {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px -8px rgba(0, 255, 209, 0.4);
-        }
-        
-        .floating-icon {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        .pulse-border {
-          animation: pulse-border 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse-border {
-          0%, 100% { border-color: rgba(0, 255, 209, 0.3); }
-          50% { border-color: rgba(0, 255, 209, 0.8); }
-        }
-        
-        .gradient-text {
-          background: linear-gradient(135deg, #00FFD1, #00A8CC, #6366f1);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-      `}</style>
-      
-      <section ref={sectionRef} id="contact" className="py-20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,255,209,0.1),transparent)]"></div>
-        <div className="absolute top-0 left-0 w-full h-full opacity-10">
-          <div className="absolute top-20 right-10 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-40 left-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-1/3 left-1/3 w-48 h-48 bg-purple-500/20 rounded-full blur-2xl animate-pulse"></div>
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-          {/* Header */}
-          <div className="text-center mb-20 animate-on-scroll">
-            <h2 className="text-6xl font-bold text-white mb-6">
-              Let's{" "}
-              <span className="gradient-text">
-                Connect
-              </span>
-            </h2>
-            <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              Ready to bring your digital vision to life? Let's discuss how I can
-              help your project succeed with cutting-edge design and development.
-            </p>
-          </div>
+    <section id="contact" className="relative py-24 bg-[#050505] overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[100px]" />
+      </div>
 
-          <div className="grid lg:grid-cols-2 gap-16">
-            {/* Contact Information */}
-            <div className="space-y-8">
-              <div className="animate-on-scroll" style={{ transitionDelay: '0.1s' }}>
-                <h3 className="text-3xl font-bold text-white mb-6">
-                  Get in Touch
-                </h3>
-                <p className="text-slate-300 mb-8 leading-relaxed text-lg">
-                  I'm always excited to work on new projects and collaborate with
-                  innovative teams. Whether you need design, development, or
-                  security consulting, I'm here to help turn your ideas into reality.
-                </p>
-              </div>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+        
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-20"
+        >
+          <span className="inline-block py-1 px-3 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 text-sm font-semibold mb-6">
+            Get In Touch
+          </span>
+          <h2 className="text-4xl md:text-7xl font-black text-white mb-6">
+            Let's <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Collaborate.</span>
+          </h2>
+          <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+            Ready to build something extraordinary? Whether it's a complex web app or a security audit, I'm here to help.
+          </p>
+        </motion.div>
 
-              {/* Contact Methods */}
-              <div className="space-y-6">
-                <div className="contact-card animate-on-scroll flex items-start gap-4 p-5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl hover:border-cyan-400/50 transition-all duration-300" style={{ transitionDelay: '0.2s' }}>
-                  <div className="p-3 bg-cyan-500/10 border border-cyan-400/30 rounded-lg">
-                    <Mail size={24} className="text-cyan-400 floating-icon" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-white text-lg">Email</h4>
-                    <p className="text-slate-300 font-medium">{personalInfo.email}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Clock size={14} className="text-slate-400" />
-                      <p className="text-sm text-slate-400">Response within 24 hours</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="contact-card animate-on-scroll flex items-start gap-4 p-5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl hover:border-cyan-400/50 transition-all duration-300" style={{ transitionDelay: '0.3s' }}>
-                  <div className="p-3 bg-cyan-500/10 border border-cyan-400/30 rounded-lg">
-                    <Phone size={24} className="text-cyan-400 floating-icon" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-white text-lg">Phone</h4>
-                    <p className="text-slate-300 font-medium">{personalInfo.phone}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Clock size={14} className="text-slate-400" />
-                      <p className="text-sm text-slate-400">Available 9 AM - 6 PM WAT</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="contact-card animate-on-scroll flex items-start gap-4 p-5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl hover:border-cyan-400/50 transition-all duration-300" style={{ transitionDelay: '0.4s' }}>
-                  <div className="p-3 bg-cyan-500/10 border border-cyan-400/30 rounded-lg">
-                    <MapPin size={24} className="text-cyan-400 floating-icon" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-white text-lg">Location</h4>
-                    <p className="text-slate-300 font-medium">{personalInfo.location}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Globe size={14} className="text-slate-400" />
-                      <p className="text-sm text-slate-400">Open to remote collaboration</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Calendar Booking */}
-              <div className="animate-on-scroll p-8 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-sm border border-cyan-400/20 rounded-2xl pulse-border" style={{ transitionDelay: '0.5s' }}>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-2 bg-cyan-500/20 rounded-lg">
-                    <Calendar className="w-8 h-8 text-cyan-400" />
-                  </div>
-                  <h4 className="text-2xl font-semibold text-white">
-                    Schedule a Call
-                  </h4>
-                </div>
-                <p className="text-slate-300 mb-6 leading-relaxed">
-                  Prefer to talk directly? Book a 30-minute consultation call to
-                  discuss your project requirements and explore how we can work together.
-                </p>
-                <button
-                  onClick={handleCalendarBooking}
-                  disabled={isBookingOpen}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-600 disabled:to-slate-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-3 group transition-all duration-300 shadow-lg hover:shadow-cyan-500/25"
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-24">
+          
+          {/* Left Column: Contact Info */}
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="space-y-12"
+          >
+            {/* Info Cards */}
+            <div className="space-y-6">
+              {[
+                { icon: Mail, label: "Email", value: personalInfo.email, sub: "Response within 24h" },
+                { icon: Phone, label: "Phone", value: personalInfo.phone, sub: "Mon-Fri, 9am-6pm" },
+                { icon: MapPin, label: "Location", value: personalInfo.location, sub: "Available for Remote Work" },
+              ].map((item, i) => (
+                <motion.div 
+                  key={i} 
+                  variants={itemVariants}
+                  className="flex items-center gap-6 p-6 rounded-2xl bg-zinc-900/50 border border-white/5 hover:border-cyan-500/30 transition-all group"
                 >
-                  {isBookingOpen ? (
-                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Calendar size={20} />
-                  )}
-                  {isBookingOpen ? "Opening Calendar..." : "Book Free Consultation"}
-                  <ExternalLink
-                    size={16}
-                    className="group-hover:translate-x-1 transition-transform duration-300"
-                  />
-                </button>
-              </div>
-
-              {/* Social Links */}
-              <div className="animate-on-scroll" style={{ transitionDelay: '0.6s' }}>
-                <h4 className="text-white font-semibold mb-6 text-xl">
-                  Follow My Work
-                </h4>
-                <div className="flex gap-4">
-                  {socialPlatforms.map((platform, index) => (
-                    <a
-                      key={platform.name}
-                      href={platform.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`social-link p-4 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl hover:border-cyan-400/50 transition-all duration-300 group ${platform.color}`}
-                      title={platform.name}
-                      style={{ transitionDelay: `${0.1 * index}s` }}
-                    >
-                      <span className="text-slate-300 group-hover:scale-110 transition-transform duration-300 inline-block">
-                        {platform.icon}
-                      </span>
-                    </a>
-                  ))}
-                </div>
-              </div>
+                  <div className="p-4 rounded-xl bg-cyan-500/10 text-cyan-400 group-hover:scale-110 transition-transform">
+                    <item.icon size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold text-lg">{item.label}</h4>
+                    <p className="text-zinc-300 font-medium">{item.value}</p>
+                    <p className="text-zinc-500 text-sm mt-1">{item.sub}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
 
-            {/* Contact Form */}
-            <div className="animate-on-scroll bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl" style={{ transitionDelay: '0.2s' }}>
-              <div className="flex items-center gap-3 mb-8">
-                <MessageSquare className="w-8 h-8 text-cyan-400" />
-                <h3 className="text-3xl font-bold text-white">
-                  Send a Message
-                </h3>
+            {/* Social Proof / Links */}
+            <motion.div variants={itemVariants}>
+              <h4 className="text-white font-bold mb-6 flex items-center gap-2">
+                <Globe size={18} className="text-cyan-500" /> Connect on Socials
+              </h4>
+              <div className="flex gap-4">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`p-4 rounded-xl bg-zinc-900 border border-white/10 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 ${social.color}`}
+                  >
+                    {social.icon}
+                  </a>
+                ))}
               </div>
+            </motion.div>
+          </motion.div>
 
-              {/* Status Messages */}
-              {submitStatus === 'success' && (
-                <div className="mb-6 p-4 bg-green-500/10 border border-green-400/30 rounded-lg flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
-                  <div>
-                    <p className="text-green-400 font-medium">Message sent successfully!</p>
-                    <p className="text-green-300 text-sm">Opening WhatsApp to continue the conversation...</p>
-                  </div>
-                </div>
-              )}
-
-              {submitStatus === 'error' && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-400/30 rounded-lg flex items-center gap-3">
-                  <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0" />
-                  <div>
-                    <p className="text-red-400 font-medium">Please check the form for errors</p>
-                    <p className="text-red-300 text-sm">Make sure all required fields are filled correctly.</p>
-                  </div>
-                </div>
-              )}
+          {/* Right Column: Form */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-3xl blur-2xl opacity-10" />
+            <form 
+              onSubmit={handleSubmit}
+              className="relative bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <MessageSquare className="text-cyan-400" />
+                <h3 className="text-2xl font-bold text-white">Send a Message</h3>
+              </div>
 
               <div className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-white font-medium mb-2">
-                      Your Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className={`form-input w-full p-4 bg-slate-700/50 border ${formErrors.name ? 'border-red-400' : 'border-slate-600'} rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent`}
-                      placeholder="John Doe"
-                    />
-                    {formErrors.name && (
-                      <p className="mt-1 text-sm text-red-400">{formErrors.name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="email" className="block text-white font-medium mb-2">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className={`form-input w-full p-4 bg-slate-700/50 border ${formErrors.email ? 'border-red-400' : 'border-slate-600'} rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent`}
-                      placeholder="john@example.com"
-                    />
-                    {formErrors.email && (
-                      <p className="mt-1 text-sm text-red-400">{formErrors.email}</p>
-                    )}
-                  </div>
+                  <FloatingInput 
+                    label="Name" 
+                    name="name" 
+                    value={formData.name} 
+                    onChange={handleInputChange} 
+                    focused={focusedField === "name"}
+                    setFocused={setFocusedField}
+                  />
+                  <FloatingInput 
+                    label="Email" 
+                    name="email" 
+                    type="email"
+                    value={formData.email} 
+                    onChange={handleInputChange} 
+                    focused={focusedField === "email"}
+                    setFocused={setFocusedField}
+                  />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="company" className="block text-white font-medium mb-2">
-                      Company (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      id="company"
-                      name="company"
-                      value={formData.company}
-                      onChange={handleInputChange}
-                      className="form-input w-full p-4 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                      placeholder="Your Company"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="service" className="block text-white font-medium mb-2">
-                      Service Interested In
-                    </label>
+                  <FloatingInput 
+                    label="Company (Optional)" 
+                    name="company" 
+                    value={formData.company} 
+                    onChange={handleInputChange} 
+                    focused={focusedField === "company"}
+                    setFocused={setFocusedField}
+                  />
+                  <div className="relative">
                     <select
-                      id="service"
                       name="service"
                       value={formData.service}
                       onChange={handleInputChange}
-                      className="form-input w-full p-4 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-white appearance-none focus:outline-none focus:border-cyan-500 transition-colors"
                     >
-                      <option value="">Select a service</option>
-                      <option value="graphic-design">Graphic Design</option>
-                      <option value="web-development">Web Development</option>
-                      <option value="ui-ux-design">UI/UX Design</option>
-                      <option value="security-consulting">Security Consulting</option>
-                      <option value="custom-project">Custom Project</option>
+                      <option value="" disabled>Select Interest</option>
+                      <option value="dev">Web Development</option>
+                      <option value="security">Security Audit</option>
+                      <option value="design">UI/UX Design</option>
+                      <option value="other">Other</option>
                     </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">▼</div>
                   </div>
                 </div>
 
-                <div>
-                  <label htmlFor="message" className="block text-white font-medium mb-2">
-                    Project Details *
-                  </label>
+                <div className="relative">
                   <textarea
-                    id="message"
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
-                    rows={6}
-                    className={`form-input w-full p-4 bg-slate-700/50 border ${formErrors.message ? 'border-red-400' : 'border-slate-600'} rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent resize-vertical`}
-                    placeholder="Tell me about your project, goals, timeline, and any specific requirements..."
+                    onFocus={() => setFocusedField("message")}
+                    onBlur={() => setFocusedField(null)}
+                    rows={5}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-cyan-500 transition-colors resize-none"
+                    placeholder="Tell me about your project..."
                   />
-                  {formErrors.message && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.message}</p>
-                  )}
                 </div>
+
+                <AnimatePresence mode="wait">
+                  {formStatus === "error" && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }} 
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-3 rounded-lg"
+                    >
+                      <AlertCircle size={16} /> Please fill in all required fields.
+                    </motion.div>
+                  )}
+                  {formStatus === "success" && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }} 
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex items-center gap-2 text-green-400 text-sm bg-green-500/10 p-3 rounded-lg"
+                    >
+                      <CheckCircle size={16} /> Redirecting to WhatsApp...
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-slate-600 disabled:to-slate-700 text-white px-8 py-4 rounded-lg font-semibold flex items-center justify-center gap-3 group transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 disabled:cursor-not-allowed"
+                  disabled={formStatus === "submitting"}
+                  className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-cyan-500 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Sending Message...
-                    </>
+                  {formStatus === "submitting" ? (
+                    <Loader2 className="animate-spin" />
                   ) : (
-                    <>
-                      <Send size={20} />
-                      Send Message via WhatsApp
-                      <ArrowRight
-                        size={18}
-                        className="group-hover:translate-x-1 transition-transform duration-300"
-                      />
-                    </>
+                    <>Send via WhatsApp <Send size={18} /></>
                   )}
                 </button>
-
-                <div className="text-center">
-                  <p className="text-sm text-slate-400">
-                    Prefer email? Send me a message at{" "}
-                    <a
-                      href="mailto:nexus.dynasty.org@gmail.com"
-                      className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition-colors duration-300"
-                    >
-                      nexus.dynasty.org@gmail.com
-                    </a>
-                  </p>
-                </div>
               </div>
-
-              <div className="mt-8 pt-6 border-t border-slate-700/50">
-                <p className="text-sm text-slate-400 text-center">
-                  🔒 By submitting this form, you agree to our privacy policy. Your information will be used solely for project communication.
-                </p>
-              </div>
-            </div>
-          </div>
+            </form>
+          </motion.div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 };
+
+// Helper Component for Floating Labels
+const FloatingInput = ({ label, name, value, onChange, type = "text", focused, setFocused }) => (
+  <div className="relative">
+    <motion.label
+      initial={false}
+      animate={{
+        y: focused || value ? -24 : 0,
+        x: focused || value ? 0 : 16,
+        scale: focused || value ? 0.85 : 1,
+        color: focused ? "#22d3ee" : "#71717a"
+      }}
+      className="absolute top-4 left-0 pointer-events-none origin-left transition-colors"
+    >
+      {label}
+    </motion.label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      onFocus={() => setFocused(name)}
+      onBlur={() => setFocused(null)}
+      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-cyan-500 transition-colors"
+    />
+  </div>
+);
 
 export default ContactSection;

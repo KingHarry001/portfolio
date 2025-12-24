@@ -1,422 +1,334 @@
-import React, { useState, useEffect } from "react";
-import { Moon, Sun, Menu, X } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { 
+  Menu, Sparkles, Command, Palette, ArrowRight, Zap,
+  Mail, ExternalLink, ChevronRight
+} from "lucide-react";
+import { 
+  motion, AnimatePresence, useScroll, useSpring, 
+  useMotionValue, useTransform 
+} from "framer-motion";
 import { personalInfo } from "../../data/mock";
-import { useNavigate, useLocation } from "react-router-dom";
 
+// --- 1. Optimized Magnetic Component (No Re-renders) ---
+const Magnetic = ({ children, strength = 0.2 }) => {
+  const ref = useRef(null);
+  
+  // Use MotionValues instead of State to avoid re-renders on mousemove
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  // Smooth spring physics
+  const springX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.1 });
+  const springY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.1 });
+
+  const handleMouse = (e) => {
+    const { clientX, clientY } = e;
+    const { height, width, left, top } = ref.current.getBoundingClientRect();
+    const middleX = clientX - (left + width / 2);
+    const middleY = clientY - (top + height / 2);
+    
+    x.set(middleX * strength);
+    y.set(middleY * strength);
+  };
+
+  const reset = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      style={{ x: springX, y: springY }}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// --- 2. Main Header Component ---
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const headerRef = useRef(null);
+  
+  // State for low-frequency updates only
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null);
   const [activeSection, setActiveSection] = useState("");
+  const [hoveredPath, setHoveredPath] = useState(location.pathname);
+  const [isScrolled, setIsScrolled] = useState(false);
 
+  // Scroll Progress Bar
+  const { scrollYProgress, scrollY } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  // --- 3. Performance Optimized Scroll Logic ---
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+    // A. Visual Header Change (Motion Value Listener)
+    const unsubscribe = scrollY.on("change", (latest) => {
+      const shouldBeScrolled = latest > 50;
+      if (shouldBeScrolled !== isScrolled) setIsScrolled(shouldBeScrolled);
+    });
 
-      // Only update active section on home page
-      if (location.pathname === "/") {
-        const sections = [
-          "hero",
-          "about",
-          "services",
-          "projects",
-          "blog",
-          "testimonial",
-          "contact",
-        ];
-        let currentSection = "";
-
-        // Check sections from bottom to top to handle overlapping
-        for (let i = sections.length - 1; i >= 0; i--) {
-          const section = sections[i];
-          const element = document.querySelector(`#${section}`);
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            const threshold = window.innerHeight * 0.3; // 30% of viewport
-
-            if (rect.top <= threshold) {
-              currentSection = `#${section}`;
-              break;
-            }
+    // B. Active Section Detection (Intersection Observer)
+    // This is much lighter than calculating rects on scroll
+    const sections = ["hero", "about", "services", "projects", "blog", "contact"];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(`#${entry.target.id}`);
           }
-        }
-
-        if (currentSection && currentSection !== activeSection) {
-          setActiveSection(currentSection);
-        }
-      }
-    };
-
-    // Throttle scroll events for better performance
-    let ticking = false;
-    const throttledHandleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
         });
-        ticking = true;
-      }
+      },
+      { threshold: 0.4, rootMargin: "-10% 0px -40% 0px" } // Detect when element is near center
+    );
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      unsubscribe();
+      observer.disconnect();
     };
+  }, [isScrolled]);
 
-    window.addEventListener("scroll", throttledHandleScroll);
-    return () => window.removeEventListener("scroll", throttledHandleScroll);
-  }, [location.pathname, activeSection]);
+  const navItems = useMemo(() => [
+    { name: "Home", href: "#hero", icon: Sparkles },
+    { name: "Work", href: "#projects", icon: Zap, badge: "New" },
+    { name: "Services", href: "#services", icon: Command },
+    { name: "Apps", href: "/apps", icon: ExternalLink },
+    { name: "Writing", href: "#blog", icon: Menu },
+    { name: "Connect", href: "#contact", icon: Mail },
+  ], []);
 
-  // Set initial active section
-  useEffect(() => {
-    if (location.pathname === "/") {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        const hash = location.hash || "#hero";
-        setActiveSection(hash);
-      }, 100);
-    } else {
-      setActiveSection(location.pathname);
-    }
-  }, [location.pathname, location.hash]);
-
-  const navItems = [
-    { name: "Home", href: "#hero" },
-    { name: "About", href: "#about" },
-    { name: "Apps", href: "/apps" },
-    {
-      name: "Services",
-      href: "#services",
-    },
-    { name: "Projects", href: "#projects" },
-    { name: "Blog", href: "#blog" },
-    { name: "Testimonials", href: "#testimonial" },
-    { name: "Contact", href: "#contact" },
-  ];
-
-  const scrollToSection = (href) => {
+  const handleNavClick = useCallback((href) => {
     if (href.startsWith("#")) {
-      if (location.pathname === "/") {
-        const element = document.querySelector(href);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-          // Update active section immediately for better UX
-          setActiveSection(href);
-        }
-      } else {
+      if (location.pathname !== "/") {
         navigate("/", { state: { scrollTo: href } });
+      } else {
+        const el = document.querySelector(href);
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+        setActiveSection(href);
       }
     } else {
       navigate(href);
     }
     setIsMobileMenuOpen(false);
-    setOpenDropdown(null);
-  };
+  }, [navigate, location.pathname]);
 
-  useEffect(() => {
-    if (location.pathname === "/" && location.state?.scrollTo) {
-      const target = document.querySelector(location.state.scrollTo);
-      if (target) {
-        setTimeout(() => {
-          target.scrollIntoView({ behavior: "smooth" });
-          setActiveSection(location.state.scrollTo);
-        }, 100);
-      }
-    }
-  }, [location]);
-
-  // Check if item is active
-  const isActive = (item) => {
-    if (item.children) {
-      // Only highlight parent if we're actually on a child route, not on home page sections
-      return item.children.some((child) => child.href === location.pathname);
-    }
-
-    if (item.href.startsWith("#")) {
-      return location.pathname === "/" && activeSection === item.href;
-    } else {
-      return location.pathname === item.href;
-    }
-  };
-
-  const isChildActive = (child) => {
-    return location.pathname === child.href;
-  };
-
-  // Function to open theme modal using global state
-  const handleOpenThemeModal = () => {
-    if (typeof window !== 'undefined' && window.openThemeModal) {
-      window.openThemeModal();
-    }
+  // Handle Theme Logic
+  const handleThemeToggle = () => {
+    if (window.openThemeModal) window.openThemeModal();
   };
 
   return (
-    <header
-      className={`fixed top-0 w-full transition-all duration-500 ease-out ${
-        isScrolled
-          ? "bg-background/90 text-foreground backdrop-blur-xl border-b border-white/10 shadow-lg"
-          : "bg-transparent"
-      }`}
-      style={{ zIndex: 40 }}
-    >
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <a
-              href="/admin"
-              className="text-2xl font-bold text-foreground hover:text-chart-1 transition-all duration-300 cursor-pointer hover:scale-105 transform"
-              // onClick={(e) => {
-              //   e.preventDefault();
-              //   scrollToSection("#hero");
-              // }}
+    <>
+      {/* Top Reading Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-chart-1 via-purple-500 to-blue-500 origin-left z-[100]"
+        style={{ scaleX }}
+      />
+
+      <motion.header
+        ref={headerRef}
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+          isScrolled 
+            ? "h-16 bg-background/60 backdrop-blur-xl border-b border-white/5 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)]" 
+            : "h-24 bg-transparent"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+          
+          {/* --- LOGO --- */}
+          <Magnetic>
+            <button 
+              onClick={() => handleNavClick("#hero")}
+              className="group flex items-center gap-2 cursor-pointer focus:outline-none"
             >
-              {personalInfo.name
-                .split(" ")
-                .map((name) => name[0])
-                .join("")}
-            </a>
-          </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <div
-                key={item.name}
-                className="relative flex items-center gap-1"
-                onMouseEnter={() => item.children && setOpenDropdown(item.name)}
-                onMouseLeave={() =>
-                  item.children && setTimeout(() => setOpenDropdown(null), 300)
-                }
-              >
-                <button
-                  onClick={() => scrollToSection(item.href)}
-                  className={`font-medium transition-all duration-300 ease-out relative py-2 px-1 group ${
-                    isActive(item)
-                      ? "text-chart-1 transform scale-105"
-                      : "text-muted-foreground hover:text-foreground hover:scale-105"
-                  }`}
-                >
-                  {item.name}
-
-                  {/* Animated underline */}
-                  <span
-                    className={`absolute -bottom-1 left-0 h-0.5 bg-chart-1 rounded-full transition-all duration-300 ease-out ${
-                      isActive(item)
-                        ? "w-full opacity-100"
-                        : "w-0 opacity-0 group-hover:w-full group-hover:opacity-70"
-                    }`}
-                  ></span>
-                </button>
-
-                {item.children && (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenDropdown(
-                        openDropdown === item.name ? null : item.name
-                      );
-                    }}
-                    className={`text-xs cursor-pointer transition-all duration-300 ease-out transform hover:scale-110 ${
-                      isActive(item)
-                        ? "text-chart-1 rotate-180"
-                        : openDropdown === item.name
-                        ? "text-foreground rotate-180"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    &#9662;
-                  </span>
-                )}
-
-                {/* Animated Dropdown */}
-                {item.children && (
-                  <div
-                    className={`absolute bg-background/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl top-full left-0 mt-3 min-w-[200px] overflow-hidden transition-all duration-300 ease-out transform origin-top ${
-                      openDropdown === item.name
-                        ? "opacity-100 scale-100 translate-y-0"
-                        : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
-                    }`}
-                    style={{ zIndex: 50 }}
-                    onMouseEnter={() => setOpenDropdown(item.name)}
-                    onMouseLeave={() => setOpenDropdown(null)}
-                  >
-                    {item.children.map((child, index) => (
-                      <button
-                        key={child.name}
-                        onClick={() => scrollToSection(child.href)}
-                        className={`block w-full text-left px-4 py-3 text-sm transition-all duration-200 ease-out transform hover:scale-[1.02] ${
-                          isChildActive(child)
-                            ? "text-chart-1 bg-chart-1/20 shadow-inner"
-                            : "text-muted-foreground hover:text-foreground hover:bg-white/10"
-                        }`}
-                        style={{
-                          animationDelay: `${index * 50}ms`,
-                          animation:
-                            openDropdown === item.name
-                              ? `slideInFromTop 0.3s ease-out forwards`
-                              : "none",
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          {child.name}
-                          {isChildActive(child) && (
-                            <span className="w-2 h-2 bg-chart-1 rounded-full"></span>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div className="relative w-10 h-10 flex items-center justify-center bg-gradient-to-br from-chart-1 to-blue-600 rounded-xl shadow-lg shadow-chart-1/20 group-hover:shadow-chart-1/40 transition-all duration-300 overflow-hidden">
+                <span className="text-white font-black text-lg relative z-10">
+                  {personalInfo.name.charAt(0)}
+                </span>
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               </div>
-            ))}
+              <div className="flex flex-col text-left">
+                <span className="font-bold text-lg tracking-tight leading-none group-hover:text-chart-1 transition-colors">
+                  {personalInfo.name.split(" ")[0]}
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-white transition-colors">
+                  Developer
+                </span>
+              </div>
+            </button>
+          </Magnetic>
+
+          {/* --- DESKTOP NAVIGATION --- */}
+          <nav 
+            className="hidden md:flex items-center gap-1 p-1 bg-white/5 border border-white/5 rounded-full backdrop-blur-md shadow-2xl"
+            onMouseLeave={() => setHoveredPath(activeSection || location.pathname)}
+          >
+            {navItems.map((item) => {
+              const isActive = activeSection === item.href || location.pathname === item.href;
+              const Icon = item.icon;
+              
+              return (
+                <Magnetic key={item.name} strength={0.1}>
+                  <button
+                    onClick={() => handleNavClick(item.href)}
+                    onMouseEnter={() => setHoveredPath(item.href)}
+                    className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      isActive ? "text-white" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    {/* Active Pill Background */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        className="absolute inset-0 bg-white/10 rounded-full border border-white/5 shadow-inner"
+                      />
+                    )}
+                    
+                    {/* Hover Spotlight */}
+                    {hoveredPath === item.href && !isActive && (
+                      <motion.div
+                        layoutId="nav-hover"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        className="absolute inset-0 bg-white/5 rounded-full"
+                      />
+                    )}
+                    
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Icon size={14} />
+                      {item.name}
+                      {item.badge && (
+                        <span className="flex h-1.5 w-1.5 rounded-full bg-chart-1 animate-pulse" />
+                      )}
+                    </span>
+                  </button>
+                </Magnetic>
+              );
+            })}
           </nav>
 
-          {/* Theme Toggle & Mobile Menu */}
-          <div className="flex items-center space-x-4">
-            {/* Theme selector button */}
-            <button 
-              onClick={handleOpenThemeModal}
-              className="p-2 rounded-lg hover:bg-muted transition-colors group"
-              aria-label="Open theme selector"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="currentColor"
-                className="text-foreground group-hover:scale-110 transition-transform"
-                viewBox="0 0 16 16"
+          {/* --- ACTIONS --- */}
+          <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <Magnetic>
+              <button 
+                onClick={handleThemeToggle}
+                className="group relative p-3 rounded-xl bg-white/5 hover:bg-chart-1/20 border border-white/5 hover:border-chart-1/50 transition-all duration-300 overflow-hidden"
               >
-                <path d="M12.433 10.07C14.133 10.585 16 11.15 16 8a8 8 0 1 0-8 8c1.996 0 1.826-1.504 1.649-3.08-.124-1.101-.252-2.237.351-2.92.465-.527 1.42-.237 2.433.07M8 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m4.5 3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3M5 6.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m.5 6.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
-              </svg>
-            </button>
+                <Palette size={18} className="text-zinc-400 group-hover:text-chart-1 transition-colors relative z-10" />
+                <div className="absolute inset-0 bg-chart-1/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              </button>
+            </Magnetic>
+            
+            {/* CTA */}
+            <div className="hidden md:block">
+              <Magnetic>
+                <button 
+                  onClick={() => handleNavClick("#contact")}
+                  className="group relative px-6 py-2.5 bg-white text-black font-bold rounded-xl overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-shadow"
+                >
+                  <span className="relative z-10 flex items-center gap-2 group-hover:gap-3 transition-all">
+                    Let's Talk <ArrowRight size={16} />
+                  </span>
+                  <div className="absolute inset-0 bg-chart-1 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                </button>
+              </Magnetic>
+            </div>
 
-            {/* <button
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="md:hidden relative z-[60] p-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 transform hover:scale-110"
             >
-              <div
-                className={`transition-transform duration-300 ${
-                  isMobileMenuOpen ? "rotate-90" : ""
-                }`}
-              >
-                {isMobileMenuOpen ? (
-                  <X size={20} className="text-foreground" />
-                ) : (
-                  <Menu size={20} className="text-foreground" />
-                )}
+              <div className="w-8 flex flex-col items-end gap-1.5 group">
+                <motion.span 
+                  animate={isMobileMenuOpen ? { rotate: 45, y: 8, width: 32 } : { rotate: 0, y: 0, width: 32 }}
+                  className="h-0.5 bg-white block" 
+                />
+                <motion.span 
+                  animate={isMobileMenuOpen ? { opacity: 0, width: 0 } : { opacity: 1, width: 24 }}
+                  className="h-0.5 bg-white block" 
+                />
+                <motion.span 
+                  animate={isMobileMenuOpen ? { rotate: -45, y: -8, width: 32 } : { rotate: 0, y: 0, width: 16 }}
+                  className="h-0.5 bg-white block" 
+                />
               </div>
-            </button> */}
+            </button>
           </div>
         </div>
+      </motion.header>
 
-        {/* Mobile Navigation */}
-        {/* <div
-          className={`md:hidden bg-background/95 backdrop-blur-xl border-t border-white/10 transition-all duration-300 ease-out overflow-hidden ${
-            isMobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
-          }`}
-        >
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            {navItems.map((item, index) => (
-              <div
-                key={item.name}
-                className={`transition-all duration-300 ease-out transform ${
-                  isMobileMenuOpen
-                    ? "translate-x-0 opacity-100"
-                    : "-translate-x-4 opacity-0"
-                }`}
-                style={{ transitionDelay: `${index * 50}ms` }}
-              >
-                <div className="flex justify-between items-center">
-                  <button
-                    onClick={() => scrollToSection(item.href)}
-                    className={`flex-1 text-left px-4 py-3 text-base font-medium rounded-xl transition-all duration-300 transform hover:scale-[1.02] relative overflow-hidden ${
-                      isActive(item)
-                        ? "text-chart-1 bg-gradient-to-r from-chart-1/20 to-chart-1/10 shadow-inner"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/10"
-                    }`}
-                  >
-                    {item.name}
-                    {isActive(item) && (
-                      <span className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-chart-1 rounded-r-full"></span>
-                    )}
-                  </button>
+      {/* --- MOBILE MENU OVERLAY --- */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, clipPath: "circle(0% at 100% 0)" }}
+            animate={{ opacity: 1, clipPath: "circle(150% at 100% 0)" }}
+            exit={{ opacity: 0, clipPath: "circle(0% at 100% 0)" }}
+            transition={{ duration: 0.5, ease: [0.32, 0, 0.67, 0] }}
+            className="fixed inset-0 z-50 bg-[#050505] flex flex-col justify-center px-6"
+          >
+            {/* Background Texture */}
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:20px_20px]" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-chart-1/20 rounded-full blur-[100px]" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]" />
 
-                  {item.children && (
-                    <span
-                      onClick={() =>
-                        setOpenDropdown(
-                          openDropdown === item.name ? null : item.name
-                        )
-                      }
-                      className={`px-3 py-2 cursor-pointer transition-all duration-300 transform hover:scale-110 ${
-                        openDropdown === item.name ? "rotate-180" : ""
-                      } ${
-                        isActive(item)
-                          ? "text-chart-1"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      ▼
-                    </span>
-                  )}
-                </div>
-
-                Mobile Dropdown
-                <div
-                  className={`overflow-hidden transition-all duration-300 ease-out ${
-                    item.children && openDropdown === item.name
-                      ? "max-h-64 opacity-100"
-                      : "max-h-0 opacity-0"
-                  }`}
+            <nav className="relative z-10 space-y-2">
+              {navItems.map((item, i) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ x: 50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 + i * 0.1 }}
                 >
-                  <div className="pl-6 pt-1">
-                    {item.children?.map((child, childIndex) => (
-                      <button
-                        key={child.name}
-                        onClick={() => scrollToSection(child.href)}
-                        className={`block w-full text-left px-4 py-2 text-sm rounded-lg transition-all duration-200 transform hover:scale-[1.02] relative ${
-                          isChildActive(child)
-                            ? "text-chart-1 bg-chart-1/20 shadow-inner"
-                            : "text-muted-foreground hover:text-foreground hover:bg-white/10"
-                        }`}
-                        style={{
-                          animationDelay: `${childIndex * 100}ms`,
-                          transform:
-                            openDropdown === item.name
-                              ? "translateX(0)"
-                              : "translateX(-10px)",
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          {child.name}
-                          {isChildActive(child) && (
-                            <span className="w-2 h-2 bg-chart-1 rounded-full"></span>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div> */}
-      </div>
+                  <button
+                    onClick={() => handleNavClick(item.href)}
+                    className="group flex items-center gap-4 text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 to-zinc-700 hover:from-white hover:to-white transition-all duration-300 w-full"
+                  >
+                    <span className="text-sm font-mono text-chart-1 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                      0{i + 1}
+                    </span>
+                    {item.name}
+                    <ChevronRight className="w-8 h-8 text-white opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ml-auto" />
+                  </button>
+                </motion.div>
+              ))}
+            </nav>
 
-      <style jsx>{`
-        @keyframes slideInFromTop {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-    </header>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="absolute bottom-12 left-6 right-6 pt-8 border-t border-white/10 flex justify-between items-center"
+            >
+              <div className="flex flex-col">
+                <span className="text-zinc-500 text-sm uppercase tracking-widest mb-1">Get in touch</span>
+                <a href={`mailto:${personalInfo.email}`} className="text-white font-bold text-lg hover:text-chart-1 transition-colors">
+                  {personalInfo.email}
+                </a>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
-export default Header;
+export default React.memo(Header);

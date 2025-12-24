@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { X, Upload, Loader, Save, FileText } from "lucide-react";
 import { resumesAPI } from "../../api/supabase";
+import Loading from "../layouts/loading";
 
 const ResumeFormModal = ({ editingItem, setShowModal, onSuccess, onError }) => {
   const [formData, setFormData] = useState(
@@ -189,7 +190,7 @@ const ResumeFormModal = ({ editingItem, setShowModal, onSuccess, onError }) => {
 
                     {uploading ? (
                       <div className="flex flex-col items-center gap-4">
-                        <Loader className="w-12 h-12 text-cyan-500 animate-spin" />
+                        <Loading />
                         <p className="text-gray-400">Uploading...</p>
                       </div>
                     ) : selectedFile ? (
@@ -287,7 +288,7 @@ const ResumeFormModal = ({ editingItem, setShowModal, onSuccess, onError }) => {
               >
                 {saving ? (
                   <>
-                    <Loader className="w-5 h-5 animate-spin" />
+                    <Loading />
                     <span>Saving...</span>
                   </>
                 ) : (

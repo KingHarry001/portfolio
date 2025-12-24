@@ -27,6 +27,8 @@ import {
 } from "../../api/supabase";
 import FloatingUserButton from "./FloatingUserButton";
 import Loading from "../layouts/loading";
+import AdminReviewsPanel from "./AdminReviewsPanel";
+import AdminPanel from "./AdminPanel";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -136,9 +138,12 @@ const AdminDashboard = () => {
 
   const handleDelete = async (type, id) => {
     console.log("handleDelete called:", type, id);
-    if (!window.confirm(`Delete this ${type}?`)) return;
+    if (!window.confirm(`Are you sure you want to delete this ${type}?`))
+      return;
 
     try {
+      setLoading(true); // Add loading state
+
       switch (type) {
         case "project":
           await projectsAPI.delete(id, "admin-user-id");
@@ -164,14 +169,19 @@ const AdminDashboard = () => {
         case "resume":
           await resumesAPI.delete(id);
           break;
+        default:
+          throw new Error(`Unknown type: ${type}`);
       }
+
       showNotification(
         `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`
       );
-      fetchData();
+      await fetchData(); // Wait for refetch
     } catch (error) {
       console.error("Delete error:", error);
-      showNotification("Error: " + error.message, "error");
+      showNotification(`Failed to delete: ${error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -405,6 +415,27 @@ const AdminDashboard = () => {
           />
         );
 
+      case "users":
+        return (
+          <div className="space-y-6">
+            <AdminPanel />
+          </div>
+        );
+
+      case "reviews":
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h3 className="text-2xl font-bold text-white">
+                  Review Management
+                </h3>
+                <p className="text-gray-400">Manage all user reviews</p>
+              </div>
+            </div>
+            <AdminReviewsPanel />
+          </div>
+        );
       case "media":
         return (
           <div className="text-center py-12 sm:py-20 px-4">
@@ -521,7 +552,7 @@ const AdminDashboard = () => {
       {showModal && modalType === "app" && (
         <AppFormModal
           editingItem={editingItem}
-          setShowModal={setShowModal}
+          onClose={() => setShowModal(false)}
           onSuccess={() => {
             fetchData();
             showNotification(
@@ -535,7 +566,6 @@ const AdminDashboard = () => {
           }
         />
       )}
-
       {showModal && modalType !== "project" && modalType !== "app" && (
         <GenericFormModal
           type={modalType}

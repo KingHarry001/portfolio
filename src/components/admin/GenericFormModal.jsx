@@ -1,7 +1,6 @@
-// src/components/admin/GenericFormModal.jsx - FIXED
+// src/components/admin/GenericFormModal.jsx - UPDATED TO HANDLE EXTRA FIELDS
 import { useState } from "react";
-import { X, Save, Loader } from "lucide-react";
-import Loading from "../layouts/loading";
+import { X, Save } from "lucide-react";
 import {
   skillsAPI,
   certificationsAPI,
@@ -9,6 +8,7 @@ import {
   testimonialsAPI,
   blogAPI,
 } from "../../api/supabase";
+import Loading from "../layouts/loading";
 
 const formConfigs = {
   skill: {
@@ -124,7 +124,6 @@ const formConfigs = {
         type: "textarea",
         required: true,
       },
-      { name: "avatar_url", label: "Avatar URL", type: "url", required: false },
       {
         name: "rating",
         label: "Rating (1-5)",
@@ -207,24 +206,80 @@ const GenericFormModal = ({
   onError,
 }) => {
   const config = formConfigs[type];
+  
+  if (!config) {
+    console.error(`Invalid form type: ${type}`);
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-900 rounded-xl p-6 max-w-md">
+          <h3 className="text-xl font-bold text-red-400 mb-4">Configuration Error</h3>
+          <p className="text-gray-400 mb-4">Form configuration for type "{type}" not found.</p>
+          <button
+            onClick={() => setShowModal(false)}
+            className="px-6 py-3 bg-gray-800 text-white rounded-lg"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const [saving, setSaving] = useState(false);
 
-  // Initialize form data
+  // Get initial form data based on type
   const getInitialData = () => {
-    if (editingItem) return editingItem;
+    if (editingItem) {
+      // Remove metadata fields that shouldn't be in the form
+      const { id, created_at, updated_at, updated_by, user_id, ...rest } = editingItem;
+      return rest;
+    }
 
+    // Initialize empty form based on type
     const initialData = {};
-    config.fields.forEach((field) => {
-      if (field.type === "checkbox") {
-        initialData[field.name] = false;
-      } else if (field.type === "number") {
-        initialData[field.name] = field.min || 0;
-      } else if (field.type === "date") {
-        initialData[field.name] = new Date().toISOString().split("T")[0];
-      } else {
-        initialData[field.name] = "";
+    
+    // Set default values for each field in the config
+    config.fields.forEach(field => {
+      switch (field.type) {
+        case "textarea":
+          initialData[field.name] = "";
+          break;
+        case "select":
+          initialData[field.name] = "";
+          break;
+        case "checkbox":
+          initialData[field.name] = field.name === "published" ? false : true;
+          break;
+        case "number":
+          initialData[field.name] = field.name === "level" ? 0 : 
+                                   field.name === "display_order" ? 0 : 
+                                   field.name === "rating" ? 5 : 0;
+          break;
+        case "date":
+          initialData[field.name] = field.name === "publish_date" ? 
+                                   new Date().toISOString().split('T')[0] : "";
+          break;
+        default:
+          initialData[field.name] = "";
       }
     });
+
+    // Set some smart defaults
+    if (type === "blog") {
+      initialData.author = "Harrison King";
+      initialData.published = false;
+    }
+
+    if (type === "testimonial") {
+      initialData.rating = 5;
+      initialData.display_order = 0;
+    }
+
+    if (type === "service") {
+      initialData.active = true;
+      initialData.display_order = 0;
+    }
+
     return initialData;
   };
 
@@ -243,35 +298,72 @@ const GenericFormModal = ({
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSaving(true);
 
-    try {
-      // Process features array if it exists (for services)
-      let cleanData = { ...formData };
-      if (cleanData.features && typeof cleanData.features === "string") {
-        cleanData.features = cleanData.features
-          .split("\n")
-          .map((f) => f.trim())
-          .filter(Boolean);
-      }
-
-      if (editingItem) {
-        await config.api.update(editingItem.id, cleanData);
-      } else {
-        await config.api.create(cleanData);
-      }
-
-      setShowModal(false);
-      onSuccess();
-    } catch (error) {
-      console.error("Error saving:", error);
-      onError(error);
-    } finally {
-      setSaving(false);
+  try {
+    // Process the form data for each type
+    let cleanData = { ...formData };
+    
+    // Process features for services
+    if (type === "service" && cleanData.features && typeof cleanData.features === "string") {
+      cleanData.features = cleanData.features
+        .split("\n")
+        .map((f) => f.trim())
+        .filter(Boolean);
     }
-  };
+
+    // For blog posts, ensure required fields
+    if (type === "blog") {
+      if (!cleanData.slug) {
+        // Auto-generate slug if not provided
+        cleanData.slug = cleanData.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+      }
+      
+      // Set publish_date if not provided
+      if (!cleanData.publish_date) {
+        cleanData.publish_date = new Date().toISOString().split('T')[0];
+      }
+      
+      // Set author if not provided
+      if (!cleanData.author) {
+        cleanData.author = "Harrison King";
+      }
+    }
+
+    console.log(`Submitting ${type} data:`, cleanData);
+
+    if (editingItem) {
+      await config.api.update(editingItem.id, cleanData);
+    } else {
+      await config.api.create(cleanData);
+    }
+
+    setShowModal(false);
+    onSuccess();
+  } catch (error) {
+    console.error(`Error saving ${type}:`, error);
+    console.error("Full error object:", JSON.stringify(error, null, 2));
+    
+    let errorMessage = `Failed to save ${config.title.toLowerCase()}. `;
+    
+    if (error.code === "PGRST116") {
+      errorMessage += "The database operation succeeded but didn't return data. ";
+      errorMessage += "This could be due to Row Level Security (RLS) policies. ";
+      errorMessage += "Check your RLS policies for the blog_posts table.";
+    } else if (error.message) {
+      errorMessage += error.message;
+    }
+    
+    onError(new Error(errorMessage));
+  } finally {
+    setSaving(false);
+  }
+};
 
   const renderField = (field) => {
     const value = formData[field.name] || "";
@@ -282,7 +374,7 @@ const GenericFormModal = ({
           <textarea
             required={field.required}
             rows={field.rows || (field.name === "features" ? 5 : 3)}
-            value={Array.isArray(value) ? value.join("\n") : value}
+            value={typeof value === "object" ? JSON.stringify(value) : value}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
             placeholder={
               field.name === "features"
@@ -315,7 +407,7 @@ const GenericFormModal = ({
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={value}
+              checked={!!value}
               onChange={(e) => handleInputChange(field.name, e.target.checked)}
               className="sr-only peer"
             />
@@ -407,7 +499,7 @@ const GenericFormModal = ({
               >
                 {saving ? (
                   <>
-                    <Loader />
+                    <Loading className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                     <span>Saving...</span>
                   </>
                 ) : (

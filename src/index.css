@@ -240,6 +240,58 @@ code {
 }
 }
 
+/* Add to your existing CSS */
+@layer base {
+  /* Convert HSL to RGB for better opacity handling */
+  :root {
+    --chart-1-rgb: 0, 184, 217;
+    --chart-2-rgb: 45, 212, 191;
+    --chart-3-rgb: 225, 69, 125;
+    --chart-4-rgb: 255, 188, 57;
+    --chart-5-rgb: 51, 204, 102;
+  }
+
+  [data-theme="dark"] {
+    --chart-1-rgb: 102, 255, 224;
+    --chart-2-rgb: 76, 217, 191;
+    --chart-3-rgb: 255, 140, 102;
+    --chart-4-rgb: 174, 129, 255;
+    --chart-5-rgb: 255, 99, 132;
+  }
+
+  [data-theme="earth"] {
+    --chart-1-rgb: 184, 92, 0;
+    --chart-2-rgb: 45, 140, 102;
+    --chart-3-rgb: 184, 69, 0;
+    --chart-4-rgb: 230, 188, 77;
+    --chart-5-rgb: 38, 140, 89;
+  }
+
+  [data-theme="glass"] {
+    --chart-1-rgb: 158, 0, 255;
+    --chart-2-rgb: 0, 245, 255;
+    --chart-3-rgb: 255, 0, 214;
+    --chart-4-rgb: 0, 153, 255;
+    --chart-5-rgb: 76, 255, 0;
+  }
+
+  [data-theme="retro"] {
+    --chart-1-rgb: 255, 0, 208;
+    --chart-2-rgb: 0, 208, 255;
+    --chart-3-rgb: 255, 230, 0;
+    --chart-4-rgb: 255, 0, 0;
+    --chart-5-rgb: 255, 99, 132;
+  }
+
+  [data-theme="darkblue"] {
+    --chart-1-rgb: 0, 255, 255;
+    --chart-2-rgb: 77, 142, 255;
+    --chart-3-rgb: 0, 245, 212;
+    --chart-4-rgb: 153, 161, 179;
+    --chart-5-rgb: 145, 77, 255;
+  }
+}
+
 /* ENHANCED BUTTON COMPONENTS */
 @layer components {
   /* Modern Primary Button */

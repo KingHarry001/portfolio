@@ -95,17 +95,16 @@ const LoadingSpinner3D = ({ size = 80, color = "#00FFD1" }) => {
       >
         {/* Center glow */}
         <div
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-0 rounded-full animate-pulse-glow"
           style={{
             background: `radial-gradient(circle, ${color}40 0%, transparent 70%)`,
-            animation: "pulse 2s ease-in-out infinite",
           }}
         />
       </div>
 
       {/* Outer ring */}
       <div
-        className="absolute border-2 border-transparent rounded-full animate-spin"
+        className="absolute border-2 border-transparent rounded-full animate-spin-slow"
         style={{
           width: size * 1.5,
           height: size * 1.5,
@@ -113,12 +112,11 @@ const LoadingSpinner3D = ({ size = 80, color = "#00FFD1" }) => {
           borderRightColor: `${color}80`,
           borderBottomColor: `${color}40`,
           borderLeftColor: `${color}20`,
-          animationDuration: "3s",
         }}
       />
 
       {/* Text */}
-      <div className="absolute -bottom-8 text-center">
+      <div className="absolute bottom-8 text-center">
         <p
           className="text-sm font-medium bg-gradient-to-r from-chart-1 to-chart-3 bg-clip-text text-transparent"
           style={{ color }}
@@ -127,16 +125,23 @@ const LoadingSpinner3D = ({ size = 80, color = "#00FFD1" }) => {
         </p>
       </div>
 
-      <style jsx>{`
-        @keyframes pulse {
+      {/* FIX: Removed 'jsx' attribute and made styles standard CSS */}
+      <style>{`
+        @keyframes pulse-glow {
           0%, 100% { opacity: 0.6; transform: scale(0.95); }
           50% { opacity: 1; transform: scale(1.05); }
         }
+        .animate-pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
         
-        @keyframes spin {
+        @keyframes spin-slow {
           0% { transform: rotate(0deg) scale(1); }
           50% { transform: rotate(180deg) scale(1.1); }
           100% { transform: rotate(360deg) scale(1); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
         }
       `}</style>
     </div>

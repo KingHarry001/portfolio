@@ -164,20 +164,6 @@ const ServicesSection = () => {
                     ))}
                   </ul>
                 </div>
-
-                <div className="flex items-center justify-between pt-8 border-t border-white/5">
-                  <div>
-                    <span className="block text-zinc-500 text-xs font-bold uppercase mb-1">Starts from</span>
-                    <span className="text-2xl font-black text-white">{service.starting_price}</span>
-                  </div>
-                  <button
-                    onClick={() => handleServiceInquiry(service.title)}
-                    className="flex items-center gap-2 px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-chart-1 transition-colors group/btn"
-                  >
-                    Get Started
-                    <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
-                </div>
               </div>
             </div>
           ))}

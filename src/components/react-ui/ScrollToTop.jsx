@@ -5,16 +5,8 @@ export default function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Check if screen width is greater than mobile breakpoint (768px)
-    const isMobile = window.innerWidth < 768;
-    
-    if (!isMobile) {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "smooth",
-      });
-    }
+    // Instantly scroll to top whenever the path changes
+    window.scrollTo(0, 0);
   }, [pathname]);
 
   return null;

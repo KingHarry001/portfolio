@@ -2,23 +2,20 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router-dom";
 import { 
   Menu, Sparkles, Command, Palette, ArrowRight, Zap,
-  Mail, ExternalLink, ChevronRight
+  Mail, ExternalLink, ChevronRight, X 
 } from "lucide-react";
 import { 
   motion, AnimatePresence, useScroll, useSpring, 
-  useMotionValue, useTransform 
+  useMotionValue 
 } from "framer-motion";
 import { personalInfo } from "../../data/mock";
 
-// --- 1. Optimized Magnetic Component (No Re-renders) ---
+// --- 1. Optimized Magnetic Component ---
 const Magnetic = ({ children, strength = 0.2 }) => {
   const ref = useRef(null);
-  
-  // Use MotionValues instead of State to avoid re-renders on mousemove
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  // Smooth spring physics
   const springX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.1 });
   const springY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.1 });
 
@@ -27,7 +24,6 @@ const Magnetic = ({ children, strength = 0.2 }) => {
     const { height, width, left, top } = ref.current.getBoundingClientRect();
     const middleX = clientX - (left + width / 2);
     const middleY = clientY - (top + height / 2);
-    
     x.set(middleX * strength);
     y.set(middleY * strength);
   };
@@ -57,26 +53,20 @@ const Header = () => {
   const location = useLocation();
   const headerRef = useRef(null);
   
-  // State for low-frequency updates only
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [hoveredPath, setHoveredPath] = useState(location.pathname);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Scroll Progress Bar
   const { scrollYProgress, scrollY } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
-  // --- 3. Performance Optimized Scroll Logic ---
   useEffect(() => {
-    // A. Visual Header Change (Motion Value Listener)
     const unsubscribe = scrollY.on("change", (latest) => {
       const shouldBeScrolled = latest > 50;
       if (shouldBeScrolled !== isScrolled) setIsScrolled(shouldBeScrolled);
     });
 
-    // B. Active Section Detection (Intersection Observer)
-    // This is much lighter than calculating rects on scroll
     const sections = ["hero", "about", "services", "projects", "blog", "contact"];
     const observer = new IntersectionObserver(
       (entries) => {
@@ -86,7 +76,7 @@ const Header = () => {
           }
         });
       },
-      { threshold: 0.4, rootMargin: "-10% 0px -40% 0px" } // Detect when element is near center
+      { threshold: 0.4, rootMargin: "-10% 0px -40% 0px" }
     );
 
     sections.forEach((id) => {
@@ -124,7 +114,6 @@ const Header = () => {
     setIsMobileMenuOpen(false);
   }, [navigate, location.pathname]);
 
-  // Handle Theme Logic
   const handleThemeToggle = () => {
     if (window.openThemeModal) window.openThemeModal();
   };
@@ -133,7 +122,7 @@ const Header = () => {
     <>
       {/* Top Reading Progress Bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-chart-1 via-purple-500 to-blue-500 origin-left z-[100]"
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-chart-1 via-purple-500 to-blue-500 origin-left z-[99]"
         style={{ scaleX }}
       />
 
@@ -144,7 +133,7 @@ const Header = () => {
         transition={{ type: "spring", stiffness: 100, damping: 20 }}
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${
           isScrolled 
-            ? "h-16 bg-background/60 backdrop-blur-xl border-b border-white/5 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)]" 
+            ? "h-16 bg-background/80 backdrop-blur-xl border-b border-border shadow-sm" 
             : "h-24 bg-transparent"
         }`}
       >
@@ -163,10 +152,11 @@ const Header = () => {
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               </div>
               <div className="flex flex-col text-left">
-                <span className="font-bold text-lg tracking-tight leading-none group-hover:text-chart-1 transition-colors">
+                {/* FIXED: Added text-foreground for Light Mode visibility */}
+                <span className="font-bold text-lg tracking-tight leading-none text-foreground group-hover:text-chart-1 transition-colors">
                   {personalInfo.name.split(" ")[0]}
                 </span>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-white transition-colors">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
                   Developer
                 </span>
               </div>
@@ -175,7 +165,7 @@ const Header = () => {
 
           {/* --- DESKTOP NAVIGATION --- */}
           <nav 
-            className="hidden md:flex items-center gap-1 p-1 bg-white/5 border border-white/5 rounded-full backdrop-blur-md shadow-2xl"
+            className="hidden md:flex items-center gap-1 p-1 bg-background/50 border border-border/50 rounded-full backdrop-blur-md shadow-sm"
             onMouseLeave={() => setHoveredPath(activeSection || location.pathname)}
           >
             {navItems.map((item) => {
@@ -187,25 +177,24 @@ const Header = () => {
                   <button
                     onClick={() => handleNavClick(item.href)}
                     onMouseEnter={() => setHoveredPath(item.href)}
+                    // FIXED: Updated text colors for Light Mode visibility
                     className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                      isActive ? "text-white" : "text-zinc-400 hover:text-white"
+                      isActive ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    {/* Active Pill Background */}
                     {isActive && (
                       <motion.div
                         layoutId="nav-pill"
                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                        className="absolute inset-0 bg-white/10 rounded-full border border-white/5 shadow-inner"
+                        className="absolute inset-0 bg-foreground/10 rounded-full border border-foreground/5 shadow-inner"
                       />
                     )}
                     
-                    {/* Hover Spotlight */}
                     {hoveredPath === item.href && !isActive && (
                       <motion.div
                         layoutId="nav-hover"
                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                        className="absolute inset-0 bg-white/5 rounded-full"
+                        className="absolute inset-0 bg-foreground/5 rounded-full"
                       />
                     )}
                     
@@ -228,9 +217,9 @@ const Header = () => {
             <Magnetic>
               <button 
                 onClick={handleThemeToggle}
-                className="group relative p-3 rounded-xl bg-white/5 hover:bg-chart-1/20 border border-white/5 hover:border-chart-1/50 transition-all duration-300 overflow-hidden"
+                className="group relative p-3 rounded-xl bg-background/50 hover:bg-chart-1/20 border border-border hover:border-chart-1/50 transition-all duration-300 overflow-hidden"
               >
-                <Palette size={18} className="text-zinc-400 group-hover:text-chart-1 transition-colors relative z-10" />
+                <Palette size={18} className="text-muted-foreground group-hover:text-chart-1 transition-colors relative z-10" />
                 <div className="absolute inset-0 bg-chart-1/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               </button>
             </Magnetic>
@@ -240,7 +229,7 @@ const Header = () => {
               <Magnetic>
                 <button 
                   onClick={() => handleNavClick("#contact")}
-                  className="group relative px-6 py-2.5 bg-white text-black font-bold rounded-xl overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-shadow"
+                  className="group relative px-6 py-2.5 bg-foreground text-background font-bold rounded-xl overflow-hidden shadow-lg transition-shadow hover:shadow-xl"
                 >
                   <span className="relative z-10 flex items-center gap-2 group-hover:gap-3 transition-all">
                     Let's Talk <ArrowRight size={16} />
@@ -250,23 +239,24 @@ const Header = () => {
               </Magnetic>
             </div>
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Menu Toggle Button (Hamburger) */}
             <button 
-              className="md:hidden relative z-[60] p-2"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden relative z-[60] p-2 text-foreground" // FIXED: Added text-foreground
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} // FIX: Toggles properly now
             >
               <div className="w-8 flex flex-col items-end gap-1.5 group">
+                {/* FIXED: Changed bg-white to bg-current so it inherits text color (Black in light mode, White in dark) */}
                 <motion.span 
                   animate={isMobileMenuOpen ? { rotate: 45, y: 8, width: 32 } : { rotate: 0, y: 0, width: 32 }}
-                  className="h-0.5 bg-white block" 
+                  className="h-0.5 bg-current block" 
                 />
                 <motion.span 
                   animate={isMobileMenuOpen ? { opacity: 0, width: 0 } : { opacity: 1, width: 24 }}
-                  className="h-0.5 bg-white block" 
+                  className="h-0.5 bg-current block group-hover:w-8 transition-all" 
                 />
                 <motion.span 
                   animate={isMobileMenuOpen ? { rotate: -45, y: -8, width: 32 } : { rotate: 0, y: 0, width: 16 }}
-                  className="h-0.5 bg-white block" 
+                  className="h-0.5 bg-current block group-hover:w-8 transition-all" 
                 />
               </div>
             </button>
@@ -288,6 +278,15 @@ const Header = () => {
             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:20px_20px]" />
             <div className="absolute top-0 right-0 w-96 h-96 bg-chart-1/20 rounded-full blur-[100px]" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]" />
+
+            {/* --- CLOSE BUTTON --- */}
+            {/* Added explicit Close button inside the menu as well */}
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-6 right-6 p-4 text-white hover:text-chart-1 transition-colors z-50"
+            >
+              <X size={32} />
+            </button>
 
             <nav className="relative z-10 space-y-2">
               {navItems.map((item, i) => (

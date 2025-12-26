@@ -245,13 +245,8 @@ export default function AppStore() {
                 placeholder="Search for apps, tools, or categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-5 bg-transparent text-lg placeholder-muted-foreground/70 focus:outline-none"
+                className="w-full px-4 py-5 bg-transparent text-lg placeholder-muted-foreground/70"
               />
-              <div className="pr-4 hidden sm:block">
-                 <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs text-muted-foreground font-mono">
-                    <Command className="w-3 h-3" /> K
-                 </div>
-              </div>
             </div>
           </div>
         </div>

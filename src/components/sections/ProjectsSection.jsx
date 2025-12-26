@@ -165,11 +165,10 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
                             href={normalized.liveUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl hover:shadow-xl hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-105"
+                            className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl hover:shadow-xl hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-105 hover:text-black"
                           >
                             <ExternalLink className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                             <span>View Live Project</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           </a>
                         )}
                         {normalized.githubUrl && (

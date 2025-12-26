@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Menu,
   X,
@@ -8,12 +8,12 @@ import {
   User,
   Briefcase,
   FileText,
+  MessageSquare,
   LogIn,
   LogOut,
   Shield,
   Mail,
-  Zap,
-  LayoutGrid,
+  Settings,
 } from "lucide-react";
 import { useAuth, useUser, UserButton } from "@clerk/clerk-react";
 
@@ -26,41 +26,43 @@ export default function BottomNavigation() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [themeColor, setThemeColor] = useState("#3b82f6");
+  const [themeColor, setThemeColor] = useState("#3b82f6"); // Default blue
 
-  // Haptics helper
-  const triggerHaptic = () => {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(10);
-    }
-  };
-
-  // --- LOGIC SECTION ---
-
-  // 1. Detect Theme Color
+  // Get current theme color - IMPROVED VERSION
   useEffect(() => {
     const getThemeColor = () => {
       const theme = document.documentElement.getAttribute("data-theme");
-      const colors = {
-        light: "#3b82f6",
-        dark: "#06b6d4",
-        glass: "#8b5cf6",
-        earth: "#f97316",
-        retro: "#ec4899",
-        darkblue: "#00d4ff",
-      };
-      setThemeColor(colors[theme] || "#3b82f6");
+
+      // Use guaranteed visible colors based on theme
+      let color = "#3b82f6"; // Default blue for light mode
+
+      if (theme === "dark") {
+        color = "#06b6d4"; // Cyan for dark mode
+      } else if (theme === "glass") {
+        color = "#8b5cf6"; // Purple for glass theme
+      } else if (theme === "earth") {
+        color = "#f97316"; // Orange for earth theme
+      } else if (theme === "retro") {
+        color = "#ec4899"; // Pink for retro theme
+      } else if (theme === "darkblue") {
+        color = "#00d4ff"; // Bright cyan for darkblue theme
+      }
+
+      console.log("🎨 Using theme color:", color, "for theme:", theme);
+      setThemeColor(color);
     };
+
     getThemeColor();
     const observer = new MutationObserver(getThemeColor);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class", "data-theme"],
     });
+
     return () => observer.disconnect();
   }, []);
 
-  // 2. Check Admin Status
+  // Check if user is admin
   useEffect(() => {
     if (isSignedIn && user) {
       const isUserAdmin = user.publicMetadata?.role === "admin";
@@ -68,38 +70,73 @@ export default function BottomNavigation() {
     }
   }, [isSignedIn, user]);
 
-  // 3. Scroll Progress (Clamped)
+  // Scroll progress function - WORKING VERSION
   useEffect(() => {
+    console.log("🔄 Setting up scroll progress...");
+
     const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
+
       const totalHeight = scrollHeight - clientHeight;
-      
-      // Prevent rubber-banding values (<0 or >100)
-      let progress = totalHeight > 0 ? (scrollTop / totalHeight) * 100 : 0;
-      progress = Math.min(100, Math.max(0, progress));
-      
+      const progress = totalHeight > 0 ? (scrollTop / totalHeight) * 100 : 0;
+
+      console.log("📊 Scroll progress:", progress.toFixed(1) + "%");
       setScrollProgress(progress);
     };
-    
+
     window.addEventListener("scroll", handleScroll, { passive: true });
+
+    // Initial calculation
+    setTimeout(handleScroll, 100);
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 4. Mobile Detection
+  // Check mobile/desktop
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const handleNavigate = (href) => {
-    triggerHaptic();
+  // Navigation items for home page
+  const homeSections = [
+    { id: "hero", name: "Home", icon: Home, href: "#hero" },
+    { id: "apps", name: "Apps Store", href: "/apps", icon: Briefcase },
+    { id: "about", name: "About", icon: User, href: "#about" },
+    { id: "services", name: "Services", icon: Briefcase, href: "#services" },
+    { id: "projects", name: "Projects", icon: Briefcase, href: "#projects" },
+    { id: "blog", name: "Blog", icon: FileText, href: "#blog" },
+    {
+      id: "testimonial",
+      name: "Testimonials",
+      icon: MessageSquare,
+      href: "#testimonial",
+    },
+    { id: "contact", name: "Contact", icon: Mail, href: "#contact" },
+  ];
+
+  // Main navigation items
+  const mainNavItems = [
+    { name: "Home", href: "/", icon: Home },
+    { name: "Apps Store", href: "/apps", icon: Briefcase },
+    { name: "Blog", href: "/blog", icon: FileText },
+    { name: "Contact", href: "/contact", icon: Mail },
+  ];
+
+  const scrollToSection = (href) => {
     if (href.startsWith("#")) {
       const element = document.querySelector(href);
-      if (element) element.scrollIntoView({ behavior: "smooth" });
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     } else {
       navigate(href);
     }
@@ -107,341 +144,659 @@ export default function BottomNavigation() {
   };
 
   const scrollToTop = () => {
-    triggerHaptic();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
-  const radius = 28;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (scrollProgress / 100) * circumference;
+  // Calculate progress ring values - WORKING CALCULATION
+  const radius = 28; // Changed from 20 to 28
+  const circumference = 2 * Math.PI * radius; // ~175.93
+  const strokeDashoffset =
+    circumference - (scrollProgress / 100) * circumference;
 
-  // --- NAVIGATION DATA ---
-  const homeSections = [
-    { id: "hero", name: "Home", icon: Home, href: "#hero", color: "text-blue-500" },
-    { id: "apps", name: "App Store", href: "/apps", icon: LayoutGrid, color: "text-purple-500" },
-    { id: "projects", name: "Projects", icon: Zap, href: "#projects", color: "text-amber-500" },
-    { id: "about", name: "About", icon: User, href: "#about", color: "text-emerald-500" },
-    { id: "blog", name: "Blog", icon: FileText, href: "#blog", color: "text-pink-500" },
-    { id: "contact", name: "Contact", icon: Mail, href: "#contact", color: "text-cyan-500" },
-  ];
+  // ================= DESKTOP VERSION =================
+  if (!isMobile) {
+    if (isSignedIn && isAdmin) {
+      return (
+        <>
+          <div className="fixed bottom-6 left-6 z-50">
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              <Shield className="w-6 h-6" />
+              <span className="text-sm font-medium">Admin</span>
+            </button>
+          </div>
 
-  const mainNavItems = [
-    { name: "Home", href: "/", icon: Home, color: "text-blue-500" },
-    { name: "Apps Store", href: "/apps", icon: LayoutGrid, color: "text-purple-500" },
-    { name: "Blog", href: "/blog", icon: FileText, color: "text-pink-500" },
-    { name: "Contact", href: "#contact", icon: Mail, color: "text-cyan-500" },
-  ];
+          <div className="fixed bottom-6 right-6 z-50">
+            <div className="relative w-16 h-16">
+              {/* Circular Progress Ring for Desktop */}
+              <svg
+                className="w-full h-full transform -rotate-90 absolute inset-0"
+                viewBox="0 0 64 64"
+              >
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  stroke="rgba(255, 255, 255, 0.15)"
+                  strokeWidth="4"
+                  fill="none"
+                  className="dark:stroke-gray-700/50"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  stroke={themeColor}
+                  strokeWidth="4"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  style={{
+                    filter: `drop-shadow(0 0 6px ${themeColor}40)`,
+                    transition: "stroke-dashoffset 0.15s ease-out",
+                  }}
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  stroke={themeColor}
+                  strokeWidth="6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  style={{
+                    filter: "blur(6px)",
+                    opacity: "0.35",
+                    transition: "stroke-dashoffset 0.15s ease-out",
+                  }}
+                />
+              </svg>
 
-  // ================= UI COMPONENTS =================
+              {/* Inner glass button with UserButton */}
+              <div className="absolute inset-2.5 rounded-full flex items-center justify-center">
+                <div className="relative">
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse z-10"></div>
+                  {/* Glass border wrapper */}
+                  <div className="p-1 rounded-full bg-gradient-to-br from-white/20 to-white/5 dark:from-gray-900/40 dark:to-gray-900/20 backdrop-blur-lg border border-white/30 dark:border-gray-700/50 shadow-lg">
+                    <UserButton
+                      afterSignOutUrl="/"
+                      appearance={{
+                        elements: {
+                          rootBox: "w-11 h-11",
+                          userButtonBox: "w-full h-full",
+                          userButtonTrigger: "w-full h-full p-0",
+                          userButtonOuterIdentifier: "hidden",
+                          avatarBox: `w-11 h-11 border-2 hover:scale-105 transition-transform`,
+                          userButtonPopoverCard:
+                            "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl",
+                          userButtonPopoverActions:
+                            "border-t border-gray-200 dark:border-gray-800",
+                          userButtonPopoverActionButton:
+                            "hover:bg-gray-100 dark:hover:bg-gray-800",
+                        },
+                        variables: {
+                          colorPrimary: themeColor,
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
 
-  const ProgressRingButton = ({ onClick, children }) => (
-    <div className="relative w-16 h-16 group cursor-pointer" onClick={onClick}>
-      {/* 1. Ambient Glow */}
-      <div 
-        className="absolute inset-0 rounded-full blur-[20px] opacity-40 group-hover:opacity-70 transition-opacity duration-700"
-        style={{ backgroundColor: themeColor }}
-      />
+              {/* Progress percentage */}
+              {scrollProgress > 5 && scrollProgress < 95 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white dark:bg-gray-900 border border-white/30 dark:border-gray-700 flex items-center justify-center shadow-sm">
+                  <span
+                    className="text-[8px] font-bold"
+                    style={{ color: themeColor }}
+                  >
+                    {Math.round(scrollProgress)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      );
+    } else if (isSignedIn) {
+      return (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="relative w-16 h-16">
+            {/* Circular Progress Ring for Desktop */}
+            <svg
+              className="w-full h-full transform -rotate-90 absolute inset-0"
+              viewBox="0 0 64 64"
+            >
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                stroke="rgba(255, 255, 255, 0.15)"
+                strokeWidth="4"
+                fill="none"
+                className="dark:stroke-gray-700/50"
+              />
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                stroke={themeColor}
+                strokeWidth="4"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                style={{
+                  filter: `drop-shadow(0 0 6px ${themeColor}40)`,
+                  transition: "stroke-dashoffset 0.15s ease-out",
+                }}
+              />
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                stroke={themeColor}
+                strokeWidth="6"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                style={{
+                  filter: "blur(6px)",
+                  opacity: "0.35",
+                  transition: "stroke-dashoffset 0.15s ease-out",
+                }}
+              />
+            </svg>
 
-      {/* 2. The SVG Ring */}
-      <svg className="w-full h-full transform -rotate-90 relative z-10" viewBox="0 0 64 64">
-        <defs>
-          <linearGradient id="cometGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={themeColor} stopOpacity="0" />
-            <stop offset="100%" stopColor={themeColor} stopOpacity="1" />
-          </linearGradient>
-        </defs>
-        
-        <circle
-          cx="32" cy="32" r="28"
-          stroke="currentColor" strokeWidth="3" fill="none"
-          className="text-white/10 dark:text-white/5"
-        />
-        
-        <circle
-          cx="32" cy="32" r="28"
-          stroke="url(#cometGradient)" strokeWidth="3" fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          style={{ transition: "stroke-dashoffset 0.1s linear" }}
-        />
-      </svg>
+            {/* Inner glass button with UserButton */}
+            <div className="absolute inset-2.5 rounded-full flex items-center justify-center">
+              <div className="relative">
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse z-10"></div>
+                {/* Glass border wrapper */}
+                <div className="p-1 rounded-full bg-gradient-to-br from-white/20 to-white/5 dark:from-gray-900/40 dark:to-gray-900/20 backdrop-blur-lg border border-white/30 dark:border-gray-700/50 shadow-lg">
+                  <UserButton
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        rootBox: "w-11 h-11",
+                        userButtonBox: "w-full h-full",
+                        userButtonTrigger: "w-full h-full p-0",
+                        userButtonOuterIdentifier: "hidden",
+                        avatarBox: `w-11 h-11 border-2 hover:scale-105 transition-transform`,
+                        userButtonPopoverCard:
+                          "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl",
+                        userButtonPopoverActions:
+                          "border-t border-gray-200 dark:border-gray-800",
+                        userButtonPopoverActionButton:
+                          "hover:bg-gray-100 dark:hover:bg-gray-800",
+                      },
+                      variables: {
+                        colorPrimary: themeColor,
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
 
-      {/* 3. The Physical Glass Button */}
-      <div className="absolute inset-2 z-20 rounded-full overflow-hidden transition-all duration-300 group-hover:scale-105 active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.3)]">
-        <div className="absolute inset-0 bg-noise opacity-[0.08] pointer-events-none" />
-        <div className="w-full h-full bg-white/10 dark:bg-black/40 backdrop-blur-xl flex items-center justify-center relative">
-          {children}
+            {/* Progress percentage */}
+            {scrollProgress > 5 && scrollProgress < 95 && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white dark:bg-gray-900 border border-white/30 dark:border-gray-700 flex items-center justify-center shadow-sm">
+                <span
+                  className="text-[8px] font-bold"
+                  style={{ color: themeColor }}
+                >
+                  {Math.round(scrollProgress)}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      );
+    } else {
+      return (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="relative w-16 h-16">
+            {/* Circular Progress Ring for Desktop */}
+            <svg
+              className="w-full h-full transform -rotate-90 absolute inset-0"
+              viewBox="0 0 64 64"
+            >
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                stroke="rgba(255, 255, 255, 0.15)"
+                strokeWidth="4"
+                fill="none"
+                className="dark:stroke-gray-700/50"
+              />
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                stroke={themeColor}
+                strokeWidth="4"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                style={{
+                  filter: `drop-shadow(0 0 6px ${themeColor}40)`,
+                  transition: "stroke-dashoffset 0.15s ease-out",
+                }}
+              />
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                stroke={themeColor}
+                strokeWidth="6"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                style={{
+                  filter: "blur(6px)",
+                  opacity: "0.35",
+                  transition: "stroke-dashoffset 0.15s ease-out",
+                }}
+              />
+            </svg>
 
-      {/* 4. Percentage Pill */}
-      {scrollProgress > 2 && (
-        <div className="absolute -top-1 -right-1 z-30 animate-in fade-in zoom-in duration-300">
-          <div className="px-1.5 py-0.5 rounded-full bg-[#0a0a0a] border border-white/20 shadow-lg flex items-center justify-center min-w-[24px]">
-            <span className="text-[9px] font-bold text-white font-mono tracking-tighter">
-              {Math.round(scrollProgress)}
+            {/* Inner glass button with User Icon */}
+            <div className="absolute inset-2.5 rounded-full bg-gradient-to-br from-white/20 to-white/5 dark:from-gray-900/40 dark:to-gray-900/20 backdrop-blur-lg border border-white/30 dark:border-gray-700/50 shadow-lg flex items-center justify-center">
+              <button
+                onClick={() => navigate("/sign-in")}
+                className="w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 bg-white/10 dark:bg-gray-800/60 hover:bg-white/20 dark:hover:bg-gray-700/60"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M13.3337 14V12.6667C13.3337 11.9594 13.0527 11.2811 12.5526 10.781C12.0525 10.281 11.3742 10 10.667 10H5.33366C4.62641 10 3.94814 10.281 3.44804 10.781C2.94794 11.2811 2.66699 11.9594 2.66699 12.6667V14M10.667 4.66667C10.667 6.13943 9.47308 7.33333 8.00033 7.33333C6.52757 7.33333 5.33366 6.13943 5.33366 4.66667C5.33366 3.19391 6.52757 2 8.00033 2C9.47308 2 10.667 3.19391 10.667 4.66667Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-gray-600 dark:text-gray-300"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Progress percentage */}
+            {scrollProgress > 5 && scrollProgress < 95 && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white dark:bg-gray-900 border border-white/30 dark:border-gray-700 flex items-center justify-center shadow-sm">
+                <span
+                  className="text-[8px] font-bold"
+                  style={{ color: themeColor }}
+                >
+                  {Math.round(scrollProgress)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // ================= MOBILE VERSION =================
+  return (
+    <>
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="relative w-16 h-16">
+          {/* WORKING PROGRESS RING - FIXED SVG */}
+          <svg
+            className="w-full h-full transform -rotate-90 absolute inset-0"
+            viewBox="0 0 64 64"
+          >
+            {/* Background track */}
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              stroke="rgba(0, 0, 0, 0.2)"
+              strokeWidth="3"
+              fill="none"
+            />
+
+            {/* PROGRESS RING - WORKING VERSION */}
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              stroke={themeColor}
+              strokeWidth="3"
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              style={{
+                transition: "stroke-dashoffset 0.1s ease-out",
+              }}
+            />
+
+            {/* Glow effect */}
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              stroke={themeColor}
+              strokeWidth="6"
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              style={{
+                filter: "blur(4px)",
+                opacity: "0.3",
+                transition: "stroke-dashoffset 0.1s ease-out",
+              }}
+            />
+          </svg>
+
+          {/* Inner glass button */}
+          <div className="absolute inset-3 rounded-full bg-gradient-to-br from-white/20 to-white/5 dark:from-gray-900/40 dark:to-gray-900/20 backdrop-blur-lg border border-white/30 dark:border-gray-700/50 shadow-lg flex items-center justify-center">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 group ${
+                isSignedIn
+                  ? "bg-transparent"
+                  : "bg-white/10 dark:bg-gray-800/60 hover:bg-white/20 dark:hover:bg-gray-700/60"
+              }`}
+              style={{
+                border: isSignedIn ? `2px solid ${themeColor}80` : "none",
+              }}
+            >
+              {isSignedIn ? (
+                <div className="relative">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/30">
+                    {user?.imageUrl ? (
+                      <img
+                        src={user.imageUrl}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-gray-300 mx-auto mt-2" />
+                    )}
+                  </div>
+                  <div className="absolute -top-1 -right-1 bg-green-500 rounded-full border border-white dark:border-gray-900 animate-pulse"></div>
+                  {isAdmin && (
+                    <div className="absolute -bottom-1 -right-1 p-0.5 bg-purple-600 rounded-full flex items-center justify-center border border-white dark:border-gray-900">
+                      <Shield className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  className={`transition-transform duration-300 ${
+                    isMobileMenuOpen ? "rotate-90" : ""
+                  }`}
+                >
+                  {isMobileMenuOpen ? (
+                    <X size={20} className="text-foreground" />
+                  ) : (
+                    <Menu size={20} className="text-foreground" />
+                  )}
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* Progress percentage - ALWAYS VISIBLE */}
+          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/80 border-2 border-white/50 flex items-center justify-center shadow-lg">
+            <span className="text-[9px] font-bold text-white">
+              {Math.round(scrollProgress)}%
             </span>
           </div>
         </div>
-      )}
-    </div>
-  );
-
-  // ================= DESKTOP RENDER =================
-  if (!isMobile) {
-    return (
-      <>
-        {/* Admin Float Button */}
-        {isSignedIn && isAdmin && (
-          <div className="fixed bottom-8 left-8 z-[100] animate-fade-in-up">
-            <button
-              onClick={() => handleNavigate("/admin")}
-              className="group relative flex items-center gap-2 px-5 py-2.5 rounded-full shadow-2xl transition-all duration-300 hover:-translate-y-1 active:scale-95 overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-white dark:to-gray-200" />
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Shield className="w-4 h-4 text-white dark:text-black relative z-10" />
-              <span className="text-sm font-bold tracking-wide text-white dark:text-black relative z-10">Admin</span>
-            </button>
-          </div>
-        )}
-
-        {/* Desktop Progress/Auth Trigger */}
-        <div className="fixed bottom-8 right-8 z-50 animate-fade-in-up">
-          <ProgressRingButton onClick={isSignedIn ? () => {} : () => handleNavigate('/sign-in')}>
-             {isSignedIn ? (
-                <div className="w-full h-full rounded-full overflow-hidden p-[2px]">
-                   <UserButton 
-                      appearance={{
-                        elements: {
-                          rootBox: "w-full h-full",
-                          userButtonTrigger: "w-full h-full opacity-0 cursor-pointer",
-                          avatarBox: "w-full h-full"
-                        }
-                      }}
-                   />
-                   <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none p-[2px]">
-                      <img src={user?.imageUrl} alt="Profile" className="w-full h-full object-cover rounded-full" />
-                   </div>
-                </div>
-             ) : (
-                <LogIn className="w-5 h-5 text-white dark:text-white" />
-             )}
-          </ProgressRingButton>
-        </div>
-      </>
-    );
-  }
-
-  // ================= MOBILE RENDER =================
-  
-  // Animation Logic: Profile Pic = Subtle Scale; Menu Icon = Rotate + Scale
-  const triggerTransformClass = isSignedIn 
-    ? (isMobileMenuOpen ? "scale-95" : "scale-100") 
-    : (isMobileMenuOpen ? "rotate-90 scale-90" : "rotate-0 scale-100");
-
-  return (
-    <>
-      {/* --- Main Floating Trigger --- */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[50] filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]">
-        <ProgressRingButton onClick={() => { triggerHaptic(); setIsMobileMenuOpen(!isMobileMenuOpen); }}>
-           <div className={`transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${triggerTransformClass}`}>
-              {isSignedIn ? (
-                 <img 
-                   src={user?.imageUrl} 
-                   alt="Me" 
-                   className="w-full h-full rounded-full object-cover ring-2 transition-all duration-300" 
-                   style={{ ringColor: isMobileMenuOpen ? themeColor : 'transparent', borderColor: 'transparent' }}
-                 />
-              ) : (
-                 isMobileMenuOpen ? <X size={24} className="text-white" /> : <Menu size={24} className="text-white" />
-              )}
-           </div>
-        </ProgressRingButton>
       </div>
 
-      {/* --- Mobile Control Center --- */}
+      {/* Mobile Menu Modal */}
       {isMobileMenuOpen && (
         <>
-          {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-md z-40 animate-fade-in"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          {/* Floating Dock */}
-          <div className="fixed bottom-28 left-4 right-4 z-50 flex flex-col items-center justify-end pointer-events-none">
-            <div className="w-full max-w-[360px] pointer-events-auto animate-spring-up origin-bottom">
-              
-              {/* Premium Glass Container */}
-              <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border border-white/20 dark:border-white/10">
-                {/* Background Layer */}
-                <div className="absolute inset-0 bg-[#f5f5f7]/90 dark:bg-[#121212]/90 backdrop-blur-2xl z-0" />
-                <div className="absolute inset-0 bg-noise opacity-[0.03] z-0 pointer-events-none" />
-                
-                <div className="relative z-10">
-                  {/* 1. Header & Stats */}
-                  <div className="px-6 py-5 border-b border-gray-200/50 dark:border-white/5">
-                     <div className="flex justify-between items-end mb-4">
-                        <div>
-                           <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Menu</h3>
-                           <div className="flex items-center gap-1.5 mt-1">
-                              <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: themeColor }}></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: themeColor }}></span>
-                              </span>
-                              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Online</p>
-                           </div>
-                        </div>
-                        <div className="text-right">
-                           <span className="text-3xl font-black tracking-tighter" style={{ color: themeColor }}>
-                              {Math.round(scrollProgress)}<span className="text-sm text-gray-400 font-bold ml-0.5">%</span>
-                           </span>
-                        </div>
-                     </div>
-                     
-                     {/* Glossy Progress Bar */}
-                     <div className="h-2 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
-                        <div 
-                          className="h-full rounded-full relative overflow-hidden transition-all duration-300"
-                          style={{ width: `${scrollProgress}%`, backgroundColor: themeColor }}
-                        >
-                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-full -translate-x-full animate-shimmer" />
-                        </div>
-                     </div>
+          <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 w-72 max-w-[90vw]">
+            <div className="bg-white/90 dark:bg-gray-900/95 backdrop-blur-xl border border-white/30 dark:border-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+              {/* Header with progress visualization */}
+              <div className="w-full p-4 bg-gradient-to-r from-white/20 to-white/10 dark:from-gray-800/50 dark:to-gray-900/50 border-b border-white/20 dark:border-gray-800">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                    Scroll Progress
                   </div>
-
-                  {/* 2. Grid Navigation */}
-                  <div className="p-3 max-h-[40vh] overflow-y-auto no-scrollbar">
-                     <div className="grid grid-cols-2 gap-3">
-                        {(pathname === "/" ? homeSections : mainNavItems).map((item, idx) => (
-                           <button
-                              key={item.name}
-                              onClick={() => handleNavigate(item.href)}
-                              className="group relative flex flex-col items-center justify-center p-4 rounded-2xl border border-transparent transition-all duration-200 bg-white dark:bg-white/5 shadow-sm hover:shadow-md active:scale-95 overflow-hidden"
-                              style={{ animationDelay: `${idx * 50}ms` }}
-                           >
-                              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-current" style={{ color: themeColor }} />
-                              
-                              <item.icon 
-                                 className={`w-7 h-7 mb-2 transition-transform duration-300 group-hover:-translate-y-1 ${item.color}`} 
-                                 strokeWidth={1.5}
-                              />
-                              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">{item.name}</span>
-                           </button>
-                        ))}
-                     </div>
-                  </div>
-
-                  {/* 3. Footer Actions */}
-                  <div className="p-4 bg-gray-50/80 dark:bg-black/20 border-t border-gray-200/50 dark:border-white/5 space-y-3">
-                     {isSignedIn ? (
-                        <div className="flex gap-3">
-                           {/* Profile Button */}
-                           <button 
-                              onClick={() => window.Clerk?.openUserProfile()}
-                              className="flex-1 flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 shadow-sm hover:bg-gray-50 dark:hover:bg-white/10 active:scale-95 transition-all"
-                           >
-                              <User className="w-4 h-4 text-gray-900 dark:text-white" />
-                              <span className="text-sm font-bold text-gray-900 dark:text-white">Profile</span>
-                           </button>
-                           
-                           {/* Admin Button */}
-                           {isAdmin && (
-                              <button 
-                                 onClick={() => handleNavigate("/admin")}
-                                 className="flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 active:scale-95 transition-all"
-                              >
-                                 <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                              </button>
-                           )}
-                           
-                           {/* Sign Out */}
-                           <button 
-                              onClick={() => signOut()}
-                              className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 active:scale-95 transition-all"
-                           >
-                              <LogOut className="w-4 h-4 text-red-500" />
-                           </button>
-                        </div>
-                     ) : (
-                        <div className="grid grid-cols-2 gap-3">
-                           {/* HIRE ME BUTTON (Primary) */}
-                           <button 
-                              onClick={() => handleNavigate("#contact")}
-                              className="relative overflow-hidden rounded-2xl py-3.5 font-bold text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 group"
-                           >
-                              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500" />
-                              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              
-                              <Mail className="w-4 h-4 relative z-10" />
-                              <span className="relative z-10 text-sm">Hire Me</span>
-                           </button>
-
-                           {/* SIGN IN BUTTON (Secondary) */}
-                           <button 
-                              onClick={() => handleNavigate("/sign-in")}
-                              className="relative overflow-hidden rounded-2xl py-3.5 font-bold text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
-                              style={{ backgroundColor: themeColor }}
-                           >
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
-                              <LogIn className="w-4 h-4" />
-                              <span className="text-sm">Sign In</span>
-                           </button>
-                        </div>
-                     )}
-
-                     <button
-                        onClick={scrollToTop}
-                        className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                     >
-                        <ChevronUp className="w-3 h-3" />
-                        Back to Top
-                     </button>
+                  <div
+                    className="text-sm font-bold"
+                    style={{ color: themeColor }}
+                  >
+                    {Math.round(scrollProgress)}%
                   </div>
                 </div>
+
+                {/* Linear progress bar */}
+                <div className="w-full h-2 bg-white/20 dark:bg-gray-800 rounded-full overflow-hidden mb-3">
+                  <div
+                    className="h-full rounded-full transition-all duration-200"
+                    style={{
+                      width: `${scrollProgress}%`,
+                      background: `linear-gradient(90deg, ${themeColor}80, ${themeColor})`,
+                    }}
+                  ></div>
+                </div>
+
+                {/* Scroll to top button */}
+                <button
+                  onClick={scrollToTop}
+                  className="w-full flex items-center justify-center gap-2 p-3 bg-white/30 dark:bg-gray-800/50 hover:bg-white/40 dark:hover:bg-gray-700/50 rounded-xl transition-all duration-200 group"
+                >
+                  <ChevronUp className="w-4 h-4 text-gray-700 dark:text-gray-300 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Scroll to Top
+                  </span>
+                </button>
+              </div>
+
+              {/* Navigation Items */}
+              <div className="py-2 max-h-[60vh] overflow-y-auto">
+                {pathname === "/" ? (
+                  <>
+                    {homeSections.map((section) => (
+                      <button
+                        key={section.id}
+                        onClick={() => scrollToSection(section.href)}
+                        className="w-full flex items-center gap-3 p-4 hover:bg-white/30 dark:hover:bg-gray-800/50 transition-all duration-200 text-left text-gray-800 dark:text-gray-200 group"
+                      >
+                        <section.icon className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-300 transition-colors" />
+                        <span className="text-sm flex-1">{section.name}</span>
+                        <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-700 group-hover:bg-gray-500 dark:group-hover:bg-gray-500 transition-colors"></div>
+                      </button>
+                    ))}
+
+                    <div className="border-t border-white/20 dark:border-gray-800 mt-2 pt-2">
+                      {isSignedIn ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              window.Clerk?.openUserProfile();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-3 p-4 hover:bg-white/30 dark:hover:bg-gray-800/50 transition-all duration-200 text-left text-gray-800 dark:text-gray-200 group"
+                          >
+                            <User className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm flex-1">
+                              Manage Account
+                            </span>
+                          </button>
+
+                          {isAdmin && (
+                            <button
+                              onClick={() => {
+                                navigate("/admin");
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className="w-full flex items-center gap-3 p-4 hover:bg-purple-100/30 dark:hover:bg-purple-900/30 transition-all duration-200 text-left group"
+                            >
+                              <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
+                              <span className="text-sm flex-1 text-purple-600 dark:text-purple-400">
+                                Admin Dashboard
+                              </span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              signOut();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-3 p-4 hover:bg-red-100/30 dark:hover:bg-red-900/20 transition-all duration-200 text-left text-red-600 dark:text-red-400 group border-t border-white/20 dark:border-gray-800 mt-2"
+                          >
+                            <LogOut className="w-5 h-5" />
+                            <span className="text-sm flex-1">Sign Out</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              navigate("/sign-in");
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-3 p-4 hover:bg-white/30 dark:hover:bg-gray-800/50 transition-all duration-200 text-left text-gray-800 dark:text-gray-200 group mb-2"
+                          >
+                            <LogIn className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm flex-1">Sign In</span>
+                          </button>
+
+                          <button
+                            onClick={() => scrollToSection("#contact")}
+                            className="w-full flex items-center gap-3 p-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg mx-2 my-2 transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg"
+                          >
+                            <Mail className="w-5 h-5" />
+                            <span className="text-sm font-medium flex-1">
+                              Hire Me
+                            </span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {mainNavItems.map((item) => (
+                      <button
+                        key={item.name}
+                        onClick={() => scrollToSection(item.href)}
+                        className={`w-full flex items-center gap-3 p-4 hover:bg-white/30 dark:hover:bg-gray-800/50 transition-all duration-200 text-left text-gray-800 dark:text-gray-200 group ${
+                          pathname === item.href
+                            ? "bg-white/20 dark:bg-gray-800"
+                            : ""
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-300 transition-colors" />
+                        <span className="text-sm flex-1">{item.name}</span>
+                        {pathname === item.href && (
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: themeColor }}
+                          ></div>
+                        )}
+                      </button>
+                    ))}
+
+                    <div className="border-t border-white/20 dark:border-gray-800 mt-2 pt-2">
+                      {isSignedIn ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              window.Clerk?.openUserProfile();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-3 p-4 hover:bg-white/30 dark:hover:bg-gray-800/50 transition-all duration-200 text-left text-gray-800 dark:text-gray-200 group"
+                          >
+                            <User className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm flex-1">
+                              Manage Account
+                            </span>
+                          </button>
+
+                          {isAdmin && (
+                            <button
+                              onClick={() => {
+                                navigate("/admin");
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className="w-full flex items-center gap-3 p-4 hover:bg-purple-100/30 dark:hover:bg-purple-900/30 transition-all duration-200 text-left group"
+                            >
+                              <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
+                              <span className="text-sm flex-1 text-purple-600 dark:text-purple-400">
+                                Admin
+                              </span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              signOut();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-3 p-4 hover:bg-red-100/30 dark:hover:bg-red-900/20 transition-all duration-200 text-left text-red-600 dark:text-red-400 group border-t border-white/20 dark:border-gray-800 mt-2"
+                          >
+                            <LogOut className="w-5 h-5" />
+                            <span className="text-sm flex-1">Sign Out</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              navigate("/sign-in");
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-3 p-4 hover:bg-white/30 dark:hover:bg-gray-800/50 transition-all duration-200 text-left text-gray-800 dark:text-gray-200 group"
+                          >
+                            <LogIn className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm flex-1">Sign In</span>
+                          </button>
+
+                          <button
+                            onClick={() => navigate("/contact")}
+                            className="w-full flex items-center gap-3 p-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg mx-2 my-2 transition-all duration-300 hover:scale-[1.02] shadow-lg"
+                          >
+                            <Mail className="w-5 h-5" />
+                            <span className="text-sm font-medium flex-1">
+                              Hire Me
+                            </span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </>
       )}
-
-      {/* Global Styles */}
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .bg-noise {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        }
-
-        @keyframes spring-up {
-           0% { transform: translateY(120px) scale(0.9); opacity: 0; }
-           50% { transform: translateY(-8px) scale(1.02); opacity: 1; }
-           100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        .animate-spring-up { animation: spring-up 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
-        
-        @keyframes fade-in {
-           from { opacity: 0; }
-           to { opacity: 1; }
-        }
-        .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
-
-        @keyframes fade-in-up {
-           from { opacity: 0; transform: translateY(20px); }
-           to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up { animation: fade-in-up 0.6s ease-out forwards; }
-
-        @keyframes shimmer {
-          100% { transform: translateX(100%); }
-        }
-        .animate-shimmer {
-          animation: shimmer 2s infinite;
-        }
-      `}</style>
     </>
   );
 }

@@ -65,7 +65,6 @@ const ProtectedRoute = React.lazy(() => import("./components/ProtectedRoute"));
 import "./index.css";
 import ScrollToTop from "./components/react-ui/ScrollToTop";
 import Blog from "./pages/Blog";
-import Contact from "./pages/Contact";
 
 // --- Config ---
 const dockItems = [
@@ -121,7 +120,6 @@ const PortfolioHome = () => (
       <ServicesSection />
       <AboutSection />
       <BlogSection />
-      <ContactSection />
     </main>
   </div>
 );

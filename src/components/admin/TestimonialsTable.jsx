@@ -1,80 +1,132 @@
-import { Plus, Star, Edit, Trash2 } from 'lucide-react';
+import { Plus, Star, Edit, Trash2, MessageSquareQuote, User, Quote } from 'lucide-react';
 
 const TestimonialsTable = ({ testimonials, onAddTestimonial, onEditTestimonial, onDeleteTestimonial }) => {
+  
+  // Helper to render stars
+  const renderStars = (rating) => {
+    return (
+      <div className="flex gap-0.5">
+        {[...Array(5)].map((_, i) => (
+          <Star 
+            key={i} 
+            size={14} 
+            className={`${i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-700 fill-gray-700"}`} 
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-bold text-white">Testimonials</h3>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h3 className="text-3xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent mb-2">
+            Testimonials
+          </h3>
+          <p className="text-gray-400">Social proof and client feedback.</p>
+        </div>
+        
         <button
           onClick={onAddTestimonial}
-          className="px-3 py-3 border border-gray-300 dark:border-gray-600 hover:border-orange-600 dark:hover:border-orange-500 rounded-[10px] hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
-            aria-label="Add to cart"
-          >
-            <svg
-              className="w-4 h-4 text-gray-600 dark:text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
+          className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-cyan-500/25 flex items-center gap-2 group"
+        >
+          <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+          Add Testimonial
         </button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {testimonials.map((testimonial) => (
-          <div key={testimonial.id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                {testimonial.avatar_url && (
-                  <img 
-                    src={testimonial.avatar_url} 
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                )}
-                <div>
-                  <p className="font-bold text-white">{testimonial.name}</p>
-                  <p className="text-xs text-gray-400">{testimonial.role}</p>
-                </div>
-              </div>
-              {testimonial.featured && (
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              )}
-            </div>
-            
-            <p className="text-sm text-gray-400 mb-4 line-clamp-3">{testimonial.content}</p>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex gap-1">
-                {[...Array(testimonial.rating || 5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                ))}
-              </div>
-              
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onEditTestimonial(testimonial)}
-                  className="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 text-sm"
-                >
-                  <Edit className="w-3 h-3" />
-                </button>
-                <button
-                  onClick={() => onDeleteTestimonial(testimonial.id)}
-                  className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-sm"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
+      {/* Empty State */}
+      {testimonials.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-white/5 border border-white/10 rounded-3xl border-dashed">
+          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+            <MessageSquareQuote size={40} className="text-gray-500" />
           </div>
-        ))}
-      </div>
+          <h3 className="text-xl font-bold text-white mb-2">No testimonials yet</h3>
+          <p className="text-gray-400 max-w-sm text-center mb-8">
+            Add feedback from your clients to build trust.
+          </p>
+          <button
+            onClick={onAddTestimonial}
+            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Add First Testimonial
+          </button>
+        </div>
+      ) : (
+        /* Grid */
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {testimonials.map((testimonial) => (
+            <div 
+              key={testimonial.id} 
+              className="group flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/[0.07] hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
+            >
+              <div className="p-6 flex flex-col flex-1 relative">
+                
+                {/* Decorative Quote Icon */}
+                <Quote className="absolute top-6 right-6 text-white/5 w-12 h-12 fill-white/5" />
+
+                {/* Content */}
+                <div className="mb-6 relative z-10">
+                  <div className="mb-3">
+                    {renderStars(testimonial.rating || 5)}
+                  </div>
+                  <p className="text-sm text-gray-300 leading-relaxed line-clamp-4 italic">
+                    "{testimonial.content}"
+                  </p>
+                </div>
+
+                {/* User Info & Footer */}
+                <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center border border-white/10 shrink-0">
+                      {testimonial.avatar_url ? (
+                        <img 
+                          src={testimonial.avatar_url} 
+                          alt={testimonial.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <User size={18} className="text-gray-400" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-white text-sm truncate">{testimonial.name}</p>
+                        {testimonial.featured && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.5)]" title="Featured" />
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">{testimonial.role}</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => onEditTestimonial(testimonial)}
+                      className="p-2 text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors"
+                      title="Edit"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={() => onDeleteTestimonial(testimonial.id)}
+                      className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,4 @@
-// src/components/admin/AppsTable.jsx - UPDATED WITH REVIEWS
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Plus,
   Star,
@@ -8,292 +7,257 @@ import {
   ExternalLink,
   Smartphone,
   MessageSquare,
-  Eye,
-  EyeOff,
+  Download,
+  User,
+  Quote,
+  X,
+  Loader2,
+  Eye
 } from "lucide-react";
-import { reviewsAPI } from "../../api/supabase";
+import { reviewsAPI, appsAPI } from "../../api/supabase"; // Import appsAPI
 import toast from "react-hot-toast";
 
 const AppsTable = ({ apps, onAddApp, onEditApp, onDeleteApp }) => {
-  const [reviews, setReviews] = useState({});
-  const [loadingReviews, setLoadingReviews] = useState({});
-  const [expandedApp, setExpandedApp] = useState(null);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [selectedAppForReviews, setSelectedAppForReviews] = useState(null);
+  
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   const formatDownloads = (num) => {
+    if (!num) return "0";
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M+`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K+`;
-    return num?.toString() || "0";
+    return num.toString();
   };
 
-  const loadAppReviews = async (appId, appName) => {
-    setLoadingReviews((prev) => ({ ...prev, [appId]: true }));
+  // ✅ NEW: Handle Download Click & Increment Count
+  const handleDownloadClick = async (e, app) => {
+    e.stopPropagation(); // Stop card click
+    
+    if (!app.download_url) return;
+
+    // 1. Open the link immediately (better UX)
+    window.open(app.download_url, "_blank");
+
+    // 2. Tell Server to increment count
     try {
-      const reviewsData = await reviewsAPI.getByAppId(appId);
-      setReviews((prev) => ({ ...prev, [appId]: reviewsData || [] }));
+      await appsAPI.incrementDownloads(app.id);
+      console.log(`Incremented downloads for ${app.name}`);
+      // Note: The UI won't update until refresh, which is fine for stats
     } catch (error) {
-      console.error(`Error loading reviews for ${appName}:`, error);
-      toast.error(`Failed to load reviews for ${appName}`);
-    } finally {
-      setLoadingReviews((prev) => ({ ...prev, [appId]: false }));
+      console.error("Failed to increment download count:", error);
     }
   };
 
-  const handleDeleteReview = async (reviewId, appId, userName, appName) => {
-    if (!window.confirm(`Delete review by ${userName} for ${appName}?`)) return;
+  const openReviewsModal = async (app) => {
+    setSelectedAppForReviews(app);
+    setShowReviewsModal(true);
+    setLoadingReviews(true);
+    setReviews([]);
 
     try {
-      // For admin deletion, pass a special flag or handle differently
+      const data = await reviewsAPI.getByAppId(app.id);
+      setReviews(data || []);
+    } catch (error) {
+      console.error(`Error loading reviews:`, error);
+      toast.error(`Failed to load reviews`);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+
+    try {
       await reviewsAPI.delete(reviewId, "admin-bypass");
       toast.success("Review deleted");
-
-      // Reload reviews for this app
-      loadAppReviews(appId, appName);
+      setReviews(prev => prev.filter(r => r.id !== reviewId));
     } catch (error) {
       console.error("Error deleting review:", error);
-      toast.error("Failed to delete review");
-    }
-  };
-
-  const toggleAppReviews = (appId, appName) => {
-    if (expandedApp === appId) {
-      setExpandedApp(null);
-    } else {
-      setExpandedApp(appId);
-      if (!reviews[appId]) {
-        loadAppReviews(appId, appName);
-      }
+      toast.error(error.message || "Failed to delete review");
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8 animate-fade-in relative">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h3 className="text-2xl font-bold text-white">Apps Management</h3>
-          <p className="text-gray-400">
-            Manage your app store applications and reviews
-          </p>
+          <h3 className="text-3xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent mb-2">
+            Apps Management
+          </h3>
+          <p className="text-gray-400">Manage your app store applications.</p>
         </div>
+        
         <button
           onClick={onAddApp}
-          className="px-4 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+          className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-cyan-500/25 flex items-center gap-2 group"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
           Add App
         </button>
       </div>
 
+      {/* Grid */}
       {apps.length === 0 ? (
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-12 text-center">
-          <Smartphone className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg mb-4">No apps added yet</p>
-          <button
-            onClick={onAddApp}
-            className="px-6 py-3 bg-cyan-500 text-white rounded-lg font-medium hover:bg-cyan-600 transition-colors inline-flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Your First App
+        <div className="flex flex-col items-center justify-center py-20 bg-white/5 border border-white/10 rounded-3xl border-dashed">
+          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+            <Smartphone size={40} className="text-gray-500" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">No apps added yet</h3>
+          <button onClick={onAddApp} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all flex items-center gap-2">
+            <Plus className="w-5 h-5" /> Add First App
           </button>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {apps.map((app) => (
-            <div
-              key={app.id}
-              className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden hover:border-cyan-500/50 transition-all group"
-            >
-              <div className="p-4">
-                <div className="flex items-start gap-3 mb-3">
-                  <img
-                    src={app.icon_url || "https://via.placeholder.com/64"}
-                    alt={app.name}
-                    className="w-16 h-16 rounded-xl flex-shrink-0 object-cover bg-gray-700"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors">
-                          {app.name}
-                        </h4>
-                        {app.featured && (
-                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-                        )}
+            <div key={app.id} className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/[0.07] hover:border-white/20 transition-all duration-300 hover:-translate-y-1 flex flex-col">
+              <div className="p-5 flex flex-col flex-1">
+                
+                {/* Header Info */}
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="relative">
+                    <img src={app.icon_url || "https://via.placeholder.com/64"} alt={app.name} className="w-16 h-16 rounded-2xl bg-gray-800 object-cover shadow-lg" />
+                    {app.featured && (
+                      <div className="absolute -top-2 -right-2 p-1 bg-yellow-500/20 rounded-full border border-yellow-500/50 shadow-sm backdrop-blur-sm">
+                        <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                       </div>
-                      <button
-                        onClick={() => toggleAppReviews(app.id, app.name)}
-                        className="p-1 text-gray-400 hover:text-cyan-400 transition-colors"
-                        title={
-                          expandedApp === app.id
-                            ? "Hide reviews"
-                            : "Show reviews"
-                        }
-                      >
-                        {expandedApp === app.id ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <MessageSquare className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-500">{app.category}</p>
-                  </div>
-                </div>
-
-                <p className="text-sm text-gray-400 mb-3 line-clamp-2">
-                  {app.short_description}
-                </p>
-
-                <div className="flex items-center justify-between mb-3 text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    {app.rating || "0.0"} ({app.rating_count || 0})
-                  </span>
-                  <span>{formatDownloads(app.downloads)} downloads</span>
-                </div>
-
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">
-                    v{app.version || "1.0.0"}
-                  </span>
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      app.published
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-yellow-500/20 text-yellow-400"
-                    }`}
-                  >
-                    {app.published ? "Published" : "Draft"}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {app.size || "N/A"}
-                  </span>
-                </div>
-
-                {/* Reviews Section - Collapsible */}
-                {expandedApp === app.id && (
-                  <div className="mb-4 pt-4 border-t border-gray-700">
-                    <div className="flex items-center justify-between mb-3">
-                      <h5 className="font-medium text-white flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4" />
-                        Reviews ({reviews[app.id]?.length || 0})
-                      </h5>
-                      {loadingReviews[app.id] && (
-                        <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-                      )}
-                    </div>
-
-                    {reviews[app.id] && reviews[app.id].length > 0 ? (
-                      <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                        {reviews[app.id].map((review) => (
-                          <div
-                            key={review.id}
-                            className="p-3 bg-gray-900/50 rounded-lg"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <img
-                                  src={
-                                    review.users?.image_url ||
-                                    "/default-avatar.png"
-                                  }
-                                  alt={review.users?.name}
-                                  className="w-6 h-6 rounded-full"
-                                />
-                                <span className="text-sm font-medium text-white">
-                                  {review.users?.name || "Anonymous"}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="flex">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star
-                                      key={i}
-                                      className={`w-3 h-3 ${
-                                        i < review.rating
-                                          ? "text-yellow-400 fill-yellow-400"
-                                          : "text-gray-600"
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteReview(
-                                      review.id,
-                                      app.id,
-                                      review.users?.name,
-                                      app.name
-                                    )
-                                  }
-                                  className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                                  title="Delete review"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </div>
-                            <p className="text-xs text-gray-300 line-clamp-2">
-                              {review.review_text}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {new Date(review.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-400 text-center py-4">
-                        No reviews yet for this app
-                      </p>
                     )}
                   </div>
-                )}
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-lg font-bold text-white truncate">{app.name}</h4>
+                      
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openReviewsModal(app); }}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-cyan-500/20 text-gray-400 hover:text-cyan-400 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 border border-white/5 hover:border-cyan-500/30"
+                      >
+                        <MessageSquare size={14} />
+                        <span>Reviews</span>
+                      </button>
+                    </div>
+                    <p className="text-xs font-medium text-cyan-400/80 mb-2">{app.category}</p>
+                    
+                    {/* Stats Row */}
+                    <div className="flex items-center gap-3 text-xs text-gray-400 bg-black/20 p-1.5 rounded-lg w-fit">
+                      <span className="flex items-center gap-1.5 px-1">
+                        <Download size={12} className="text-blue-400" /> 
+                        <span className="text-gray-300">{formatDownloads(app.downloads)}</span>
+                      </span>
+                      <div className="w-px h-3 bg-white/10" />
+                      <span className="flex items-center gap-1.5 px-1">
+                        <Star size={12} className="text-yellow-400 fill-yellow-400" /> 
+                        <span className="text-gray-300">{app.rating ? Number(app.rating).toFixed(1) : "0.0"}</span>
+                        <span className="text-gray-600">({app.rating_count || 0})</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                <div className="flex gap-2 pt-4 border-t border-gray-700">
+                <p className="text-sm text-gray-400 mb-4 line-clamp-2 min-h-[2.5em]">{app.short_description}</p>
+
+                {/* Footer Buttons */}
+                <div className="flex items-center gap-2 mt-auto pt-4 border-t border-white/5">
                   {app.download_url && (
-                    <a
-                      href={app.download_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex-1 px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 flex items-center justify-center gap-2 text-sm"
+                    <button
+                      onClick={(e) => handleDownloadClick(e, app)}
+                      className="p-2 text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors"
+                      title="Download APK"
                     >
-                      <ExternalLink className="w-3 h-3" />
-                      Test
+                      <Download size={18} />
+                    </button>
+                  )}
+                  
+                  {app.website_url && (
+                    <a
+                      href={app.website_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink size={18} />
                     </a>
                   )}
-                  {/* // In AppsTable.jsx, update the Edit button onClick: */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log("=== EDIT BUTTON CLICKED ===");
-                      console.log("App data being passed:", app);
-                      console.log("App ID:", app.id);
-                      console.log("App name:", app.name);
-                      onEditApp(app);
-                    }}
-                    className="flex-1 px-3 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 flex items-center justify-center gap-2 text-sm"
-                  >
-                    <Edit className="w-3 h-3" />
-                    Edit
+
+                  <div className="flex-1" />
+
+                  <button onClick={(e) => { e.stopPropagation(); onEditApp(app); }} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                    <Edit size={16} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onDeleteApp(app.id);
-                    }}
-                    className="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 flex items-center justify-center"
-                  >
-                    <Trash2 className="w-3 h-3" />
+                  <button onClick={(e) => { e.stopPropagation(); onDeleteApp(app.id); }} className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                    <Trash2 size={18} />
                   </button>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Reviews Modal */}
+      {showReviewsModal && selectedAppForReviews && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">Reviews for {selectedAppForReviews.name}</h3>
+                <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                  <Star size={12} className="text-yellow-400 fill-yellow-400" />
+                  <span className="text-white">{selectedAppForReviews.rating || "0.0"}</span>
+                  <span>•</span>
+                  <span>{reviews.length} reviews</span>
+                </div>
+              </div>
+              <button onClick={() => setShowReviewsModal(false)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"><X size={20} /></button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              {loadingReviews ? (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <Loader2 className="w-8 h-8 animate-spin mb-2 text-cyan-500" />
+                  <p>Loading feedback...</p>
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p>No reviews found for this app yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="p-4 bg-white/5 border border-white/5 rounded-xl hover:border-white/10 transition-all group relative">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center text-xs font-bold text-gray-300">
+                            {review.users?.image_url ? <img src={review.users.image_url} alt="" className="w-full h-full rounded-full object-cover" /> : <User size={14} />}
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm text-white">{review.users?.name || "Anonymous"}</div>
+                            <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} size={8} className={i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-700 fill-gray-700"} />
+                                ))}
+                              </div>
+                              <span>•</span>
+                              <span>{new Date(review.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <button onClick={() => handleDeleteReview(review.id)} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
+                      </div>
+                      <div className="pl-11"><p className="text-sm text-gray-300 leading-relaxed">{review.review_text}</p></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

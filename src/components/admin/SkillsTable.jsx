@@ -1,107 +1,135 @@
-// src/components/admin/SkillsTable.jsx
-import { Plus, Edit, Trash2, Code, Palette, Shield } from 'lucide-react';
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Code, 
+  Palette, 
+  Shield, 
+  Cpu, 
+  Terminal, 
+  Database, 
+  Globe,
+  Layers
+} from 'lucide-react';
 
 const categoryIcons = {
   'Graphic Design': Palette,
-  'Frontend': Code,
-  'Backend': Code,
-  'Programming': Code,
+  'Frontend': Globe,
+  'Backend': Database,
+  'Programming': Terminal,
   'Security': Shield,
+  'Cybersecurity': Shield,
   'Crypto': Shield,
-  'AI/ML': Code,
+  'AI/ML': Cpu,
+  'Data Science': Layers,
 };
 
 const SkillsTable = ({ skills, onAddSkill, onEditSkill, onDeleteSkill }) => {
   // Group skills by category
   const groupedSkills = skills.reduce((acc, skill) => {
-    if (!acc[skill.category]) {
-      acc[skill.category] = [];
+    const cat = skill.category || "Other";
+    if (!acc[cat]) {
+      acc[cat] = [];
     }
-    acc[skill.category].push(skill);
+    acc[cat].push(skill);
     return acc;
   }, {});
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8 animate-fade-in">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h3 className="text-2xl font-bold text-white">Skills Management</h3>
-          <p className="text-gray-400">Manage your expertise and skill levels</p>
+          <h3 className="text-3xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent mb-2">
+            Skills & Expertise
+          </h3>
+          <p className="text-gray-400">Manage your technical proficiency levels.</p>
         </div>
+        
         <button
           onClick={onAddSkill}
-          className="px-4 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+          className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-cyan-500/25 flex items-center gap-2 group"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
           Add Skill
         </button>
       </div>
 
+      {/* Content Grid */}
       {Object.keys(groupedSkills).length === 0 ? (
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-12 text-center">
-          <Code className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg mb-4">No skills added yet</p>
+        <div className="flex flex-col items-center justify-center py-20 bg-white/5 border border-white/10 rounded-3xl border-dashed">
+          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+            <Code size={40} className="text-gray-500" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">No skills found</h3>
+          <p className="text-gray-400 max-w-sm text-center mb-8">
+            Add your hard skills to showcase your expertise levels.
+          </p>
           <button
             onClick={onAddSkill}
-            className="px-6 py-3 bg-cyan-500 text-white rounded-lg font-medium hover:bg-cyan-600 transition-colors inline-flex items-center gap-2"
+            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" />
-            Add Your First Skill
+            <Plus className="w-5 h-5" />
+            Add First Skill
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
           {Object.entries(groupedSkills).map(([category, categorySkills]) => {
             const Icon = categoryIcons[category] || Code;
             
             return (
-              <div key={category} className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-cyan-500/10 rounded-lg">
-                    <Icon className="w-5 h-5 text-cyan-400" />
+              <div 
+                key={category} 
+                className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/[0.07] transition-all duration-300 flex flex-col h-full"
+              >
+                {/* Category Header */}
+                <div className="px-6 py-4 border-b border-white/5 bg-black/20 flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg border border-white/10 text-cyan-400">
+                    <Icon size={18} />
                   </div>
-                  <h4 className="text-xl font-bold text-white">{category}</h4>
-                  <span className="ml-auto text-sm text-gray-400">
-                    {categorySkills.length} {categorySkills.length === 1 ? 'skill' : 'skills'}
-                  </span>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-white text-lg">{category}</h4>
+                    <p className="text-xs text-gray-500">{categorySkills.length} skills</p>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* Skills List */}
+                <div className="p-4 space-y-3 flex-1">
                   {categorySkills.map((skill) => (
                     <div
                       key={skill.id}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-900/50 rounded-lg hover:bg-gray-900 transition-colors gap-4"
+                      className="group p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all"
                     >
-                      <div className="flex-1 w-full">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-white">{skill.name}</span>
-                          <span className="text-sm font-semibold text-cyan-400">
-                            {skill.level}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500"
-                            style={{ width: `${skill.level}%` }}
-                          />
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium text-gray-200 text-sm">{skill.name}</span>
+                        
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => onEditSkill(skill)}
+                            className="p-1.5 text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            onClick={() => onDeleteSkill(skill.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex gap-2 w-full sm:w-auto">
-                        <button
-                          onClick={() => onEditSkill(skill)}
-                          className="flex-1 sm:flex-none px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors inline-flex items-center justify-center gap-2"
-                        >
-                          <Edit className="w-4 h-4" />
-                          <span className="sm:hidden">Edit</span>
-                        </button>
-                        <button
-                          onClick={() => onDeleteSkill(skill.id)}
-                          className="flex-1 sm:flex-none px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors inline-flex items-center justify-center gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="sm:hidden">Delete</span>
-                        </button>
+                      {/* Progress Bar */}
+                      <div className="relative w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                        <div
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-1000 ease-out"
+                          style={{ width: `${skill.level}%` }}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end mt-1">
+                        <span className="text-[10px] font-mono text-cyan-400/80">{skill.level}%</span>
                       </div>
                     </div>
                   ))}

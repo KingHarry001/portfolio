@@ -394,19 +394,19 @@ export const appsAPI = {
 
 // ==================== BLOG POSTS API ====================
 export const blogAPI = {
-async getAll() {
+  async getAll() {
     console.log("Fetching all blog posts...");
     const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('published', true) // Only get published posts
-      .order('publish_date', { ascending: false });
-    
+      .from("blog_posts")
+      .select("*")
+      .eq("published", true) // Only get published posts
+      .order("publish_date", { ascending: false });
+
     if (error) {
       console.error("Error fetching blog posts:", error);
       throw error;
     }
-    
+
     console.log("Fetched blog posts:", data?.length || 0);
     return data || [];
   },
@@ -414,65 +414,65 @@ async getAll() {
   async getFeatured() {
     console.log("Fetching featured post...");
     const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('published', true)
-      .eq('featured', true)
-      .order('publish_date', { ascending: false })
+      .from("blog_posts")
+      .select("*")
+      .eq("published", true)
+      .eq("featured", true)
+      .order("publish_date", { ascending: false })
       .limit(1)
       .single();
-    
+
     if (error) {
       console.error("Error fetching featured post:", error);
       // If no featured post found, get the latest published post
       return this.getLatest();
     }
-    
+
     console.log("Featured post found:", data?.title);
     return data;
   },
 
   async getLatest() {
     const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('published', true)
-      .order('publish_date', { ascending: false })
+      .from("blog_posts")
+      .select("*")
+      .eq("published", true)
+      .order("publish_date", { ascending: false })
       .limit(1)
       .single();
-    
+
     if (error) {
       console.error("Error fetching latest post:", error);
       return null;
     }
-    
+
     return data;
   },
 
   async getBySlug(slug) {
     console.log("Fetching blog post by slug:", slug);
     const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('slug', slug)
-      .eq('published', true)
+      .from("blog_posts")
+      .select("*")
+      .eq("slug", slug)
+      .eq("published", true)
       .single();
-    
+
     if (error) {
       console.error("Error fetching post by slug:", error);
       throw error;
     }
-    
+
     return data;
   },
 
   async getById(id) {
     const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('id', id)
+      .from("blog_posts")
+      .select("*")
+      .eq("id", id)
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -624,18 +624,22 @@ export const resumesAPI = {
       .from("resumes")
       .select("*")
       .eq("is_active", true)
-      .order("upload_date", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle(); // Use maybeSingle to avoid PGRST116 if none active
 
-    if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows
+    if (error) throw error;
     return data;
   },
 
   create: async (resumeData) => {
     const { data, error } = await supabase
       .from("resumes")
-      .insert(resumeData)
+      .insert([
+        {
+          ...resumeData,
+          upload_date: new Date().toISOString(), // Ensure date is set
+        },
+      ])
       .select()
       .single();
 
@@ -659,45 +663,44 @@ export const resumesAPI = {
   },
 
   delete: async (id) => {
-    // Get resume data to delete file from storage
+    // 1. Get resume info to delete the file
     const { data: resume } = await supabase
       .from("resumes")
-      .select("file_url")
+      .select("file_url, file_name")
       .eq("id", id)
       .single();
 
+    // 2. Delete file from storage (if it exists)
     if (resume?.file_url) {
       try {
-        // Extract file path from URL
-        const urlParts = resume.file_url.split("/");
-        const fileName = urlParts[urlParts.length - 1];
+        // Extract the filename from the URL or use the stored file_name
+        // The URL format is usually: .../storage/v1/object/public/resumes/FILENAME
+        const fileName = resume.file_url.split("/").pop();
 
-        // Delete from storage
-        await supabase.storage.from("resumes").remove([fileName]);
-      } catch (storageError) {
-        console.error("Error deleting file from storage:", storageError);
-        // Continue with database deletion even if storage deletion fails
+        const { error: storageError } = await supabase.storage
+          .from("resumes")
+          .remove([fileName]);
+
+        if (storageError) console.warn("Storage delete warning:", storageError);
+      } catch (err) {
+        console.error("Error deleting file:", err);
       }
     }
 
-    // Delete from database
+    // 3. Delete record from database
     const { error } = await supabase.from("resumes").delete().eq("id", id);
-
     if (error) throw error;
     return true;
   },
 
   setActive: async (id) => {
-    // First, set all resumes to inactive
-    await supabase
-      .from("resumes")
-      .update({ is_active: false })
-      .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all
+    // 1. Set ALL resumes to inactive
+    await supabase.from("resumes").update({ is_active: false }).neq("id", "0"); // Safe way to update all rows
 
-    // Then set the selected one to active
+    // 2. Set the target resume to active
     const { data, error } = await supabase
       .from("resumes")
-      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .update({ is_active: true })
       .eq("id", id)
       .select()
       .single();
@@ -707,30 +710,27 @@ export const resumesAPI = {
   },
 
   uploadFile: async (file) => {
+    // Sanitize filename to prevent issues
     const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()
-      .toString(36)
-      .substring(2)}-${Date.now()}.${fileExt}`;
-    const filePath = fileName;
+    const cleanName = file.name.replace(/[^a-zA-Z0-9]/g, "_");
+    const fileName = `${Date.now()}_${cleanName}.${fileExt}`;
 
-    // Upload to Supabase storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Upload to Supabase
+    const { error: uploadError } = await supabase.storage
       .from("resumes")
-      .upload(filePath, file, {
+      .upload(fileName, file, {
         cacheControl: "3600",
         upsert: false,
       });
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("resumes").getPublicUrl(filePath);
+    // Get Public URL
+    const { data } = supabase.storage.from("resumes").getPublicUrl(fileName);
 
     return {
-      file_url: publicUrl,
-      file_name: file.name,
+      file_url: data.publicUrl,
+      file_name: file.name, // Keep original name for display
       file_size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
     };
   },
@@ -780,7 +780,6 @@ export const usersAPI = {
   },
 };
 
-// ==================== REVIEWS API ====================
 // ==================== REVIEWS API ====================
 export const reviewsAPI = {
   // Get all reviews (for admin panel)
@@ -837,15 +836,15 @@ export const reviewsAPI = {
   // Get review statistics for an app
   getStats: async (appId) => {
     try {
-      // Try to call the PostgreSQL function
       const { data, error } = await supabase.rpc("get_app_review_stats", {
         app_id_param: appId,
       });
 
       if (error) {
-        // If function doesn't exist, calculate manually
-        console.warn("Review stats function not available, calculating manually:", error.message);
-        
+        console.warn(
+          "Review stats function not available, calculating manually:",
+          error.message
+        );
         const { data: reviews } = await supabase
           .from("reviews")
           .select("rating")
@@ -863,13 +862,13 @@ export const reviewsAPI = {
           };
         }
 
-        const ratings = reviews.map(r => r.rating || 0);
+        const ratings = reviews.map((r) => r.rating || 0);
         const total = ratings.length;
         const sum = ratings.reduce((a, b) => a + b, 0);
         const average = total > 0 ? sum / total : 0;
 
         const countByRating = {};
-        ratings.forEach(rating => {
+        ratings.forEach((rating) => {
           countByRating[rating] = (countByRating[rating] || 0) + 1;
         });
 
@@ -884,15 +883,17 @@ export const reviewsAPI = {
         };
       }
 
-      return data?.[0] || {
-        average_rating: 0,
-        total_reviews: 0,
-        rating_5: 0,
-        rating_4: 0,
-        rating_3: 0,
-        rating_2: 0,
-        rating_1: 0,
-      };
+      return (
+        data?.[0] || {
+          average_rating: 0,
+          total_reviews: 0,
+          rating_5: 0,
+          rating_4: 0,
+          rating_3: 0,
+          rating_2: 0,
+          rating_1: 0,
+        }
+      );
     } catch (error) {
       console.error("Error getting review stats:", error);
       throw error;
@@ -902,7 +903,6 @@ export const reviewsAPI = {
   // Get a user's review for a specific app
   getUserReview: async (appId, clerkId) => {
     try {
-      // First get the user ID from clerk_id
       const { data: user, error: userError } = await supabase
         .from("users")
         .select("id")
@@ -910,10 +910,7 @@ export const reviewsAPI = {
         .single();
 
       if (userError) {
-        if (userError.code === "PGRST116") {
-          // User not found in database
-          return null;
-        }
+        if (userError.code === "PGRST116") return null;
         throw userError;
       }
 
@@ -937,7 +934,6 @@ export const reviewsAPI = {
   // Create a new review
   create: async (reviewData, clerkId) => {
     try {
-      // First, get or create user
       const { data: user, error: userError } = await supabase
         .from("users")
         .select("id")
@@ -945,8 +941,6 @@ export const reviewsAPI = {
         .single();
 
       if (userError && userError.code === "PGRST116") {
-        // User not found, need to create them
-        // You might want to get user info from Clerk context
         const { data: newUser, error: createError } = await supabase
           .from("users")
           .insert({
@@ -984,33 +978,24 @@ export const reviewsAPI = {
     }
   },
 
-  // Update an existing review
   update: async (reviewId, reviewData, clerkId) => {
     try {
-      // Verify user owns this review
+      // 1. Get User Profile to verify identity
       const { data: user, error: userError } = await supabase
         .from("users")
         .select("id, role")
         .eq("clerk_id", clerkId)
         .single();
 
-      if (userError) throw new Error("User not found");
-      if (!user) throw new Error("User not found");
-
-      // Check if review exists and user owns it (or is admin)
-      const { data: review, error: reviewError } = await supabase
-        .from("reviews")
-        .select("user_id")
-        .eq("id", reviewId)
-        .single();
-
-      if (reviewError) throw reviewError;
-      
-      // Only allow update if user owns the review or is admin
-      if (review.user_id !== user.id && user.role !== "admin") {
-        throw new Error("You don't have permission to update this review");
+      if (userError || !user) {
+        console.error("User check failed:", userError);
+        throw new Error(
+          "User not found in database. Please refresh and try again."
+        );
       }
 
+      // 2. Perform Update
+      // We removed .single() to prevent the PGRST116 crash if RLS hides the return value
       const { data, error } = await supabase
         .from("reviews")
         .update({
@@ -1018,21 +1003,55 @@ export const reviewsAPI = {
           updated_at: new Date().toISOString(),
         })
         .eq("id", reviewId)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
-      return data;
+
+      // 3. Manual check for success
+      if (!data || data.length === 0) {
+        // If 0 rows were returned, it might be RLS hiding it, OR the row doesn't exist
+        // But if no error was thrown, the update technically "ran".
+        // We can just return null or a success flag.
+        return null;
+      }
+
+      return data[0];
     } catch (error) {
       console.error("Error updating review:", error);
       throw error;
     }
   },
 
-  // Delete a review
   delete: async (reviewId, clerkId) => {
     try {
-      // First, get the user
+      // 1. ADMIN BYPASS
+      if (clerkId === "admin-bypass") {
+        console.log("⚡ ADMIN BYPASS: Deleting review", reviewId);
+
+        // ADD .select() TO CHECK IF IT ACTUALLY DELETED
+        const { data, error } = await supabase
+          .from("reviews")
+          .delete()
+          .eq("id", reviewId)
+          .select(); // <--- This returns the deleted rows
+
+        if (error) throw error;
+
+        // CHECK IF ANYTHING WAS ACTUALLY DELETED
+        if (!data || data.length === 0) {
+          console.error("RLS Blocking: No rows deleted");
+          throw new Error(
+            "Database denied permission (RLS). You cannot delete this review."
+          );
+        }
+
+        return true;
+      }
+
+      // ----------------------------------------
+      // STANDARD LOGIC (This runs if not admin)
+      // ----------------------------------------
+
       const { data: user, error: userError } = await supabase
         .from("users")
         .select("id, role")
@@ -1040,141 +1059,61 @@ export const reviewsAPI = {
         .single();
 
       if (userError) {
-        console.error("User not found error:", userError);
-        throw new Error("User not found. Please log in again.");
+        if (userError.code === "PGRST116")
+          throw new Error("User profile not found in database.");
+        throw userError;
       }
 
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      // Check if review exists
+      // 3. Verify Ownership
       const { data: review, error: reviewError } = await supabase
         .from("reviews")
         .select("user_id")
         .eq("id", reviewId)
         .single();
 
-      if (reviewError) {
-        if (reviewError.code === "PGRST116") {
-          throw new Error("Review not found");
-        }
-        throw reviewError;
+      if (reviewError) throw reviewError;
+
+      // Allow if user is admin OR user owns the review
+      if (user.role !== "admin" && review.user_id !== user.id) {
+        throw new Error("You don't have permission to delete this review");
       }
 
-      // Build the query
-      let query = supabase.from("reviews").delete().eq("id", reviewId);
-
-      // If user is not admin, they can only delete their own reviews
-      if (user.role !== "admin") {
-        query = query.eq("user_id", user.id);
-        
-        // Also verify they own this review
-        if (review.user_id !== user.id) {
-          throw new Error("You don't have permission to delete this review");
-        }
-      }
-
-      const { error } = await query;
-
+      // 4. Perform Delete
+      const { error } = await supabase
+        .from("reviews")
+        .delete()
+        .eq("id", reviewId);
       if (error) throw error;
-      
-      // Log the deletion
-      await auditLog("delete", "reviews", reviewId, user.id, null);
-      
+
       return true;
     } catch (error) {
       console.error("Error deleting review:", error);
       throw error;
     }
   },
+};
 
-  // User management function (separate from reviews)
-  createOrUpdateUser: async (userData) => {
-    try {
-      // Get Clerk user metadata if available
-      let role = "user";
+// ==================== STORAGE API ====================
+export const storageAPI = {
+  // 👇 Ensure this is a COLON (:), not an equals sign (=)
+  uploadImage: async (file, folder = "uploads") => {
+    const fileExt = file.name.split(".").pop();
+    // Create a clean filename to avoid issues with special characters
+    const fileName = `${folder}/${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(7)}.${fileExt}`;
 
-      // If we have access to Clerk's public metadata
-      if (userData.clerk_metadata) {
-        // Clerk stores roles in publicMetadata.role or publicMetadata.isAdmin
-        role =
-          userData.clerk_metadata.role ||
-          (userData.clerk_metadata.isAdmin ? "admin" : "user");
-      }
+    const { error: uploadError } = await supabase.storage
+      .from("images") // Make sure this matches your bucket name
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
-      const { data, error } = await supabase
-        .from("users")
-        .upsert(
-          {
-            clerk_id: userData.clerk_id,
-            email: userData.email,
-            name: userData.name,
-            image_url: userData.image_url,
-            role: role,
-            clerk_metadata: userData.clerk_metadata,
-            updated_at: new Date().toISOString(),
-          },
-          {
-            onConflict: "clerk_id",
-          }
-        )
-        .select()
-        .single();
+    if (uploadError) throw uploadError;
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error("Error in createOrUpdateUser:", error);
-      throw error;
-    }
-  },
+    const { data } = supabase.storage.from("images").getPublicUrl(fileName);
 
-  // Get paginated reviews (for public display)
-  getPaginated: async (appId = null, page = 1, limit = 10) => {
-    const start = (page - 1) * limit;
-    const end = start + limit - 1;
-
-    let query = supabase
-      .from("reviews")
-      .select(
-        `
-        *,
-        users (
-          id,
-          name,
-          image_url
-        ),
-        apps (
-          id,
-          name
-        )
-      `
-      )
-      .order("created_at", { ascending: false })
-      .range(start, end);
-
-    if (appId) {
-      query = query.eq("app_id", appId);
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    return data;
-  },
-
-  // Get total count of reviews (for pagination)
-  getCount: async (appId = null) => {
-    let query = supabase.from("reviews").select("*", { count: "exact", head: true });
-
-    if (appId) {
-      query = query.eq("app_id", appId);
-    }
-
-    const { count, error } = await query;
-
-    if (error) throw error;
-    return count || 0;
+    return data.publicUrl;
   },
 };

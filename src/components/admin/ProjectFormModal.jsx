@@ -1,7 +1,35 @@
 import { useState } from "react";
-import { X, Upload, Loader, Save, Plus, Trash2 } from "lucide-react";
+import { X, Upload, Save, Plus, Trash2, Image as ImageIcon, Link, Calendar, Users, Building, Loader2 } from "lucide-react";
 import { projectsAPI } from "../../api/supabase";
-import Loading from "../../components/LoadingSpinner3D";
+
+// --- UI Components ---
+const InputGroup = ({ label, children }) => (
+  <div className="space-y-2">
+    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+const StyledInput = (props) => (
+  <input
+    {...props}
+    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm"
+  />
+);
+
+const StyledSelect = (props) => (
+  <div className="relative">
+    <select
+      {...props}
+      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm cursor-pointer"
+    />
+    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </div>
+);
 
 const ProjectFormModal = ({
   editingItem,
@@ -9,10 +37,8 @@ const ProjectFormModal = ({
   onSuccess,
   onError,
 }) => {
-  // Helper function to normalize data from database
   const normalizeData = (data) => {
     if (!data) return null;
-
     return {
       ...data,
       fullDescription: data.full_description || data.fullDescription || "",
@@ -25,7 +51,6 @@ const ProjectFormModal = ({
         data.completionDate ||
         new Date().toISOString().split("T")[0],
       keyFeatures: data.key_features || data.keyFeatures || [""],
-      // Ensure gallery is always an array
       gallery: Array.isArray(data.gallery)
         ? data.gallery
         : data.gallery
@@ -83,21 +108,11 @@ const ProjectFormModal = ({
     setFormData((prev) => ({ ...prev, [field]: newArray }));
   };
 
-  // Cloudinary upload function
-  // Replace your handleFileUpload function with this:
   const handleFileUpload = async (file, type = "featured") => {
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset =
-      import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "portfolio_preset";
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "portfolio_preset";
 
-    console.log("Cloudinary config:", { cloudName, uploadPreset });
-
-    // Check if Cloudinary is configured
-    if (
-      !cloudName ||
-      cloudName === "my-portfolio" ||
-      cloudName.includes("your_cloud")
-    ) {
+    if (!cloudName || cloudName === "my-portfolio" || cloudName.includes("your_cloud")) {
       console.warn("Cloudinary not properly configured, using local URL");
       return URL.createObjectURL(file);
     }
@@ -105,57 +120,25 @@ const ProjectFormModal = ({
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", uploadPreset);
-
-    // Optional: Add folder based on type
-    if (type === "gallery") {
-      formData.append("folder", "portfolio/gallery");
-    } else {
-      formData.append("folder", "portfolio/featured");
-    }
+    if (type === "gallery") formData.append("folder", "portfolio/gallery");
+    else formData.append("folder", "portfolio/featured");
 
     try {
-      console.log(`Uploading ${type} image to Cloudinary...`);
-
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-          // NO headers needed for unsigned uploads
-        }
+        { method: "POST", body: formData }
       );
-
       const data = await response.json();
-
-      if (response.ok && data.secure_url) {
-        console.log("Upload successful:", data.secure_url);
-        return data.secure_url;
-      } else {
-        console.error("Cloudinary upload error:", data);
-
-        // More detailed error messages
-        if (data.error?.message?.includes("Invalid cloud_name")) {
-          throw new Error(
-            "Invalid Cloudinary cloud name. Check your VITE_CLOUDINARY_CLOUD_NAME"
-          );
-        } else if (data.error?.message?.includes("upload_preset")) {
-          throw new Error(
-            'Invalid upload preset. Create an unsigned upload preset named "portfolio_preset" in Cloudinary'
-          );
-        } else {
-          throw new Error(data.error?.message || "Upload failed");
-        }
-      }
+      if (response.ok && data.secure_url) return data.secure_url;
+      else throw new Error(data.error?.message || "Upload failed");
     } catch (error) {
       console.error("Upload error:", error);
       throw error;
     }
   };
 
-  // Update your upload handlers:
   const handleFeaturedImageUpload = async (file) => {
     if (!file) return;
-
     setUploadingImage(true);
     try {
       const imageUrl = await handleFileUpload(file, "featured");
@@ -169,15 +152,10 @@ const ProjectFormModal = ({
 
   const handleGalleryUpload = async (files) => {
     if (!files || files.length === 0) return;
-
     setUploadingGallery(true);
     try {
-      const uploadPromises = Array.from(files).map((file) =>
-        handleFileUpload(file, "gallery")
-      );
-
+      const uploadPromises = Array.from(files).map((file) => handleFileUpload(file, "gallery"));
       const uploadedUrls = await Promise.all(uploadPromises);
-
       setFormData((prev) => ({
         ...prev,
         gallery: [...(prev.gallery || []), ...uploadedUrls],
@@ -199,9 +177,7 @@ const ProjectFormModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     try {
-      // Prepare data for database (convert to snake_case)
       const cleanData = {
         title: formData.title,
         description: formData.description,
@@ -209,12 +185,9 @@ const ProjectFormModal = ({
         category: formData.category,
         tags: Array.isArray(formData.tags)
           ? formData.tags
-          : formData.tags
-              .split(",")
-              .map((t) => t.trim())
-              .filter(Boolean),
+          : formData.tags.split(",").map((t) => t.trim()).filter(Boolean),
         image: formData.image,
-        gallery: formData.gallery || [], // Send gallery as array
+        gallery: formData.gallery || [],
         live_url: formData.liveUrl,
         github_url: formData.githubUrl,
         featured: formData.featured,
@@ -228,13 +201,8 @@ const ProjectFormModal = ({
         results: (formData.results || []).filter(Boolean),
       };
 
-      console.log("Submitting project data:", cleanData);
-
-      if (editingItem) {
-        await projectsAPI.update(editingItem.id, cleanData, "admin-user-id");
-      } else {
-        await projectsAPI.create(cleanData, "admin-user-id");
-      }
+      if (editingItem) await projectsAPI.update(editingItem.id, cleanData, "admin-user-id");
+      else await projectsAPI.create(cleanData, "admin-user-id");
 
       setShowModal(false);
       onSuccess();
@@ -247,410 +215,246 @@ const ProjectFormModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-gray-900 rounded-xl sm:rounded-2xl w-full max-w-2xl lg:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto border border-gray-800 m-2 sm:m-4">
-        <form onSubmit={handleSubmit}>
-          <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-4 sm:p-6 flex justify-between items-center z-10">
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
-              {editingItem ? "Edit Project" : "Add New Project"}
-            </h3>
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="p-1 sm:p-2 hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
-            </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden">
+      <div className="relative w-full max-w-5xl h-[90vh] bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20 backdrop-blur-xl shrink-0">
+          <div>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              {editingItem ? <Save className="w-5 h-5 text-cyan-400" /> : <Plus className="w-5 h-5 text-cyan-400" />}
+              {editingItem ? "Edit Project" : "New Project"}
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">Fill in the details below to showcase your work.</p>
           </div>
+          <button
+            onClick={() => setShowModal(false)}
+            className="p-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Basic Information Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div className="md:col-span-2">
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Project Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => handleInputChange("title", e.target.value)}
-                  placeholder="Enter project title"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Category *
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) =>
-                    handleInputChange("category", e.target.value)
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                >
-                  <option>Dev</option>
-                  <option>Design</option>
-                  <option>Security</option>
-                  <option>App</option>
-                  <option>Experimental</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Status *
-                </label>
-                <select
-                  value={formData.published ? "Published" : "Draft"}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "published",
-                      e.target.value === "Published"
-                    )
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                >
-                  <option>Published</option>
-                  <option>Draft</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Description Section */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Short Description *
-              </label>
-              <textarea
-                required
-                rows={2}
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                placeholder="Brief description (150-200 characters)"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Full Description *
-              </label>
-              <textarea
-                required
-                rows={4}
-                value={formData.fullDescription}
-                onChange={(e) =>
-                  handleInputChange("fullDescription", e.target.value)
-                }
-                placeholder="Detailed project description"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
-              />
-            </div>
-
-            {/* Featured Image Section */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Featured Image *
-              </label>
-              {formData.image ? (
-                <div className="relative">
-                  <img
-                    src={formData.image}
-                    alt="Preview"
-                    className="w-full h-32 sm:h-48 object-cover rounded-lg"
+        {/* Scrollable Content */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+          
+          {/* Main Info Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <InputGroup label="Project Details">
+                <div className="space-y-4">
+                  <StyledInput
+                    placeholder="Project Title"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange("title", e.target.value)}
+                    required
                   />
-                  <button
-                    type="button"
-                    onClick={() => handleInputChange("image", "")}
-                    className="absolute top-1 sm:top-2 right-1 sm:right-2 p-1 sm:p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-xs"
-                  >
-                    <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <StyledSelect
+                      value={formData.category}
+                      onChange={(e) => handleInputChange("category", e.target.value)}
+                    >
+                      <option className="bg-gray-900">Dev</option>
+                      <option className="bg-gray-900">Design</option>
+                      <option className="bg-gray-900">Security</option>
+                      <option className="bg-gray-900">App</option>
+                      <option className="bg-gray-900">Experimental</option>
+                    </StyledSelect>
+                    <StyledSelect
+                      value={formData.published ? "Published" : "Draft"}
+                      onChange={(e) => handleInputChange("published", e.target.value === "Published")}
+                    >
+                      <option className="bg-gray-900">Published</option>
+                      <option className="bg-gray-900">Draft</option>
+                    </StyledSelect>
+                  </div>
                 </div>
-              ) : (
-                <label className="border-2 border-dashed border-gray-700 rounded-lg p-4 sm:p-8 text-center hover:border-cyan-500 transition-colors cursor-pointer block">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) =>
-                      handleFeaturedImageUpload(e.target.files[0])
-                    }
-                    disabled={uploadingImage}
+              </InputGroup>
+
+              <InputGroup label="Descriptions">
+                <div className="space-y-4">
+                  <textarea
+                    rows={3}
+                    placeholder="Short description (excerpt for cards)..."
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm resize-none"
+                    required
                   />
-                  {uploadingImage ? (
-                    <Loading />
-                  ) : (
-                    <Upload className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500 mx-auto mb-2 sm:mb-4" />
-                  )}
-                  <p className="text-xs sm:text-sm text-gray-400 mb-1 sm:mb-2">
-                    Drop image here or click to upload
-                  </p>
-                  <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
-                </label>
-              )}
+                  <textarea
+                    rows={6}
+                    placeholder="Full detailed case study description..."
+                    value={formData.fullDescription}
+                    onChange={(e) => handleInputChange("fullDescription", e.target.value)}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm resize-none"
+                    required
+                  />
+                </div>
+              </InputGroup>
+
+              <InputGroup label="Meta Information">
+                <div className="space-y-4">
+                  <StyledInput
+                    placeholder="Tags (React, Node.js, etc...)"
+                    value={Array.isArray(formData.tags) ? formData.tags.join(", ") : formData.tags}
+                    onChange={(e) => handleInputChange("tags", e.target.value)}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type="url"
+                        placeholder="Live URL"
+                        value={formData.liveUrl}
+                        onChange={(e) => handleInputChange("liveUrl", e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type="url"
+                        placeholder="GitHub Repo"
+                        value={formData.githubUrl}
+                        onChange={(e) => handleInputChange("githubUrl", e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </InputGroup>
             </div>
 
-            {/* Gallery Images Section */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Gallery Images
-              </label>
-
-              {/* Gallery Preview */}
-              {(formData.gallery || []).length > 0 && (
-                <div className="mb-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 mb-4">
-                    {(formData.gallery || []).map((url, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={url}
-                          alt={`Gallery ${index + 1}`}
-                          className="w-full h-24 sm:h-32 object-cover rounded-lg"
-                        />
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Media Upload */}
+              <InputGroup label="Featured Media">
+                <div className={`relative border-2 border-dashed border-white/10 rounded-xl p-4 transition-all ${!formData.image ? 'hover:border-cyan-500/50 hover:bg-white/5' : ''}`}>
+                  {formData.image ? (
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden group">
+                      <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <button
                           type="button"
-                          onClick={() => removeGalleryImage(index)}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleInputChange("image", "")}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg flex items-center gap-2 hover:bg-red-600 transition-colors"
                         >
-                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <Trash2 className="w-4 h-4" /> Remove
                         </button>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-48 cursor-pointer">
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFeaturedImageUpload(e.target.files[0])} disabled={uploadingImage} />
+                      {uploadingImage ? (
+                        <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+                      ) : (
+                        <ImageIcon className="w-10 h-10 text-gray-600 mb-3" />
+                      )}
+                      <span className="text-sm text-gray-400 font-medium">Click to upload featured image</span>
+                      <span className="text-xs text-gray-600 mt-1">1920x1080 Recommended</span>
+                    </label>
+                  )}
                 </div>
-              )}
+              </InputGroup>
 
-              {/* Gallery Upload Area */}
-              <label className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center hover:border-cyan-500 transition-colors cursor-pointer block">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleGalleryUpload(e.target.files)}
-                  disabled={uploadingGallery}
-                />
-                {uploadingGallery ? (
-                  <>
-                    <Loading />
-                    <p className="text-xs sm:text-sm text-gray-400">
-                      Uploading {formData.gallery?.length || 0} images...
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500 mx-auto mb-2 sm:mb-4" />
-                    <p className="text-xs sm:text-sm text-gray-400 mb-1 sm:mb-2">
-                      Drop images here or click to upload multiple
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      PNG, JPG up to 5MB each
-                    </p>
-                  </>
-                )}
-              </label>
-
-              {(formData.gallery || []).length > 0 && (
-                <p className="text-xs text-gray-500 mt-2">
-                  {formData.gallery.length} image(s) in gallery
-                </p>
-              )}
-            </div>
-
-            {/* Tags Section */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Tags (comma separated)
-              </label>
-              <input
-                type="text"
-                value={
-                  Array.isArray(formData.tags)
-                    ? formData.tags.join(", ")
-                    : formData.tags
-                }
-                onChange={(e) => handleInputChange("tags", e.target.value)}
-                placeholder="React, Node.js, TypeScript"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-              />
-            </div>
-
-            {/* URLs Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Live URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.liveUrl}
-                  onChange={(e) => handleInputChange("liveUrl", e.target.value)}
-                  placeholder="https://example.com"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  GitHub URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.githubUrl}
-                  onChange={(e) =>
-                    handleInputChange("githubUrl", e.target.value)
-                  }
-                  placeholder="https://github.com/user/repo"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Project Details Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Client Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.clientName}
-                  onChange={(e) =>
-                    handleInputChange("clientName", e.target.value)
-                  }
-                  placeholder="Client or Company"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Duration
-                </label>
-                <input
-                  type="text"
-                  value={formData.duration}
-                  onChange={(e) =>
-                    handleInputChange("duration", e.target.value)
-                  }
-                  placeholder="3 months"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Team Size
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.teamSize}
-                  onChange={(e) =>
-                    handleInputChange("teamSize", parseInt(e.target.value))
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Array Fields Section */}
-            {["keyFeatures", "challenges", "results"].map((field) => (
-              <div key={field}>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  {field.charAt(0).toUpperCase() +
-                    field.slice(1).replace(/([A-Z])/g, " $1")}
-                </label>
-                {(formData[field] || []).map((item, index) => (
-                  <div key={index} className="flex gap-1 sm:gap-2 mb-1 sm:mb-2">
-                    <input
-                      type="text"
-                      value={item}
-                      onChange={(e) =>
-                        handleArrayInput(field, index, e.target.value)
-                      }
-                      placeholder={`Enter ${field} item`}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                    />
-                    {(formData[field] || []).length > 1 && (
+              {/* Gallery */}
+              <InputGroup label="Project Gallery">
+                <div className="grid grid-cols-3 gap-3">
+                  {formData.gallery.map((url, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden group bg-white/5">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
                       <button
                         type="button"
-                        onClick={() => removeArrayItem(field, index)}
-                        className="p-2 sm:p-3 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-xs"
+                        onClick={() => removeGalleryImage(idx)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-md text-white opacity-0 group-hover:opacity-100 transition-all"
                       >
-                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <X className="w-3 h-3" />
                       </button>
-                    )}
+                    </div>
+                  ))}
+                  <label className="aspect-square rounded-lg border-2 border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 hover:bg-white/5 transition-all text-gray-500 hover:text-cyan-400">
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleGalleryUpload(e.target.files)} disabled={uploadingGallery} />
+                    {uploadingGallery ? <Loader2 className="w-6 h-6 animate-spin text-cyan-500" /> : <Plus className="w-6 h-6" />}
+                  </label>
+                </div>
+              </InputGroup>
+
+              {/* Project Stats */}
+              <InputGroup label="Project Stats">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <StyledInput placeholder="Client Name" value={formData.clientName} onChange={(e) => handleInputChange("clientName", e.target.value)} style={{ paddingLeft: '2.5rem' }} />
                   </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addArrayItem(field)}
-                  className="text-cyan-400 hover:text-cyan-300 text-xs sm:text-sm flex items-center gap-1 sm:gap-2"
-                >
-                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Add {field} item
-                </button>
-              </div>
-            ))}
-
-            {/* Featured Toggle */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-800 rounded-lg gap-2 sm:gap-0">
-              <div>
-                <p className="font-medium text-white text-sm sm:text-base">
-                  Featured Project
-                </p>
-                <p className="text-xs sm:text-sm text-gray-400">
-                  Display on homepage
-                </p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer mt-1 sm:mt-0">
-                <input
-                  type="checkbox"
-                  checked={formData.featured}
-                  onChange={(e) =>
-                    handleInputChange("featured", e.target.checked)
-                  }
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
-              </label>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-gray-800">
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving || uploadingImage || uploadingGallery}
-                className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg font-medium hover:from-cyan-600 hover:to-purple-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 disabled:opacity-50"
-              >
-                {saving ? (
-                  <>
-                    <Loading />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>
-                      {editingItem ? "Update Project" : "Create Project"}
-                    </span>
-                  </>
-                )}
-              </button>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <StyledInput placeholder="Duration" value={formData.duration} onChange={(e) => handleInputChange("duration", e.target.value)} style={{ paddingLeft: '2.5rem' }} />
+                  </div>
+                  <div className="relative">
+                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <StyledInput type="number" min="1" placeholder="Team Size" value={formData.teamSize} onChange={(e) => handleInputChange("teamSize", parseInt(e.target.value))} style={{ paddingLeft: '2.5rem' }} />
+                  </div>
+                  <div className="flex items-center gap-3 px-4 py-3 bg-white/5 border border-white/10 rounded-xl">
+                    <input type="checkbox" checked={formData.featured} onChange={(e) => handleInputChange("featured", e.target.checked)} className="w-4 h-4 rounded border-gray-600 text-cyan-500 focus:ring-cyan-500 bg-gray-800" />
+                    <span className="text-sm text-gray-300">Featured Project</span>
+                  </div>
+                </div>
+              </InputGroup>
             </div>
           </div>
+
+          {/* Dynamic Lists */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-white/10">
+            {["keyFeatures", "challenges", "results"].map((field) => (
+              <div key={field} className="space-y-3">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">
+                  {field.replace(/([A-Z])/g, " $1")}
+                </label>
+                <div className="space-y-2">
+                  {(formData[field] || []).map((item, index) => (
+                    <div key={index} className="flex gap-2">
+                      <StyledInput
+                        value={item}
+                        onChange={(e) => handleArrayInput(field, index, e.target.value)}
+                        placeholder={`Add ${field}...`}
+                      />
+                      {(formData[field] || []).length > 1 && (
+                        <button type="button" onClick={() => removeArrayItem(field, index)} className="p-2 bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-lg transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => addArrayItem(field)} className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mt-1 font-medium">
+                    <Plus className="w-3 h-3" /> Add Item
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </form>
+
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-white/10 bg-black/20 backdrop-blur-xl flex justify-end gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2.5 text-sm font-medium text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || uploadingImage || uploadingGallery}
+            className="px-8 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? "Saving..." : "Save Project"}
+          </button>
+        </div>
+
       </div>
     </div>
   );

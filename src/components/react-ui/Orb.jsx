@@ -1,6 +1,54 @@
 import { useEffect, useRef } from "react";
 import { Renderer, Program, Mesh, Triangle, Vec3 } from "ogl";
 
+// Helper to convert Hex/RGB to normalized Vec3 (0.0 - 1.0)
+const hexToVec3 = (hex) => {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  return new Vec3(r, g, b);
+};
+
+// Define Color Palettes for each Theme
+const THEME_PALETTES = {
+  light: {
+    c1: "#9c43fe", // Purple
+    c2: "#4cc2e9", // Light Blue
+    c3: "#1014cc", // Deep Blue
+  },
+  dark: {
+    c1: "#06b6d4", // Cyan
+    c2: "#3b82f6", // Blue
+    c3: "#0f172a", // Slate
+  },
+  earth: {
+    c1: "#f97316", // Orange
+    c2: "#22c55e", // Green
+    c3: "#78350f", // Brown
+  },
+  glass: {
+    c1: "#d8b4fe", // Light Purple
+    c2: "#818cf8", // Indigo
+    c3: "#c084fc", // Fuchsia
+  },
+  retro: {
+    c1: "#ec4899", // Pink
+    c2: "#eab308", // Yellow
+    c3: "#06b6d4", // Cyan
+  },
+  darkblue: {
+    c1: "#00d4ff", // Bright Cyan
+    c2: "#0055ff", // Electric Blue
+    c3: "#000033", // Deep Navy
+  },
+  // Fallback
+  default: {
+    c1: "#6143fe",
+    c2: "#4cc2e9",
+    c3: "#1014cc",
+  },
+};
+
 export default function Orb({
   hue = 0,
   hoverIntensity = 0.2,
@@ -8,6 +56,7 @@ export default function Orb({
   forceHoverState = false,
 }) {
   const ctnDom = useRef(null);
+  const programRef = useRef(null);
 
   const vert = /* glsl */ `
     precision highp float;
@@ -29,6 +78,12 @@ export default function Orb({
     uniform float hover;
     uniform float rot;
     uniform float hoverIntensity;
+    
+    // NEW: Dynamic Color Uniforms
+    uniform vec3 color1;
+    uniform vec3 color2;
+    uniform vec3 color3;
+
     varying vec2 vUv;
 
     vec3 rgb2yiq(vec3 c) {
@@ -98,9 +153,7 @@ export default function Orb({
       return vec4(colorIn.rgb / (a + 1e-5), a);
     }
 
-    const vec3 baseColor1 = vec3(0.611765, 0.262745, 0.996078);
-    const vec3 baseColor2 = vec3(0.298039, 0.760784, 0.913725);
-    const vec3 baseColor3 = vec3(0.062745, 0.078431, 0.600000);
+    // Replaced hardcoded constants with uniforms
     const float innerRadius = 0.6;
     const float noiseScale = 0.65;
 
@@ -112,9 +165,10 @@ export default function Orb({
     }
 
     vec4 draw(vec2 uv) {
-      vec3 color1 = adjustHue(baseColor1, hue);
-      vec3 color2 = adjustHue(baseColor2, hue);
-      vec3 color3 = adjustHue(baseColor3, hue);
+      // Use uniforms instead of constants
+      vec3 c1 = adjustHue(color1, hue);
+      vec3 c2 = adjustHue(color2, hue);
+      vec3 c3 = adjustHue(color3, hue);
       
       float ang = atan(uv.y, uv.x);
       float len = length(uv);
@@ -136,8 +190,8 @@ export default function Orb({
       float v2 = smoothstep(1.0, mix(innerRadius, 1.0, n0 * 0.5), len);
       float v3 = smoothstep(innerRadius, mix(innerRadius, 1.0, 0.5), len);
       
-      vec3 col = mix(color1, color2, cl);
-      col = mix(color3, col, v0);
+      vec3 col = mix(c1, c2, cl);
+      col = mix(c3, col, v0);
       col = (col + v1) * v2 * v3;
       col = clamp(col, 0.0, 1.0);
       
@@ -167,6 +221,37 @@ export default function Orb({
     }
   `;
 
+  // --- THEME OBSERVER & UPDATE LOGIC ---
+  useEffect(() => {
+    const updateOrbColors = () => {
+      if (!programRef.current) return;
+      
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+      const palette = THEME_PALETTES[currentTheme] || THEME_PALETTES.default;
+
+      // Update uniforms directly without re-initializing WebGL
+      programRef.current.uniforms.color1.value = hexToVec3(palette.c1);
+      programRef.current.uniforms.color2.value = hexToVec3(palette.c2);
+      programRef.current.uniforms.color3.value = hexToVec3(palette.c3);
+    };
+
+    // Initial load
+    // Small timeout ensures GL context is ready
+    const timer = setTimeout(updateOrbColors, 100);
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateOrbColors);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     const container = ctnDom.current;
     if (!container) return;
@@ -177,6 +262,10 @@ export default function Orb({
     container.appendChild(gl.canvas);
 
     const geometry = new Triangle(gl);
+    
+    // Default start colors
+    const startColors = THEME_PALETTES.light;
+
     const program = new Program(gl, {
       vertex: vert,
       fragment: frag,
@@ -193,8 +282,15 @@ export default function Orb({
         hover: { value: 0 },
         rot: { value: 0 },
         hoverIntensity: { value: hoverIntensity },
+        // Initialize with default theme colors
+        color1: { value: hexToVec3(startColors.c1) },
+        color2: { value: hexToVec3(startColors.c2) },
+        color3: { value: hexToVec3(startColors.c3) },
       },
     });
+
+    // Store ref to access in theme observer
+    programRef.current = program;
 
     const mesh = new Mesh(gl, { geometry, program });
 
@@ -272,11 +368,13 @@ export default function Orb({
       window.removeEventListener("resize", resize);
       container.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mouseleave", handleMouseLeave);
-      container.removeChild(gl.canvas);
+      if (container.contains(gl.canvas)) {
+        container.removeChild(gl.canvas);
+      }
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hue, hoverIntensity, rotateOnHover, forceHoverState]);
 
-  return <div ref={ctnDom} className="bg-background text-foreground w-full h-full" />;
+  return <div ref={ctnDom} className="w-full h-full" />;
 }

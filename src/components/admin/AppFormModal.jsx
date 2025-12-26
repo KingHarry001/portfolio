@@ -1,18 +1,39 @@
-// src/components/admin/AppFormModal.jsx - UPDATED WITHOUT DYNAMIC FIELDS
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { appsAPI, usersAPI } from "../../api/supabase";
-import { X, Upload, Loader, Save, Plus, Trash2, Download } from "lucide-react";
-import Loading from "../../components/LoadingSpinner3D";
+import { X, Upload, Save, Plus, Trash2, Download, Smartphone, Globe, Shield, FileText, Calendar, Loader2 } from "lucide-react";
+
+// --- UI Components ---
+const InputGroup = ({ label, children }) => (
+  <div className="space-y-2">
+    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+const StyledInput = (props) => (
+  <input
+    {...props}
+    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm"
+  />
+);
+
+const StyledSelect = (props) => (
+  <div className="relative">
+    <select
+      {...props}
+      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm cursor-pointer"
+    />
+    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </div>
+);
 
 const categories = [
-  "Productivity",
-  "Health & Fitness",
-  "Social",
-  "Entertainment",
-  "Finance",
-  "Tools",
-  "Education",
+  "Productivity", "Health & Fitness", "Social", "Entertainment", "Finance", "Tools", "Education",
 ];
 
 const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
@@ -33,10 +54,10 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
     screenshots: [],
     min_android_version: "",
     size: "",
-    version: "",
+    version: "1.0.0",
     privacy_policy_url: "",
     support_url: "",
-    release_date: "",
+    release_date: new Date().toISOString().split("T")[0],
     featured: false,
     published: true,
     tags: [],
@@ -49,10 +70,9 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
   const [apkFile, setApkFile] = useState(null);
   const [apkUrl, setApkUrl] = useState("");
 
-  // Initialize form with editingItem data
+  // Initialize form
   useEffect(() => {
     if (editingItem) {
-      console.log("Editing item:", editingItem);
       setFormData({
         name: editingItem.name || "",
         slug: editingItem.slug || "",
@@ -70,7 +90,6 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
         min_android_version: editingItem.min_android_version || "",
         size: editingItem.size || "",
         version: editingItem.version || "",
-        // REMOVED: rating, rating_count, downloads - these are dynamic
         privacy_policy_url: editingItem.privacy_policy_url || "",
         support_url: editingItem.support_url || "",
         release_date: editingItem.release_date || "",
@@ -80,88 +99,47 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
       });
       setApkUrl(editingItem.download_url || "");
     } else {
-      // Reset form for new app
-      setFormData({
-        name: "",
-        slug: "",
-        short_description: "",
-        long_description: "",
-        category: "",
-        icon_url: "",
-        download_url: "",
-        website_url: "",
-        developer_name: user?.fullName || "",
-        features: [],
-        requirements: [],
-        changelog: [],
-        screenshots: [],
-        min_android_version: "",
-        size: "",
-        version: "1.0.0",
-        // REMOVED: rating, rating_count, downloads - these are dynamic
-        privacy_policy_url: "",
-        support_url: "",
-        release_date: new Date().toISOString().split("T")[0],
-        featured: false,
-        published: true,
-        tags: [],
-      });
-      setApkUrl("");
+        setFormData(prev => ({ ...prev, developer_name: user?.fullName || "" }));
     }
   }, [editingItem, user]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-
-    // Auto-generate slug from name when creating new app
     if (field === "name" && !editingItem) {
-      const slug = value
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+      const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
       setFormData((prev) => ({ ...prev, slug }));
     }
   };
 
   const handleArrayInput = (field, index, value) => {
-    const currentArray = formData[field] || [];
-    const newArray = [...currentArray];
+    const newArray = [...(formData[field] || [])];
     newArray[index] = value;
     setFormData((prev) => ({ ...prev, [field]: newArray }));
   };
 
   const addArrayItem = (field) => {
-    const currentArray = formData[field] || [];
-    setFormData((prev) => ({
-      ...prev,
-      [field]: [...currentArray, ""],
-    }));
+    setFormData((prev) => ({ ...prev, [field]: [...(prev[field] || []), ""] }));
   };
 
   const removeArrayItem = (field, index) => {
-    const currentArray = formData[field] || [];
-    const newArray = currentArray.filter((_, i) => i !== index);
+    const newArray = (formData[field] || []).filter((_, i) => i !== index);
     setFormData((prev) => ({ ...prev, [field]: newArray }));
   };
 
-  // Simple image upload (data URLs for now)
-  const uploadImage = async (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.readAsDataURL(file);
-    });
-  };
+  // Upload Logic
+  const uploadImage = (file) => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
 
   const handleIconUpload = async (file) => {
     if (!file) return;
-
     setUploadingIcon(true);
     try {
       const imageUrl = await uploadImage(file);
       handleInputChange("icon_url", imageUrl);
     } catch (error) {
-      console.error("Icon upload error:", error);
       onError(new Error(`Failed to upload icon: ${error.message}`));
     } finally {
       setUploadingIcon(false);
@@ -170,18 +148,12 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
 
   const handleScreenshotsUpload = async (files) => {
     if (!files || files.length === 0) return;
-
     setUploadingScreenshots(true);
     try {
       const uploadPromises = Array.from(files).map((file) => uploadImage(file));
       const uploadedUrls = await Promise.all(uploadPromises);
-
-      setFormData((prev) => ({
-        ...prev,
-        screenshots: [...(prev.screenshots || []), ...uploadedUrls],
-      }));
+      setFormData((prev) => ({ ...prev, screenshots: [...(prev.screenshots || []), ...uploadedUrls] }));
     } catch (error) {
-      console.error("Screenshots upload error:", error);
       onError(new Error(`Failed to upload screenshots: ${error.message}`));
     } finally {
       setUploadingScreenshots(false);
@@ -189,116 +161,52 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
   };
 
   const removeScreenshot = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      screenshots: (prev.screenshots || []).filter((_, i) => i !== index),
-    }));
+    setFormData((prev) => ({ ...prev, screenshots: (prev.screenshots || []).filter((_, i) => i !== index) }));
   };
 
   const handleApkUpload = async (file) => {
-    if (!file) {
-      onError(new Error("Please select a file"));
+    if (!file || !file.name.endsWith(".apk")) {
+      onError(new Error("Please select a valid APK file"));
       return;
     }
-
-    if (!file.name.endsWith(".apk")) {
-      onError(new Error("Please select an APK file (.apk)"));
-      return;
-    }
-
     setUploadingApk(true);
     try {
-      console.log(
-        "APK file:",
-        file.name,
-        "Size:",
-        (file.size / 1024 / 1024).toFixed(2),
-        "MB"
-      );
-
-      // In a real app, you would upload to Supabase Storage here
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock upload
       const mockApkUrl = `https://example.com/apps/${Date.now()}_${file.name}`;
       setApkUrl(mockApkUrl);
       setApkFile(file);
       handleInputChange("download_url", mockApkUrl);
       handleInputChange("size", `${(file.size / 1024 / 1024).toFixed(2)} MB`);
     } catch (error) {
-      console.error("APK upload error:", error);
       onError(new Error(`Failed to upload APK: ${error.message}`));
     } finally {
       setUploadingApk(false);
     }
   };
 
-  // Tags input handler
-  const handleTagsChange = (e) => {
-    const tagsString = e.target.value;
-    const tagsArray = tagsString
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0);
-    handleInputChange("tags", tagsArray);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     try {
-      if (!user) {
-        throw new Error("You must be logged in");
-      }
+      if (!user) throw new Error("You must be logged in");
+      await usersAPI.createOrUpdate({ clerk_id: user.id, email: user.primaryEmailAddress?.emailAddress, name: user.fullName, image_url: user.imageUrl });
 
-      // Ensure user exists in our database
-      await usersAPI.createOrUpdate({
-        clerk_id: user.id,
-        email: user.primaryEmailAddress?.emailAddress,
-        name: user.fullName,
-        image_url: user.imageUrl,
-      });
-
-      // Prepare app data - REMOVE dynamic fields that should not be in form
       const appData = {
-        name: formData.name,
-        slug: formData.slug,
-        short_description: formData.short_description,
-        long_description: formData.long_description,
-        category: formData.category,
-        icon_url: formData.icon_url,
-        download_url: formData.download_url,
-        website_url: formData.website_url,
-        developer_name: formData.developer_name,
-        features: formData.features,
-        requirements: formData.requirements,
-        screenshots: formData.screenshots,
-        min_android_version: formData.min_android_version,
-        size: formData.size,
-        version: formData.version,
-        // REMOVED: rating, rating_count, downloads - these are dynamic and will be set by the system
+        ...formData,
+        tags: Array.isArray(formData.tags) ? formData.tags : [],
+        changelog: formData.changelog || [],
         privacy_policy_url: formData.privacy_policy_url || null,
         support_url: formData.support_url || null,
         release_date: formData.release_date || null,
-        featured: formData.featured,
-        published: formData.published,
-        changelog: formData.changelog || [],
-        tags: formData.tags || [],
       };
 
-      console.log("Saving app data:", appData);
-
-      if (editingItem) {
-        await appsAPI.update(editingItem.id, appData);
-      } else {
-        await appsAPI.create(appData);
-      }
+      if (editingItem) await appsAPI.update(editingItem.id, appData);
+      else await appsAPI.create(appData);
 
       onSuccess();
       onClose();
     } catch (error) {
       console.error("App save error:", error);
-      console.error("Error details:", error.message, error.code, error.details);
       onError(error);
     } finally {
       setSaving(false);
@@ -306,560 +214,221 @@ const AppFormModal = ({ editingItem, onClose, onSuccess, onError }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-gray-900 rounded-xl sm:rounded-2xl w-full max-w-2xl lg:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto border border-gray-800 m-2 sm:m-4">
-        <form onSubmit={handleSubmit}>
-          <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-4 sm:p-6 flex justify-between items-center z-10">
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
-              {editingItem ? "Edit App" : "Add New App"}
-            </h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1 sm:p-2 hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
-            </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-hidden">
+      <div className="relative w-full max-w-5xl h-[90vh] bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20 backdrop-blur-xl shrink-0">
+          <div>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              {editingItem ? <Save className="w-5 h-5 text-cyan-400" /> : <Plus className="w-5 h-5 text-cyan-400" />}
+              {editingItem ? "Edit App" : "New App"}
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">Manage your mobile application details.</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Content */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+          
+          {/* Main Info Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <InputGroup label="App Details">
+                <div className="space-y-4">
+                  <StyledInput placeholder="App Name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} required />
+                  <StyledInput placeholder="Slug (URL Friendly)" value={formData.slug} onChange={(e) => handleInputChange("slug", e.target.value)} required />
+                  <StyledSelect value={formData.category} onChange={(e) => handleInputChange("category", e.target.value)}>
+                    <option value="" className="bg-gray-900">Select Category</option>
+                    {categories.map((cat) => <option key={cat} value={cat} className="bg-gray-900">{cat}</option>)}
+                  </StyledSelect>
+                </div>
+              </InputGroup>
+
+              <InputGroup label="Descriptions">
+                <div className="space-y-4">
+                  <textarea
+                    rows={2}
+                    placeholder="Short description (excerpt)..."
+                    value={formData.short_description}
+                    onChange={(e) => handleInputChange("short_description", e.target.value)}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm resize-none"
+                    required
+                  />
+                  <textarea
+                    rows={5}
+                    placeholder="Full detailed description..."
+                    value={formData.long_description}
+                    onChange={(e) => handleInputChange("long_description", e.target.value)}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm resize-none"
+                  />
+                </div>
+              </InputGroup>
+
+              <InputGroup label="Technical Info">
+                <div className="grid grid-cols-2 gap-4">
+                  <StyledInput placeholder="Version (e.g. 1.0.0)" value={formData.version} onChange={(e) => handleInputChange("version", e.target.value)} required />
+                  <StyledInput placeholder="Size (e.g. 25 MB)" value={formData.size} onChange={(e) => handleInputChange("size", e.target.value)} />
+                  <div className="relative">
+                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <StyledInput placeholder="Min Android (e.g. 8.0)" value={formData.min_android_version} onChange={(e) => handleInputChange("min_android_version", e.target.value)} style={{ paddingLeft: '2.5rem' }} />
+                  </div>
+                  <StyledInput type="date" value={formData.release_date} onChange={(e) => handleInputChange("release_date", e.target.value)} />
+                </div>
+              </InputGroup>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Icon Upload */}
+              <InputGroup label="App Icon">
+                <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
+                  {formData.icon_url ? (
+                    <img src={formData.icon_url} alt="Icon" className="w-16 h-16 rounded-xl object-cover bg-gray-800" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center">
+                      <Smartphone className="w-8 h-8 text-gray-600" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors">
+                      <Upload className="w-4 h-4" />
+                      {uploadingIcon ? "Uploading..." : "Upload Icon"}
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleIconUpload(e.target.files[0])} disabled={uploadingIcon} />
+                    </label>
+                    <p className="text-xs text-gray-500 mt-2">Square PNG/JPG, min 512x512px</p>
+                  </div>
+                </div>
+              </InputGroup>
+
+              {/* APK Upload */}
+              <InputGroup label="APK File">
+                <div className="p-4 bg-white/5 border border-dashed border-white/20 rounded-xl hover:bg-white/[0.07] transition-colors">
+                  {apkUrl ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="p-2 bg-green-500/20 text-green-500 rounded-lg">
+                          <Download className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-white truncate">{apkFile?.name || "App Package"}</p>
+                          <p className="text-xs text-cyan-400 truncate">{apkUrl}</p>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => { setApkFile(null); setApkUrl(""); handleInputChange("download_url", ""); }} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center py-4 cursor-pointer">
+                      <input type="file" accept=".apk" className="hidden" onChange={(e) => handleApkUpload(e.target.files[0])} disabled={uploadingApk} />
+                      {uploadingApk ? <Loader2 className="w-8 h-8 animate-spin text-cyan-500" /> : <Download className="w-8 h-8 text-gray-500 mb-2" />}
+                      <span className="text-sm text-gray-400">Click to upload APK file</span>
+                    </label>
+                  )}
+                  {/* Fallback URL Input */}
+                  {!apkUrl && (
+                    <div className="mt-4 pt-4 border-t border-white/5">
+                      <input type="url" placeholder="Or enter direct download URL..." value={formData.download_url} onChange={(e) => handleInputChange("download_url", e.target.value)} className="w-full bg-transparent text-xs text-gray-300 placeholder-gray-600 focus:outline-none" />
+                    </div>
+                  )}
+                </div>
+              </InputGroup>
+
+              {/* Screenshots Gallery */}
+              <InputGroup label="Screenshots">
+                <div className="grid grid-cols-4 gap-2">
+                  {formData.screenshots.map((url, idx) => (
+                    <div key={idx} className="relative aspect-[9/16] bg-gray-800 rounded-lg overflow-hidden group">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeScreenshot(idx)} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="aspect-[9/16] bg-white/5 border border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 hover:border-cyan-500/50 transition-all text-gray-500 hover:text-cyan-400">
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleScreenshotsUpload(e.target.files)} disabled={uploadingScreenshots} />
+                    {uploadingScreenshots ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-6 h-6" />}
+                  </label>
+                </div>
+              </InputGroup>
+
+              {/* Links & Metadata */}
+              <InputGroup label="Links & Meta">
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <StyledInput placeholder="Website URL" value={formData.website_url} onChange={(e) => handleInputChange("website_url", e.target.value)} style={{ paddingLeft: '2.5rem' }} />
+                  </div>
+                  <div className="relative">
+                    <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <StyledInput placeholder="Privacy Policy URL" value={formData.privacy_policy_url} onChange={(e) => handleInputChange("privacy_policy_url", e.target.value)} style={{ paddingLeft: '2.5rem' }} />
+                  </div>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={formData.featured} onChange={(e) => handleInputChange("featured", e.target.checked)} className="rounded border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500" />
+                      <span className="text-sm text-gray-300">Featured</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={formData.published} onChange={(e) => handleInputChange("published", e.target.checked)} className="rounded border-gray-600 bg-gray-800 text-green-500 focus:ring-green-500" />
+                      <span className="text-sm text-gray-300">Published</span>
+                    </label>
+                  </div>
+                </div>
+              </InputGroup>
+            </div>
           </div>
 
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div className="md:col-span-2">
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  App Name *
+          {/* Dynamic Lists Section (Features, Requirements, Changelog) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-white/10">
+            {[
+              { id: "features", label: "Key Features", icon: FileText },
+              { id: "requirements", label: "Requirements", icon: Smartphone },
+              { id: "changelog", label: "Changelog", icon: Calendar },
+            ].map((field) => (
+              <div key={field.id} className="space-y-3">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                  <field.icon className="w-3 h-3" /> {field.label}
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Enter app name"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Slug *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.slug}
-                  onChange={(e) => handleInputChange("slug", e.target.value)}
-                  placeholder="app-slug"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Category *
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) =>
-                    handleInputChange("category", e.target.value)
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                >
-                  <option value="">Select a category</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
+                <div className="space-y-2">
+                  {(formData[field.id] || []).map((item, index) => (
+                    <div key={index} className="flex gap-2 group">
+                      <StyledInput
+                        value={item}
+                        onChange={(e) => handleArrayInput(field.id, index, e.target.value)}
+                        placeholder={`Add ${field.label.toLowerCase()}...`}
+                      />
+                      {(formData[field.id] || []).length > 0 && (
+                        <button type="button" onClick={() => removeArrayItem(field.id, index)} className="p-2 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Tags (comma separated)
-              </label>
-              <input
-                type="text"
-                value={(formData.tags || []).join(", ")}
-                onChange={handleTagsChange}
-                placeholder="productivity, tools, mobile"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-              />
-            </div>
-
-            {/* Descriptions */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Short Description *
-              </label>
-              <textarea
-                required
-                rows={2}
-                value={formData.short_description}
-                onChange={(e) =>
-                  handleInputChange("short_description", e.target.value)
-                }
-                placeholder="Brief description (50-100 characters)"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Long Description
-              </label>
-              <textarea
-                rows={4}
-                value={formData.long_description}
-                onChange={(e) =>
-                  handleInputChange("long_description", e.target.value)
-                }
-                placeholder="Detailed app description"
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
-              />
-            </div>
-
-            {/* App Icon */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                App Icon *
-              </label>
-              {formData.icon_url ? (
-                <div className="relative inline-block">
-                  <img
-                    src={formData.icon_url}
-                    alt="App Icon"
-                    className="w-24 h-24 rounded-xl object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleInputChange("icon_url", "")}
-                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-xs"
-                  >
-                    <X className="w-3 h-3" />
+                  <button type="button" onClick={() => addArrayItem(field.id)} className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mt-1 font-medium">
+                    <Plus className="w-3 h-3" /> Add Item
                   </button>
                 </div>
-              ) : (
-                <label className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center hover:border-cyan-500 transition-colors cursor-pointer block w-32">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleIconUpload(e.target.files[0])}
-                    disabled={uploadingIcon}
-                  />
-                  {uploadingIcon ? (
-                    <Loading className="w-8 h-8 text-cyan-500 mx-auto animate-spin" />
-                  ) : (
-                    <Upload className="w-8 h-8 text-gray-500 mx-auto" />
-                  )}
-                  <p className="text-xs text-gray-400 mt-2">
-                    {uploadingIcon ? "Uploading..." : "Upload Icon"}
-                  </p>
-                </label>
-              )}
-            </div>
-
-            {/* Screenshots */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Screenshots
-              </label>
-
-              {(formData.screenshots || []).length > 0 && (
-                <div className="mb-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-4">
-                    {(formData.screenshots || []).map((url, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={url}
-                          alt={`Screenshot ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeScreenshot(index)}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    {(formData.screenshots || []).length} screenshot(s)
-                  </p>
-                </div>
-              )}
-
-              <label className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center hover:border-cyan-500 transition-colors cursor-pointer block">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleScreenshotsUpload(e.target.files)}
-                  disabled={uploadingScreenshots}
-                />
-                {uploadingScreenshots ? (
-                  <>
-                    <Loading className="w-8 h-8 text-cyan-500 mx-auto mb-2 animate-spin" />
-                    <p className="text-sm text-gray-400">
-                      Uploading screenshots...
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">
-                      Drop images or click to upload
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      PNG, JPG up to 5MB each
-                    </p>
-                  </>
-                )}
-              </label>
-            </div>
-
-            {/* Features, Requirements, Changelog - ARRAY FIELDS */}
-            {[
-              {
-                id: "features",
-                label: "Features",
-                placeholder: "Enter feature",
-              },
-              {
-                id: "requirements",
-                label: "Requirements",
-                placeholder: "Enter requirement",
-              },
-              {
-                id: "changelog",
-                label: "Changelog",
-                placeholder: "Enter changelog entry",
-              },
-            ].map((field) => (
-              <div key={field.id}>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  {field.label}
-                </label>
-                {(formData[field.id] || []).map((item, index) => (
-                  <div key={index} className="flex gap-1 sm:gap-2 mb-1 sm:mb-2">
-                    <input
-                      type="text"
-                      value={item}
-                      onChange={(e) =>
-                        handleArrayInput(field.id, index, e.target.value)
-                      }
-                      placeholder={field.placeholder}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                    />
-                    {(formData[field.id] || []).length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem(field.id, index)}
-                        className="p-2 sm:p-3 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-xs"
-                      >
-                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addArrayItem(field.id)}
-                  className="text-cyan-400 hover:text-cyan-300 text-xs sm:text-sm flex items-center gap-1 sm:gap-2"
-                >
-                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Add {field.label.toLowerCase()} item
-                </button>
               </div>
             ))}
-
-            {/* APK File Upload */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                APK File (Download URL)
-              </label>
-
-              {apkUrl ? (
-                <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
-                  <Download className="w-5 h-5 text-cyan-500" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-white truncate">
-                      {apkFile?.name || "App APK"}
-                    </p>
-                    {apkFile && (
-                      <p className="text-xs text-gray-400">
-                        {(apkFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    )}
-                    <p className="text-xs text-cyan-400 truncate">{apkUrl}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setApkFile(null);
-                      setApkUrl("");
-                      handleInputChange("download_url", "");
-                    }}
-                    className="p-1 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <label className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-cyan-500 transition-colors cursor-pointer block">
-                    <input
-                      type="file"
-                      accept=".apk"
-                      className="hidden"
-                      onChange={(e) => handleApkUpload(e.target.files[0])}
-                      disabled={uploadingApk}
-                    />
-                    {uploadingApk ? (
-                      <>
-                        <Loading />
-                        <p className="text-sm text-gray-400">
-                          Uploading APK...
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-                        <p className="text-sm text-gray-400">Upload APK File</p>
-                        <p className="text-xs text-gray-500">
-                          .apk files only, up to 100MB
-                        </p>
-                      </>
-                    )}
-                  </label>
-
-                  {/* Alternative: Direct URL input */}
-                  <div>
-                    <p className="text-xs text-gray-400 mb-2 text-center">OR</p>
-                    <input
-                      type="url"
-                      value={formData.download_url || ""}
-                      onChange={(e) =>
-                        handleInputChange("download_url", e.target.value)
-                      }
-                      placeholder="Enter direct download URL"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* App Details Grid - REMOVED RATING FIELDS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Version *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.version}
-                  onChange={(e) => handleInputChange("version", e.target.value)}
-                  placeholder="1.0.0"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Size
-                </label>
-                <input
-                  type="text"
-                  value={formData.size}
-                  onChange={(e) => handleInputChange("size", e.target.value)}
-                  placeholder="25 MB"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Min Android Version
-                </label>
-                <input
-                  type="text"
-                  value={formData.min_android_version}
-                  onChange={(e) =>
-                    handleInputChange("min_android_version", e.target.value)
-                  }
-                  placeholder="8.0"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* REMOVED: Rating Grid Section */}
-
-            {/* Developer Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Developer Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.developer_name}
-                  onChange={(e) =>
-                    handleInputChange("developer_name", e.target.value)
-                  }
-                  placeholder="Harrison King"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Website URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.website_url}
-                  onChange={(e) =>
-                    handleInputChange("website_url", e.target.value)
-                  }
-                  placeholder="https://example.com"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Privacy & Support URLs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Privacy Policy URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.privacy_policy_url}
-                  onChange={(e) =>
-                    handleInputChange("privacy_policy_url", e.target.value)
-                  }
-                  placeholder="https://example.com/privacy"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                  Support URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.support_url}
-                  onChange={(e) =>
-                    handleInputChange("support_url", e.target.value)
-                  }
-                  placeholder="https://example.com/support"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Release Date */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-                Release Date
-              </label>
-              <input
-                type="date"
-                value={formData.release_date}
-                onChange={(e) =>
-                  handleInputChange("release_date", e.target.value)
-                }
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
-              />
-            </div>
-
-            {/* Toggles */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-800 rounded-lg gap-2 sm:gap-0">
-                <div>
-                  <p className="font-medium text-white text-sm sm:text-base">
-                    Featured App
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-400">
-                    Display in featured section
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer mt-1 sm:mt-0">
-                  <input
-                    type="checkbox"
-                    checked={formData.featured}
-                    onChange={(e) =>
-                      handleInputChange("featured", e.target.checked)
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
-                </label>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-800 rounded-lg gap-2 sm:gap-0">
-                <div>
-                  <p className="font-medium text-white text-sm sm:text-base">
-                    Published
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-400">
-                    Make app visible to users
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer mt-1 sm:mt-0">
-                  <input
-                    type="checkbox"
-                    checked={formData.published}
-                    onChange={(e) =>
-                      handleInputChange("published", e.target.checked)
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
-                </label>
-              </div>
-            </div>
-
-            {/* Submit Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-gray-800">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={
-                  saving ||
-                  uploadingIcon ||
-                  uploadingScreenshots ||
-                  uploadingApk
-                }
-                className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg font-medium hover:from-cyan-600 hover:to-purple-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 disabled:opacity-50"
-              >
-                {saving ? (
-                  <>
-                    <Loading className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>{editingItem ? "Update App" : "Create App"}</span>
-                  </>
-                )}
-              </button>
-            </div>
           </div>
+
         </form>
+
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-white/10 bg-black/20 backdrop-blur-xl flex justify-end gap-3 shrink-0">
+          <button onClick={onClose} className="px-6 py-2.5 text-sm font-medium text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-all">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={saving || uploadingIcon || uploadingScreenshots || uploadingApk} className="px-8 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? "Saving..." : "Save App"}
+          </button>
+        </div>
+
       </div>
     </div>
   );

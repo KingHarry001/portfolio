@@ -5,7 +5,6 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-  AnimatePresence,
 } from "framer-motion";
 import {
   ArrowUpRight,
@@ -22,9 +21,11 @@ import {
   Terminal,
   Database,
 } from "lucide-react";
-import { skillsAPI, certificationsAPI } from "../../api/supabase"; // Keep your imports
+// ✅ 1. Import resumesAPI here
+import { skillsAPI, certificationsAPI, resumesAPI } from "../../api/supabase"; 
 import King from "../../assets/King.png";
 import GlassCard from "../../components/GlassCard";
+import toast from "react-hot-toast"; // Optional: for error handling
 
 // --- 1. Spotlight Effect (Mouse Follower) ---
 function Spotlight({ mouseX, mouseY }) {
@@ -100,18 +101,26 @@ const AboutSection = () => {
   // Data States
   const [skills, setSkills] = useState([]);
   const [certifications, setCertifications] = useState([]);
+  const [resumeUrl, setResumeUrl] = useState(null); // ✅ State for Resume URL
   const [loading, setLoading] = useState(true);
 
-  // Fetch Data (Preserving your Supabase logic)
+  // Fetch Data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [skillsData, certsData] = await Promise.all([
+        // ✅ Fetch Skills, Certs, AND Active Resume
+        const [skillsData, certsData, activeResume] = await Promise.all([
           skillsAPI.getAll(),
           certificationsAPI.getAll(),
+          resumesAPI.getActive().catch(() => null), // Catch error if no resume exists
         ]);
+
         setSkills(skillsData || []);
         setCertifications(certsData || []);
+        
+        if (activeResume?.file_url) {
+          setResumeUrl(activeResume.file_url);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -125,6 +134,15 @@ const AboutSection = () => {
     const { left, top } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
+  };
+
+  // ✅ Handle Download Click
+  const handleDownloadCV = () => {
+    if (resumeUrl) {
+      window.open(resumeUrl, "_blank");
+    } else {
+      toast.error("Resume not available at the moment.");
+    }
   };
 
   // Group skills helper
@@ -144,6 +162,25 @@ const AboutSection = () => {
     Crypto: Shield,
     "AI/ML": Cpu,
   };
+
+  // Helper Icon for stats
+  const Clock = (props) => (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
 
   if (loading)
     return (
@@ -167,7 +204,6 @@ const AboutSection = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
         {/* --- HEADER --- */}
         <div className="mb-24 relative">
-          {/* Big Outline Text Background */}
           <h1
             className="absolute -top-20 -left-10 text-[10rem] md:text-[15rem] font-black text-transparent opacity-5 select-none pointer-events-none"
             style={{ WebkitTextStroke: "2px #fff" }}
@@ -221,7 +257,7 @@ const AboutSection = () => {
             {/* Bento Grid Stats */}
             <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               {[
-                { label: "Years Experience", value: "03+", icon: Clock },
+                { label: "Years Experience", value: "05+", icon: Clock },
                 { label: "Projects Shipped", value: "25+", icon: Code },
                 { label: "Happy Clients", value: "100%", icon: Zap },
                 { label: "Technologies", value: "15+", icon: Cpu },
@@ -260,8 +296,16 @@ const AboutSection = () => {
                 <div className="absolute inset-0 bg-chart-1 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               </button>
 
-              <button className="px-8 py-4 rounded-full border border-white/20 text-white font-medium hover:bg-white/5 transition-colors flex items-center gap-2">
-                <Download size={18} /> Download CV
+              {/* ✅ FIXED DOWNLOAD BUTTON */}
+              <button
+                onClick={handleDownloadCV}
+                disabled={!resumeUrl}
+                className={`px-8 py-4 rounded-full border border-white/20 text-white font-medium transition-colors flex items-center gap-2 ${
+                  resumeUrl ? "hover:bg-white/5 cursor-pointer" : "opacity-50 cursor-not-allowed"
+                }`}
+              >
+                <Download size={18} /> 
+                {resumeUrl ? "Download CV" : "CV Not Available"}
               </button>
             </div>
           </div>
@@ -337,12 +381,7 @@ const AboutSection = () => {
 
                       <div className="space-y-6">
                         {catSkills.map((skill) => (
-                          <div
-                            key={skill.id}
-                            className="group"
-                            onMouseEnter={() => setActiveSkill(skill.name)}
-                            onMouseLeave={() => setActiveSkill(null)}
-                          >
+                          <div key={skill.id} className="group">
                             <div className="flex justify-between text-sm mb-2">
                               <span className="text-zinc-400 group-hover:text-white transition-colors">
                                 {skill.name}
@@ -495,24 +534,5 @@ const AboutSection = () => {
     </section>
   );
 };
-
-// Helper Icon for stats
-const Clock = (props) => (
-  <svg
-    {...props}
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-);
 
 export default AboutSection;

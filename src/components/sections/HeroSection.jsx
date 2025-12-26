@@ -1,385 +1,29 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
-import { ChevronDown, Download, ExternalLink } from "lucide-react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { ChevronDown, Download, ExternalLink, Mail, MapPin, Briefcase } from "lucide-react";
 import { personalInfo } from "../../data/mock";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
 import { resumesAPI } from "../../api/supabase";
+import King from "../../assets/King.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HeroSection = () => {
-  const [displayText, setDisplayText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [text, setText] = useState("");
-  const [roleIndex, setRoleIndex] = useState(0);
-  const [char, setChar] = useState(0);
-  const [deleting, setDeleting] = useState(false);
   const [activeResume, setActiveResume] = useState(null);
+  
+  // Refs
+  const sectionRef = useRef(null);
+  const contentRef = useRef(null);
+  const imageRef = useRef(null);
+  const badgeRef = useRef(null);
+  const nameRef = useRef(null);
+  const roleRef = useRef(null);
+  const bioRef = useRef(null);
+  const ctaRef = useRef(null);
+  const footerRef = useRef(null);
 
-  const fullText = personalInfo.tagline;
-  const statsRef = useRef();
-  const sectionRef = useRef();
-  const heroContentRef = useRef();
-  const statusBadgeRef = useRef();
-  const mainHeadingRef = useRef();
-  const roleAnimationRef = useRef();
-  const bioRef = useRef();
-  const buttonsRef = useRef();
-  const rightSideRef = useRef();
-  const scrollIndicatorRef = useRef();
-  const glowEffectRef = useRef();
-
-  // Memoize roles to prevent recreation on every render
-  const roles = useMemo(
-    () => [
-      "Web Developer",
-      "Web Designer",
-      "Cybersecurity Expert",
-      "Founder",
-      "Creator",
-    ],
-    []
-  );
-
-  // Memoize file download URL
-  const fileDownloadURL = useMemo(
-    () =>
-      "https://drive.google.com/uc?export=download&id=1Gi4LJY5ZaEzsHm1O_FPusCb7mb-TSyLN",
-    []
-  );
-
-  // UPDATED: Scroll-triggered animations instead of mount animations
+  // Fetch Resume
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Set initial states (hidden)
-      gsap.set(
-        [
-          statusBadgeRef.current,
-          mainHeadingRef.current,
-          roleAnimationRef.current,
-          bioRef.current,
-          buttonsRef.current,
-          statsRef.current,
-        ],
-        {
-          opacity: 0,
-          y: 50,
-        }
-      );
-
-      gsap.set(rightSideRef.current, {
-        opacity: 0,
-        scale: 0.8,
-        rotationY: 15,
-      });
-
-      gsap.set(scrollIndicatorRef.current, {
-        opacity: 0,
-        y: 20,
-      });
-
-      // Create scroll-triggered timeline
-      const tl = gsap.timeline({
-        defaults: {
-          ease: "power3.out",
-          duration: 1,
-        },
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 80%", // Animation starts when section is 80% visible
-          end: "top 20%", // Animation completes when section is 20% from top
-          toggleActions: "play none none reverse", // Play on enter, reverse on leave
-          // Uncomment below for debugging
-          // markers: true
-        },
-      });
-
-      // Animate elements in sequence (same timing as before)
-      tl.to(statusBadgeRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "back.out(1.7)",
-      })
-        .to(
-          mainHeadingRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: "power2.out",
-          },
-          "-=0.6"
-        )
-        .to(
-          roleAnimationRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-          },
-          "-=0.4"
-        )
-        .to(
-          bioRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-          },
-          "-=0.4"
-        )
-        .to(
-          buttonsRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: "back.out(1.4)",
-          },
-          "-=0.4"
-        )
-        .to(
-          rightSideRef.current,
-          {
-            opacity: 1,
-            scale: 1,
-            rotationY: 0,
-            duration: 1.2,
-            ease: "back.out(1.4)",
-          },
-          "-=0.8"
-        )
-        .to(
-          statsRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-          },
-          "-=0.6"
-        )
-        .to(
-          scrollIndicatorRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            ease: "bounce.out",
-          },
-          "-=0.2"
-        );
-
-      // Continuous floating animation (independent of scroll)
-      gsap.to(rightSideRef.current?.querySelector(".floating-element"), {
-        y: -20,
-        duration: 3,
-        ease: "power2.inOut",
-        yoyo: true,
-        repeat: -1,
-      });
-
-      // Glow effect animation (continuous)
-      gsap.to(glowEffectRef.current, {
-        scale: 1.1,
-        opacity: 0.8,
-        duration: 2,
-        ease: "power2.inOut",
-        yoyo: true,
-        repeat: -1,
-      });
-
-      // UPDATED: Enhanced parallax effect with better scroll responsiveness
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: 1,
-        onUpdate: (self) => {
-          const progress = self.progress;
-          gsap.to(rightSideRef.current, {
-            y: -100 * progress,
-            rotationX: 10 * progress,
-            duration: 0.3,
-            ease: "none",
-          });
-
-          // Add subtle parallax to other elements
-          gsap.to(heroContentRef.current, {
-            y: -20 * progress,
-            duration: 0.3,
-            ease: "none",
-          });
-        },
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // UPDATED: Stats animation with different scroll trigger
-  useEffect(() => {
-    if (!statsRef.current) return;
-
-    const ctx = gsap.context(() => {
-      const statEls = gsap.utils.toArray(
-        statsRef.current.querySelectorAll(".stats-value")
-      );
-
-      statEls.forEach((el) => {
-        const finalValue = parseInt(el.textContent.replace(/[^0-9]/g, ""));
-        const suffix = el.textContent.replace(/[0-9]/g, "");
-        const obj = { value: 0 };
-
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top 90%", // Start earlier for better visibility
-          toggleActions: "play none none reset",
-          onEnter: () => {
-            gsap.to(obj, {
-              value: finalValue,
-              duration: 2,
-              ease: "power2.out",
-              onUpdate: () => {
-                el.innerText =
-                  new Intl.NumberFormat().format(Math.floor(obj.value)) +
-                  suffix;
-              },
-            });
-
-            // Enhanced scale animation
-            gsap.fromTo(
-              el,
-              { scale: 0.8, rotation: -5 },
-              {
-                scale: 1,
-                rotation: 0,
-                duration: 0.5,
-                ease: "back.out(1.7)",
-              }
-            );
-          },
-        });
-      });
-    }, statsRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // Button hover animations (unchanged)
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const buttons = gsap.utils.toArray(
-        buttonsRef.current?.querySelectorAll("button") || []
-      );
-
-      buttons.forEach((button) => {
-        const icon = button.querySelector("svg");
-
-        button.addEventListener("mouseenter", () => {
-          gsap.to(button, {
-            scale: 1.05,
-            duration: 0.3,
-            ease: "power2.out",
-          });
-
-          if (icon) {
-            gsap.to(icon, {
-              scale: 1.1,
-              duration: 0.3,
-              ease: "back.out(1.7)",
-            });
-          }
-        });
-
-        button.addEventListener("mouseleave", () => {
-          gsap.to(button, {
-            scale: 1,
-            duration: 0.3,
-            ease: "power2.out",
-          });
-
-          if (icon) {
-            gsap.to(icon, {
-              scale: 1,
-              duration: 0.3,
-              ease: "power2.out",
-            });
-          }
-        });
-      });
-    }, buttonsRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // UPDATED: Delayed typewriter effect that starts with scroll trigger
-  useEffect(() => {
-    // Create a ScrollTrigger to start typewriter effect
-    const trigger = ScrollTrigger.create({
-      trigger: sectionRef.current,
-      start: "top 70%",
-      onEnter: () => {
-        // Start typewriter after a small delay
-        setTimeout(() => {
-          setCurrentIndex(0);
-        }, 800); // Delay to sync with other animations
-      },
-      onLeaveBack: () => {
-        // Reset typewriter when scrolling back up
-        setCurrentIndex(0);
-        setDisplayText("");
-      },
-    });
-
-    return () => trigger.kill();
-  }, []);
-
-  // Typewriter effect logic (unchanged)
-  useEffect(() => {
-    if (currentIndex > 0 && currentIndex <= fullText.length) {
-      const timer = setTimeout(() => {
-        setDisplayText(fullText.slice(0, currentIndex));
-        setCurrentIndex(currentIndex + 1);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [currentIndex, fullText]);
-
-  // Role cycling animation (unchanged)
-  useEffect(() => {
-    const current = roles[roleIndex];
-    const isEnd = char === current.length;
-    const isStart = char === 0;
-
-    const timeout = setTimeout(
-      () => {
-        if (!deleting) {
-          setText(current.substring(0, char + 1));
-          setChar((c) => c + 1);
-          if (isEnd) setDeleting(true);
-        } else {
-          setText(current.substring(0, char - 1));
-          setChar((c) => c - 1);
-          if (isStart) {
-            setDeleting(false);
-            setRoleIndex((prev) => (prev + 1) % roles.length);
-          }
-        }
-      },
-      isEnd ? 2000 : deleting ? 50 : 100
-    );
-
-    return () => clearTimeout(timeout);
-  }, [char, deleting, roleIndex, roles]);
-
-    useEffect(() => {
     const fetchActiveResume = async () => {
       try {
         const resume = await resumesAPI.getActive();
@@ -388,188 +32,204 @@ const HeroSection = () => {
         console.error("Error fetching resume:", error);
       }
     };
-
     fetchActiveResume();
-  }, []);
-
-  const scrollToAbout = useCallback(() => {
-    const element = document.querySelector("#about");
-    if (element) {
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
   }, []);
 
   const handleResumeDownload = useCallback(() => {
     if (activeResume?.file_url) {
       window.open(activeResume.file_url, "_blank");
-    } else {
-      console.log("No active resume available");
     }
   }, [activeResume]);
+
+  const scrollToContact = () => {
+    const el = document.querySelector("#contact");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // GSAP Animations
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Initial States
+      gsap.set([badgeRef.current, nameRef.current, roleRef.current, bioRef.current, ctaRef.current, footerRef.current], {
+        opacity: 0,
+        y: 30,
+      });
+      gsap.set(imageRef.current, {
+        opacity: 0,
+        x: 50,
+        scale: 0.95,
+      });
+
+      // Main Timeline
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.8 })
+        .to(nameRef.current, { opacity: 1, y: 0, duration: 1 }, "-=0.6")
+        .to(roleRef.current, { opacity: 1, y: 0, duration: 0.8 }, "-=0.8")
+        .to(bioRef.current, { opacity: 1, y: 0, duration: 0.8 }, "-=0.6")
+        .to(ctaRef.current, { opacity: 1, y: 0, duration: 0.8 }, "-=0.6")
+        .to(footerRef.current, { opacity: 1, y: 0, duration: 0.8 }, "-=0.6")
+        .to(imageRef.current, { opacity: 1, x: 0, scale: 1, duration: 1.2, ease: "power2.out" }, "-=1.2");
+
+      // Parallax Effect on Scroll
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: "top top",
+        end: "bottom top",
+        scrub: 1,
+        onUpdate: (self) => {
+          gsap.to(imageRef.current, {
+            y: 50 * self.progress,
+            ease: "none",
+            duration: 0.1,
+          });
+          gsap.to(contentRef.current, {
+            y: -30 * self.progress,
+            ease: "none",
+            duration: 0.1,
+          });
+        },
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen bg-background text-foreground overflow-hidden"
+      className="relative min-h-screen bg-background text-foreground overflow-hidden flex flex-col justify-center pt-24 pb-12 lg:pt-32 lg:pb-0"
     >
-      {/* Optimized Grid Pattern Overlay */}
-      <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
-          `,
-          backgroundSize: "100px 100px",
-        }}
-      />
+      {/* Background Decor (Subtle & Premium) */}
+      <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-chart-1/5 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-chart-1/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 lg:px-8 pt-20">
-        <div className="grid lg:grid-cols-2 gap-12 min-h-screen items-center">
-          {/* Left Content */}
-          <div ref={heroContentRef} className="space-y-8">
-            <div className="space-y-6">
-              {/* Status Badge */}
-              <div
-                ref={statusBadgeRef}
-                className="inline-flex items-center px-4 py-2 bg-chart-1/10 border border-chart-1/20 rounded-full"
-              >
-                <div className="w-2 h-2 bg-chart-1 rounded-full animate-pulse mr-3" />
-                <span className="text-chart-1 text-sm font-medium">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-12 w-full h-full relative z-10">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start h-full">
+          
+          {/* --- LEFT COLUMN: CONTENT --- */}
+          <div ref={contentRef} className="lg:col-span-7 flex flex-col justify-center h-full space-y-8 lg:space-y-10">
+            
+            {/* Availability Badge */}
+            <div ref={badgeRef} className="flex items-start">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-chart-1/10 border border-chart-1/20 backdrop-blur-sm">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-semibold tracking-wide text-foreground/80 uppercase">
                   Available for new projects
                 </span>
               </div>
-
-              {/* Main Heading */}
-              <h1
-                ref={mainHeadingRef}
-                className="text-4xl sm:text-6xl lg:text-7xl font-bold text-foreground leading-tight"
-              >
-                Hi, I'm{" "}
-                <span className="bg-gradient-to-r from-chart-1 to-foreground bg-clip-text text-transparent">
-                  {personalInfo.name}
-                </span>
-              </h1>
-
-              {/* Role Animation */}
-              <div ref={roleAnimationRef} className="space-y-4">
-                <h2 className="text-xl lg:text-2xl text-muted-foreground font-medium">
-                  I'm a{" "}
-                  <span className="font-bold bg-gradient-to-r from-[#9c43fe] via-[#4cc2e9] to-[#1014cc] bg-clip-text text-transparent">
-                    {text}
-                  </span>
-                  <span className="text-foreground animate-pulse">|</span>
-                </h2>
-
-                {/* Tagline with typewriter effect */}
-                <p className="text-lg lg:text-xl text-muted-foreground font-medium">
-                  {displayText}
-                  {currentIndex > 0 && currentIndex <= fullText.length && (
-                    <span className="animate-pulse">|</span>
-                  )}
-                </p>
-              </div>
-
-              {/* Bio */}
-              <p
-                ref={bioRef}
-                className="text-base lg:text-lg text-muted-foreground leading-relaxed max-w-lg"
-              >
-                {personalInfo.bio}
-              </p>
             </div>
 
-            {/* CTA Buttons */}
-            <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-4">
+            {/* Name & Headline */}
+            <div className="space-y-2">
+              <h2 ref={nameRef} className="text-lg font-medium text-chart-1 tracking-widest uppercase mb-2">
+                I am {" "} {personalInfo.name}
+              </h2>
+              <h1 ref={roleRef} className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-foreground leading-[0.9]">
+                Full Stack <br />
+                <span className="text-muted-foreground/40">Engineer.</span>
+              </h1>
+            </div>
+
+            {/* Bio */}
+            <p ref={bioRef} className="text-lg lg:text-xl text-muted-foreground max-w-xl leading-relaxed">
+              {personalInfo.tagline}. I build scalable, impact-driven platforms with a focus on performance and user experience. Expert in Next.js, Node.js, and modern UI/UX.
+            </p>
+
+            {/* CTA Actions */}
+            <div ref={ctaRef} className="flex flex-wrap gap-4 pt-2">
               <button
-                onClick={scrollToAbout}
-                className="btn-primary"
-                aria-label="View my work"
+                onClick={scrollToContact}
+                className="group relative px-8 py-4 bg-foreground text-background rounded-full font-semibold text-lg overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
-                <span>View My Work</span>
-                <ExternalLink size={18} />
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                <span className="relative flex items-center gap-2">
+                  Contact Me <Mail className="w-5 h-5" />
+                </span>
               </button>
 
               {activeResume && (
                 <button
                   onClick={handleResumeDownload}
-                  className="btn-secondary"
-                  aria-label="Download resume"
+                  className="group px-8 py-4 bg-transparent border border-border rounded-full font-semibold text-lg hover:bg-muted/50 transition-all hover:border-foreground/50 flex items-center gap-2"
                 >
-                  <Download size={18} />
-                  <span>Download Resume</span>
+                  <span>Download CV</span>
+                  <Download className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
                 </button>
               )}
             </div>
+
+            {/* Footer Stats / Info */}
+            <div ref={footerRef} className="pt-12 lg:pt-20 border-t border-border/40 w-full">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm uppercase tracking-wider font-medium">
+                    <MapPin className="w-4 h-4" /> Based In
+                  </div>
+                  <p className="text-foreground font-semibold">Lagos, Nigeria</p>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm uppercase tracking-wider font-medium">
+                    <Briefcase className="w-4 h-4" /> Experience
+                  </div>
+                  <p className="text-foreground font-semibold">5+ Years</p>
+                </div>
+                <div className="space-y-1 hidden sm:block">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm uppercase tracking-wider font-medium">
+                    <ExternalLink className="w-4 h-4" /> Current Role
+                  </div>
+                  <p className="text-foreground font-semibold">Founder @ TaskMaster</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Right Side - 3D Placeholder */}
-          <div
-            ref={rightSideRef}
-            className="relative h-[500px] lg:h-[700px] flex items-center justify-center"
-          >
-            <div className="w-full h-full max-w-[700px] relative">
-              {/* Enhanced 3D placeholder */}
-              <div className="floating-element w-full h-full bg-gradient-to-br from-chart-1/20 via-black/50 to-transparent flex items-center justify-center backdrop-blur-sm border border-white/10 rounded-full">
-                <div className="text-center space-y-6">
-                  <div className="relative mx-auto">
-                    <div className="w-32 h-32 lg:w-64 lg:h-64 bg-gradient-to-br from-chart-1/30 to-transparent rounded-full animate-pulse" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-chart-1/10 to-transparent rounded-full animate-ping" />
-                  </div>
-                  <div>
-                    <div className="text-foreground text-lg font-medium">
-                      Interactive 3D Experience
-                    </div>
-                    <div className="text-muted-foreground text-sm mt-2">
-                      Creative Technology Visualization
-                    </div>
+          {/* --- RIGHT COLUMN: IMAGE --- */}
+          <div className="lg:col-span-5 h-full flex items-center justify-center lg:justify-end relative mt-12 lg:mt-0">
+            {/* Image Container Card */}
+            <div 
+              ref={imageRef}
+              className="relative w-full max-w-md lg:max-w-full aspect-[4/5] lg:aspect-[3/4] rounded-[2rem] overflow-hidden shadow-2xl bg-muted group"
+            >
+              {/* Actual Image (Replace placeholder with your image) */}
+              <img 
+                src={King}
+                alt="Profile" 
+                className="w-full h-full object-cover filter grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105"
+              />
+              
+              {/* Overlay Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+
+              {/* Floating Badge on Image */}
+              <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full">
+                <span className="text-white text-sm font-medium flex items-center gap-2">
+                  <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  Open to Work
+                </span>
+              </div>
+
+              {/* Bottom Card Content */}
+              <div className="absolute bottom-0 left-0 w-full p-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-2xl">
+                  <p className="text-white/80 text-sm font-medium uppercase tracking-wider mb-1">Latest Project</p>
+                  <h3 className="text-white text-xl font-bold">TaskMaster Pro</h3>
+                  <div className="flex items-center gap-2 mt-4 text-white/90 text-sm font-medium cursor-pointer hover:text-white transition-colors">
+                    View Case Study <ExternalLink className="w-4 h-4" />
                   </div>
                 </div>
               </div>
-
-              {/* Enhanced Glow Effect */}
-              <div
-                ref={glowEffectRef}
-                className="absolute inset-0 bg-gradient-to-r from-chart-1/20 via-transparent to-chart-1/20 rounded-2xl blur-3xl -z-10"
-              />
             </div>
-          </div>
-        </div>
 
-        {/* Scroll Indicator */}
-        <div
-          ref={scrollIndicatorRef}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-        >
-          <button
-            onClick={scrollToAbout}
-            className="text-foreground hover:text-chart-1 transition-colors duration-300 p-2 rounded-full hover:bg-white/5"
-            aria-label="Scroll to about section"
-          >
-            <ChevronDown size={32} />
-          </button>
+            {/* Decorative Elements behind image */}
+            <div className="absolute -z-10 top-10 -right-10 w-full h-full border border-chart-1/20 rounded-[2rem] hidden lg:block" />
+          </div>
+
         </div>
       </div>
-
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes blink {
-          0%,
-          50% {
-            opacity: 1;
-          }
-          51%,
-          100% {
-            opacity: 0;
-          }
-        }
-        .animate-blink {
-          animation: blink 1s infinite;
-        }
-      `}</style>
     </section>
   );
 };
